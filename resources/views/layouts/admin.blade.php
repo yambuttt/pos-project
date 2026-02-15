@@ -33,7 +33,8 @@
 
                         $isRawMaterials = request()->routeIs('admin.raw_materials.*');
                         $isPurchases = request()->routeIs('admin.purchases.*');
-                        $isInventory = $isRawMaterials || $isPurchases;
+                        $isWastes = request()->routeIs('admin.wastes.*');
+                        $isInventory = $isRawMaterials || $isPurchases || $isWastes;
                     @endphp
 
                     <div class="flex h-full flex-col p-3">
@@ -132,6 +133,18 @@
                                             class="sidebar-label hidden text-sm font-medium text-white/90">Purchases</span>
                                         <span class="ml-auto sidebar-label hidden text-xs text-white/60">IN</span>
                                     </a>
+
+                                    <a href="{{ route('admin.wastes.index') }}" class="relative flex items-center gap-3 rounded-xl px-3 py-2 transition-all duration-200
+   {{ $isWastes ? 'bg-white/20 shadow-lg' : 'border border-white/10 bg-white/5 hover:bg-white/10' }}">
+                                        @if($isWastes)
+                                            <span
+                                                class="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r bg-white"></span>
+                                        @endif
+                                        <span
+                                            class="sidebar-label hidden text-sm font-medium text-white/90">Waste</span>
+                                        <span class="ml-auto sidebar-label hidden text-xs text-white/60">OUT</span>
+                                    </a>
+
                                 </div>
                             </div>
 

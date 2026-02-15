@@ -6,6 +6,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Admin\CashierController;
 use App\Http\Controllers\Admin\RawMaterialController;
 use App\Http\Controllers\Admin\PurchaseController;
+use App\Http\Controllers\Admin\WasteController;
 Route::get('/', function () {
     return view('welcome');
 });
@@ -25,9 +26,15 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/admin/raw-materials', [RawMaterialController::class, 'index'])->name('admin.raw_materials.index');
     Route::get('/admin/raw-materials/create', [RawMaterialController::class, 'create'])->name('admin.raw_materials.create');
     Route::post('/admin/raw-materials', [RawMaterialController::class, 'store'])->name('admin.raw_materials.store');
+
     Route::get('/admin/purchases', [PurchaseController::class, 'index'])->name('admin.purchases.index');
     Route::get('/admin/purchases/create', [PurchaseController::class, 'create'])->name('admin.purchases.create');
     Route::post('/admin/purchases', [PurchaseController::class, 'store'])->name('admin.purchases.store');
+
+
+    Route::get('/admin/wastes', [WasteController::class, 'index'])->name('admin.wastes.index');
+    Route::get('/admin/wastes/create', [WasteController::class, 'create'])->name('admin.wastes.create');
+    Route::post('/admin/wastes', [WasteController::class, 'store'])->name('admin.wastes.store');
 });
 
 Route::middleware(['auth', 'role:kasir'])->group(function () {
