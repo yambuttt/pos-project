@@ -1,12 +1,8 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Dashboard Kasir</title>
-  @vite(['resources/css/app.css', 'resources/js/app.js'])
-</head>
-<body class="min-h-screen bg-slate-900 text-white flex items-center justify-center">
+@extends('layouts.kasir')
+
+@section('title', 'Dashboard Kasir')
+
+@section('content')
   <div class="text-center space-y-4">
     <h1 class="text-3xl font-bold">Ini Dashboard Kasir</h1>
     <p class="text-white/70">Role: {{ auth()->user()->role }} | {{ auth()->user()->email }}</p>
@@ -18,5 +14,4 @@
       </button>
     </form>
   </div>
-</body>
-</html>
+@endsection
