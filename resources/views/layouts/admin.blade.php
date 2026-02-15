@@ -25,6 +25,17 @@
                 ========================= --}}
                 <aside id="adminSidebarDesktop" class="group relative m-4 hidden h-[calc(100vh-2rem)] shrink-0 rounded-[26px] border border-white/20 bg-white/10 backdrop-blur-2xl lg:block
                  transition-all duration-200 ease-out w-16">
+                    @php
+                        $isDashboard = request()->routeIs('admin.dashboard');
+                        $isProducts = request()->routeIs('admin.products.*');   // nanti
+                        $isSales = request()->routeIs('admin.sales.*');      // nanti
+                        $isUsers = request()->routeIs('admin.cashiers.*');
+
+                        $isRawMaterials = request()->routeIs('admin.raw_materials.*');
+                        $isPurchases = request()->routeIs('admin.purchases.*');
+                        $isInventory = $isRawMaterials || $isPurchases;
+                    @endphp
+
                     <div class="flex h-full flex-col p-3">
                         <div class="flex items-center justify-center">
                             <button id="sidebarPinBtn" type="button"
@@ -70,6 +81,60 @@
 
                                 <span class="sidebar-label hidden text-sm font-medium text-white/90">Produk</span>
                             </a>
+                            {{-- INVENTORY (submenu) --}}
+                            <div class="mt-2">
+                                <button type="button" id="invToggleDesktop" class="relative w-full flex items-center gap-3 rounded-xl px-3 py-2 transition-all duration-200
+    {{ $isInventory ? 'bg-white/20 shadow-lg' : 'border border-white/10 bg-white/5 hover:bg-white/10' }}">
+                                    @if($isInventory)
+                                        <span
+                                            class="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r bg-white"></span>
+                                    @endif
+
+                                    {{-- icon inventory (svg) --}}
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white/90" fill="none"
+                                        viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            d="M3 7.5L12 3l9 4.5-9 4.5L3 7.5z" />
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            d="M3 7.5v9L12 21l9-4.5v-9" />
+                                    </svg>
+
+                                    <span
+                                        class="sidebar-label hidden text-sm font-medium text-white/90 flex-1 text-left">Inventory</span>
+
+                                    {{-- chevron --}}
+                                    <svg id="invChevronDesktop" xmlns="http://www.w3.org/2000/svg"
+                                        class="sidebar-label hidden h-4 w-4 text-white/70 transition" fill="none"
+                                        viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+                                    </svg>
+                                </button>
+
+                                <div id="invMenuDesktop" class="mt-2 space-y-2 pl-2 {{ $isInventory ? '' : 'hidden' }}">
+                                    <a href="{{ route('admin.raw_materials.index') }}" class="relative flex items-center gap-3 rounded-xl px-3 py-2 transition-all duration-200
+       {{ $isRawMaterials ? 'bg-white/20 shadow-lg' : 'border border-white/10 bg-white/5 hover:bg-white/10' }}">
+                                        @if($isRawMaterials)
+                                            <span
+                                                class="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r bg-white"></span>
+                                        @endif
+                                        <span class="sidebar-label hidden text-sm font-medium text-white/90">Bahan
+                                            Baku</span>
+                                        <span class="ml-auto sidebar-label hidden text-xs text-white/60">RM</span>
+                                    </a>
+
+                                    <a href="{{ route('admin.purchases.index') }}" class="relative flex items-center gap-3 rounded-xl px-3 py-2 transition-all duration-200
+       {{ $isPurchases ? 'bg-white/20 shadow-lg' : 'border border-white/10 bg-white/5 hover:bg-white/10' }}">
+                                        @if($isPurchases)
+                                            <span
+                                                class="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r bg-white"></span>
+                                        @endif
+                                        <span
+                                            class="sidebar-label hidden text-sm font-medium text-white/90">Purchases</span>
+                                        <span class="ml-auto sidebar-label hidden text-xs text-white/60">IN</span>
+                                    </a>
+                                </div>
+                            </div>
+
                             <a href="#"
                                 class="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-3 py-2 hover:bg-white/10">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white/90" fill="none"
@@ -156,7 +221,9 @@
             <aside id="adminSidebarMobile" @php
                 $isDashboard = request()->routeIs('admin.dashboard');
                 $isUsers = request()->routeIs('admin.cashiers.*');
-                // nanti kalau ada produk/transaksi/laporan, tinggal tambah variabelnya
+                $isRawMaterials = request()->routeIs('admin.raw_materials.*');
+                $isPurchases = request()->routeIs('admin.purchases.*');
+                $isInventory = $isRawMaterials || $isPurchases;
             @endphp
                 class="fixed left-0 top-0 z-50 hidden h-full w-[280px] border-r border-white/20 bg-white/10 p-4 backdrop-blur-2xl lg:hidden">
                 <div class="flex items-center justify-between">
@@ -184,6 +251,22 @@
                     <a href="#"
                         class="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-3 py-2 hover:bg-white/10">📦
                         Produk</a>
+                    <div class="rounded-xl border border-white/10 bg-white/5 p-2">
+                        <div class="flex items-center justify-between px-2 py-2">
+                            <div class="text-sm font-semibold text-white/90">Inventory</div>
+                            <span class="text-xs text-white/60">{{ $isInventory ? 'Active' : '' }}</span>
+                        </div>
+
+                        <a href="{{ route('admin.raw_materials.index') }}"
+                            class="relative mt-1 block rounded-xl px-3 py-2 {{ $isRawMaterials ? 'bg-white/20' : 'hover:bg-white/10' }}">
+                            Bahan Baku
+                        </a>
+
+                        <a href="{{ route('admin.purchases.index') }}"
+                            class="relative mt-1 block rounded-xl px-3 py-2 {{ $isPurchases ? 'bg-white/20' : 'hover:bg-white/10' }}">
+                            Purchases
+                        </a>
+                    </div>
                     <a href="#"
                         class="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-3 py-2 hover:bg-white/10">🧾
                         Transaksi</a>
@@ -302,6 +385,22 @@
             document.addEventListener('keydown', (e) => {
                 if (e.key === 'Escape') closeMobile();
             });
+            const invToggle = document.getElementById('invToggleDesktop');
+            const invMenu = document.getElementById('invMenuDesktop');
+            const invChevron = document.getElementById('invChevronDesktop');
+
+            if (invToggle && invMenu && invChevron) {
+                invToggle.addEventListener('click', () => {
+                    const isHidden = invMenu.classList.contains('hidden');
+                    invMenu.classList.toggle('hidden');
+                    invChevron.classList.toggle('rotate-90', isHidden);
+                });
+
+                // kalau inventory active, chevron diputer
+                if (!invMenu.classList.contains('hidden')) {
+                    invChevron.classList.add('rotate-90');
+                }
+            }
         })();
     </script>
 </body>
