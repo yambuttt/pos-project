@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\CashierController;
 use App\Http\Controllers\Admin\RawMaterialController;
 use App\Http\Controllers\Admin\PurchaseController;
 use App\Http\Controllers\Admin\WasteController;
+use App\Http\Controllers\Admin\StockOpnameController;
 Route::get('/', function () {
     return view('welcome');
 });
@@ -35,6 +36,12 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/admin/wastes', [WasteController::class, 'index'])->name('admin.wastes.index');
     Route::get('/admin/wastes/create', [WasteController::class, 'create'])->name('admin.wastes.create');
     Route::post('/admin/wastes', [WasteController::class, 'store'])->name('admin.wastes.store');
+
+    Route::get('/admin/opnames', [StockOpnameController::class, 'index'])->name('admin.opnames.index');
+    Route::get('/admin/opnames/create', [StockOpnameController::class, 'create'])->name('admin.opnames.create');
+    Route::post('/admin/opnames', [StockOpnameController::class, 'store'])->name('admin.opnames.store');
+    Route::get('/admin/opnames/{id}', [StockOpnameController::class, 'show'])->name('admin.opnames.show');
+    Route::post('/admin/opnames/{id}/post', [StockOpnameController::class, 'post'])->name('admin.opnames.post');
 });
 
 Route::middleware(['auth', 'role:kasir'])->group(function () {
