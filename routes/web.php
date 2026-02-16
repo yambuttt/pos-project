@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\WasteController;
 use App\Http\Controllers\Admin\StockOpnameController;
 use App\Http\Controllers\Admin\InventoryMovementController;
 use App\Http\Controllers\Admin\ProductController;
+use App\Http\Controllers\Kasir\SaleController;
 Route::get('/', function () {
     return view('welcome');
 });
@@ -60,6 +61,10 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::delete('/products/{product}/recipes/{recipeId}', [ProductController::class, 'recipesDestroy'])->name('admin.products.recipes.destroy');
 });
 
-Route::middleware(['auth', 'role:kasir'])->group(function () {
-    Route::get('/kasir/dashboard', [DashboardController::class, 'kasir'])->name('kasir.dashboard');
+Route::prefix('kasir')->name('kasir.')->middleware(['auth', 'role:kasir'])->group(function () {
+    Route::get('/dashboard', fn() => view('dashboard.kasir.dashboard'))->name('dashboard');
+
+    Route::get('/sales', [SaleController::class, 'index'])->name('sales.index');
+    Route::get('/sales/create', [SaleController::class, 'create'])->name('sales.create');
+    Route::post('/sales', [SaleController::class, 'store'])->name('sales.store');
 });
