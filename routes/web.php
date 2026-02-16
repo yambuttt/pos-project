@@ -8,6 +8,8 @@ use App\Http\Controllers\Admin\RawMaterialController;
 use App\Http\Controllers\Admin\PurchaseController;
 use App\Http\Controllers\Admin\WasteController;
 use App\Http\Controllers\Admin\StockOpnameController;
+use App\Http\Controllers\Admin\InventoryMovementController;
+use App\Http\Controllers\Admin\ProductController;
 Route::get('/', function () {
     return view('welcome');
 });
@@ -42,6 +44,20 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::post('/admin/opnames', [StockOpnameController::class, 'store'])->name('admin.opnames.store');
     Route::get('/admin/opnames/{id}', [StockOpnameController::class, 'show'])->name('admin.opnames.show');
     Route::post('/admin/opnames/{id}/post', [StockOpnameController::class, 'post'])->name('admin.opnames.post');
+    Route::get('/admin/inventory-movements', [InventoryMovementController::class, 'index'])
+        ->name('admin.inventory-movements.index');
+
+    Route::get('/products', [ProductController::class, 'index'])->name('admin.products.index');
+    Route::get('/products/create', [ProductController::class, 'create'])->name('admin.products.create');
+    Route::post('/products', [ProductController::class, 'store'])->name('admin.products.store');
+    Route::get('/products/{product}/edit', [ProductController::class, 'edit'])->name('admin.products.edit');
+    Route::put('/products/{product}', [ProductController::class, 'update'])->name('admin.products.update');
+    Route::delete('/products/{product}', [ProductController::class, 'destroy'])->name('admin.products.destroy');
+
+    // Resep (BOM)
+    Route::get('/products/{product}/recipes', [ProductController::class, 'recipes'])->name('admin.products.recipes');
+    Route::post('/products/{product}/recipes', [ProductController::class, 'recipesStore'])->name('admin.products.recipes.store');
+    Route::delete('/products/{product}/recipes/{recipeId}', [ProductController::class, 'recipesDestroy'])->name('admin.products.recipes.destroy');
 });
 
 Route::middleware(['auth', 'role:kasir'])->group(function () {

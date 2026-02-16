@@ -22,44 +22,60 @@
 
                 {{-- =========================
                 DESKTOP SIDEBAR (lg+)
+                - default: collapsed (icon only)
+                - hover: open
+                - pin: keep open
                 ========================= --}}
-                <aside id="adminSidebarDesktop" class="group relative m-4 hidden h-[calc(100vh-2rem)] shrink-0 rounded-[26px] border border-white/20 bg-white/10 backdrop-blur-2xl lg:block
-                 transition-all duration-200 ease-out w-16">
+                <aside id="adminSidebarDesktop"
+                    class="relative m-4 hidden h-[calc(100vh-2rem)] shrink-0 rounded-[26px] border border-white/20 bg-white/10 backdrop-blur-2xl lg:block transition-all duration-200 ease-out w-16">
+
                     @php
                         $isDashboard = request()->routeIs('admin.dashboard');
-                        $isProducts = request()->routeIs('admin.products.*');   // nanti
-                        $isSales = request()->routeIs('admin.sales.*');      // nanti
+                        $isProducts = request()->routeIs('admin.products.*'); // nanti
+                        $isSales = request()->routeIs('admin.sales.*'); // nanti
                         $isUsers = request()->routeIs('admin.cashiers.*');
 
                         $isRawMaterials = request()->routeIs('admin.raw_materials.*');
                         $isPurchases = request()->routeIs('admin.purchases.*');
                         $isWastes = request()->routeIs('admin.wastes.*');
                         $isOpnames = request()->routeIs('admin.opnames.*');
-                        $isInventory = $isRawMaterials || $isPurchases || $isWastes || $isOpnames;
+
+                        // Inventory Movement (sementara pakai URL supaya tidak error walau route belum ada)
+                        $isInvMovements = request()->routeIs('admin.inventory-movements.*');
+
+                        $isInventory = $isRawMaterials || $isPurchases || $isWastes || $isOpnames || $isInvMovements;
                     @endphp
 
                     <div class="flex h-full flex-col p-3">
+                        {{-- Top button (Pin) --}}
                         <div class="flex items-center justify-center">
                             <button id="sidebarPinBtn" type="button"
-                                class="flex h-10 w-10 items-center justify-center rounded-xl border border-white/20 bg-white/10 text-sm hover:bg-white/15"
-                                title="Pin sidebar">
-                                ⚙️
+                                class="flex h-10 w-10 items-center justify-center rounded-xl border border-white/20 bg-white/10 hover:bg-white/15"
+                                title="Pin sidebar" aria-label="Pin sidebar" data-pinned="0">
+                                {{-- icon: pin/gear (akan diganti via JS ketika pinned) --}}
+                                <svg id="pinIconGear" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white/90"
+                                    fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M10.5 6h3M12 3v3m7.5 6a7.5 7.5 0 01-15 0 7.5 7.5 0 0115 0z" />
+                                </svg>
+
+                                <svg id="pinIconPinned" xmlns="http://www.w3.org/2000/svg"
+                                    class="hidden h-5 w-5 text-white/90" fill="none" viewBox="0 0 24 24"
+                                    stroke="currentColor" stroke-width="1.8">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M15 11l4-4m0 0l-4-4m4 4H9a4 4 0 00-4 4v8" />
+                                </svg>
                             </button>
                         </div>
 
-
+                        {{-- Menu --}}
                         <div class="mt-4 space-y-2">
-                            @php
-                                $isDashboard = request()->routeIs('admin.dashboard');
-                            @endphp
 
-                            <a href="{{ route('admin.dashboard') }}" class="relative flex items-center gap-3 rounded-xl px-3 py-2 transition
-   {{ $isDashboard
-    ? 'bg-white/20 text-white shadow-lg'
-    : 'border border-white/10 bg-white/5 hover:bg-white/10 text-white/90'
-   }}">
-
-                                @if($isDashboard)
+                            {{-- Dashboard --}}
+                            <a href="{{ route('admin.dashboard') }}"
+                                class="relative flex items-center gap-3 rounded-xl px-3 py-2 transition
+                                {{ $isDashboard ? 'bg-white/20 text-white shadow-lg' : 'border border-white/10 bg-white/5 hover:bg-white/10 text-white/90' }}">
+                                @if ($isDashboard)
                                     <span
                                         class="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r bg-white"></span>
                                 @endif
@@ -69,32 +85,35 @@
                                     <path stroke-linecap="round" stroke-linejoin="round"
                                         d="M3 10.5L12 3l9 7.5v9a1.5 1.5 0 01-1.5 1.5h-15A1.5 1.5 0 013 19.5v-9z" />
                                 </svg>
+
                                 <span class="sidebar-label hidden text-sm font-medium">Dashboard</span>
                             </a>
 
-                            <a href="#"
+                            {{-- Produk (dummy dulu) --}}
+                            <a href="{{ route('admin.products.index') }}"
                                 class="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-3 py-2 hover:bg-white/10">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white/90" fill="none"
                                     viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
                                     <path stroke-linecap="round" stroke-linejoin="round"
                                         d="M3 7.5L12 3l9 4.5-9 4.5L3 7.5z" />
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 7.5v9L12 21l9-4.5v-9" />
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M3 7.5v9L12 21l9-4.5v-9" />
                                 </svg>
-
                                 <span class="sidebar-label hidden text-sm font-medium text-white/90">Produk</span>
                             </a>
+
                             {{-- INVENTORY (submenu) --}}
                             <div class="mt-2">
-                                <button type="button" id="invToggleDesktop" class="relative w-full flex items-center gap-3 rounded-xl px-3 py-2 transition-all duration-200
-    {{ $isInventory ? 'bg-white/20 shadow-lg' : 'border border-white/10 bg-white/5 hover:bg-white/10' }}">
-                                    @if($isInventory)
+                                <button type="button" id="invToggleDesktop"
+                                    class="relative w-full flex items-center gap-3 rounded-xl px-3 py-2 transition-all duration-200
+                                    {{ $isInventory ? 'bg-white/20 shadow-lg' : 'border border-white/10 bg-white/5 hover:bg-white/10' }}">
+                                    @if ($isInventory)
                                         <span
                                             class="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r bg-white"></span>
                                     @endif
 
-                                    {{-- icon inventory (svg) --}}
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white/90" fill="none"
-                                        viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white/90"
+                                        fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
                                         <path stroke-linecap="round" stroke-linejoin="round"
                                             d="M3 7.5L12 3l9 4.5-9 4.5L3 7.5z" />
                                         <path stroke-linecap="round" stroke-linejoin="round"
@@ -104,7 +123,6 @@
                                     <span
                                         class="sidebar-label hidden text-sm font-medium text-white/90 flex-1 text-left">Inventory</span>
 
-                                    {{-- chevron --}}
                                     <svg id="invChevronDesktop" xmlns="http://www.w3.org/2000/svg"
                                         class="sidebar-label hidden h-4 w-4 text-white/70 transition" fill="none"
                                         viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
@@ -112,10 +130,13 @@
                                     </svg>
                                 </button>
 
-                                <div id="invMenuDesktop" class="mt-2 space-y-2 pl-2 {{ $isInventory ? '' : 'hidden' }}">
-                                    <a href="{{ route('admin.raw_materials.index') }}" class="relative flex items-center gap-3 rounded-xl px-3 py-2 transition-all duration-200
-       {{ $isRawMaterials ? 'bg-white/20 shadow-lg' : 'border border-white/10 bg-white/5 hover:bg-white/10' }}">
-                                        @if($isRawMaterials)
+                                <div id="invMenuDesktop"
+                                    class="mt-2 space-y-2 pl-2 {{ $isInventory ? '' : 'hidden' }}">
+
+                                    <a href="{{ route('admin.raw_materials.index') }}"
+                                        class="relative flex items-center gap-3 rounded-xl px-3 py-2 transition-all duration-200
+                                        {{ $isRawMaterials ? 'bg-white/20 shadow-lg' : 'border border-white/10 bg-white/5 hover:bg-white/10' }}">
+                                        @if ($isRawMaterials)
                                             <span
                                                 class="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r bg-white"></span>
                                         @endif
@@ -124,9 +145,10 @@
                                         <span class="ml-auto sidebar-label hidden text-xs text-white/60">RM</span>
                                     </a>
 
-                                    <a href="{{ route('admin.purchases.index') }}" class="relative flex items-center gap-3 rounded-xl px-3 py-2 transition-all duration-200
-       {{ $isPurchases ? 'bg-white/20 shadow-lg' : 'border border-white/10 bg-white/5 hover:bg-white/10' }}">
-                                        @if($isPurchases)
+                                    <a href="{{ route('admin.purchases.index') }}"
+                                        class="relative flex items-center gap-3 rounded-xl px-3 py-2 transition-all duration-200
+                                        {{ $isPurchases ? 'bg-white/20 shadow-lg' : 'border border-white/10 bg-white/5 hover:bg-white/10' }}">
+                                        @if ($isPurchases)
                                             <span
                                                 class="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r bg-white"></span>
                                         @endif
@@ -135,20 +157,21 @@
                                         <span class="ml-auto sidebar-label hidden text-xs text-white/60">IN</span>
                                     </a>
 
-                                    <a href="{{ route('admin.wastes.index') }}" class="relative flex items-center gap-3 rounded-xl px-3 py-2 transition-all duration-200
-   {{ $isWastes ? 'bg-white/20 shadow-lg' : 'border border-white/10 bg-white/5 hover:bg-white/10' }}">
-                                        @if($isWastes)
+                                    <a href="{{ route('admin.wastes.index') }}"
+                                        class="relative flex items-center gap-3 rounded-xl px-3 py-2 transition-all duration-200
+                                        {{ $isWastes ? 'bg-white/20 shadow-lg' : 'border border-white/10 bg-white/5 hover:bg-white/10' }}">
+                                        @if ($isWastes)
                                             <span
                                                 class="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r bg-white"></span>
                                         @endif
-                                        <span
-                                            class="sidebar-label hidden text-sm font-medium text-white/90">Waste</span>
+                                        <span class="sidebar-label hidden text-sm font-medium text-white/90">Waste</span>
                                         <span class="ml-auto sidebar-label hidden text-xs text-white/60">OUT</span>
                                     </a>
 
-                                    <a href="{{ route('admin.opnames.index') }}" class="relative flex items-center gap-3 rounded-xl px-3 py-2 transition-all duration-200
-   {{ $isOpnames ? 'bg-white/20 shadow-lg' : 'border border-white/10 bg-white/5 hover:bg-white/10' }}">
-                                        @if($isOpnames)
+                                    <a href="{{ route('admin.opnames.index') }}"
+                                        class="relative flex items-center gap-3 rounded-xl px-3 py-2 transition-all duration-200
+                                        {{ $isOpnames ? 'bg-white/20 shadow-lg' : 'border border-white/10 bg-white/5 hover:bg-white/10' }}">
+                                        @if ($isOpnames)
                                             <span
                                                 class="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r bg-white"></span>
                                         @endif
@@ -157,39 +180,45 @@
                                         <span class="ml-auto sidebar-label hidden text-xs text-white/60">ADJ</span>
                                     </a>
 
+                                    {{-- Inventory Movements (baru) --}}
+                                    <a href="{{ route('admin.inventory-movements.index') }}"
+                                        class="relative flex items-center gap-3 rounded-xl px-3 py-2 transition-all duration-200
+                                        {{ $isInvMovements ? 'bg-white/20 shadow-lg' : 'border border-white/10 bg-white/5 hover:bg-white/10' }}">
+                                        @if ($isInvMovements)
+                                            <span
+                                                class="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r bg-white"></span>
+                                        @endif
+                                        <span class="sidebar-label hidden text-sm font-medium text-white/90">Inventory
+                                            Movement</span>
+                                        <span class="ml-auto sidebar-label hidden text-xs text-white/60">LOG</span>
+                                    </a>
 
                                 </div>
                             </div>
 
+                            {{-- Transaksi (dummy dulu) --}}
                             <a href="#"
                                 class="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-3 py-2 hover:bg-white/10">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white/90" fill="none"
                                     viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
                                     <path stroke-linecap="round" stroke-linejoin="round"
                                         d="M7.5 3h9a1.5 1.5 0 011.5 1.5v15a1.5 1.5 0 01-1.5 1.5h-9A1.5 1.5 0 016 19.5v-15A1.5 1.5 0 017.5 3z" />
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 7.5h6M9 11h6M9 14.5h3" />
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M9 7.5h6M9 11h6M9 14.5h3" />
                                 </svg>
-
                                 <span class="sidebar-label hidden text-sm font-medium text-white/90">Transaksi</span>
                             </a>
 
-                            @php
-                                $isUserActive = request()->routeIs('admin.cashiers.*');
-                            @endphp
-
-                            <a href="{{ route('admin.cashiers.index') }}" class="relative flex items-center gap-3 rounded-xl px-3 py-2 transition-all duration-200
-   {{ $isUserActive
-    ? 'bg-white/20 text-white shadow-lg'
-    : 'border border-white/10 bg-white/5 hover:bg-white/10 text-white/90'
-   }}">
-
-                                {{-- Active left indicator --}}
-                                @if($isUserActive)
+                            {{-- User --}}
+                            @php $isUserActive = request()->routeIs('admin.cashiers.*'); @endphp
+                            <a href="{{ route('admin.cashiers.index') }}"
+                                class="relative flex items-center gap-3 rounded-xl px-3 py-2 transition-all duration-200
+                                {{ $isUserActive ? 'bg-white/20 text-white shadow-lg' : 'border border-white/10 bg-white/5 hover:bg-white/10 text-white/90' }}">
+                                @if ($isUserActive)
                                     <span
                                         class="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r bg-white"></span>
                                 @endif
 
-                                <!-- SVG ICON DI SINI -->
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white/90" fill="none"
                                     viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
                                     <path stroke-linecap="round" stroke-linejoin="round"
@@ -201,8 +230,7 @@
                                 <span class="sidebar-label hidden text-sm font-medium">User</span>
                             </a>
 
-
-
+                            {{-- Laporan (dummy dulu) --}}
                             <a href="#"
                                 class="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-3 py-2 hover:bg-white/10">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white/90" fill="none"
@@ -211,17 +239,18 @@
                                     <path stroke-linecap="round" stroke-linejoin="round"
                                         d="M7.5 14.25l3-3 3 3 4.5-4.5" />
                                 </svg>
-
                                 <span class="sidebar-label hidden text-sm font-medium text-white/90">Laporan</span>
                             </a>
                         </div>
 
+                        {{-- Bottom --}}
                         <div class="mt-auto space-y-3">
                             <div class="rounded-2xl border border-white/15 bg-white/10 p-3">
-                                <div class="text-[11px] text-white/70 sidebar-label hidden">Role</div>
-                                <div class="mt-1 text-sm font-semibold sidebar-label hidden">{{ auth()->user()->role }}
+                                <div class="sidebar-label hidden text-[11px] text-white/70">Role</div>
+                                <div class="sidebar-label hidden mt-1 text-sm font-semibold">
+                                    {{ auth()->user()->role }}
                                 </div>
-                                <div class="mt-2 text-[11px] text-white/70 sidebar-label hidden">
+                                <div class="sidebar-label hidden mt-2 text-[11px] text-white/70">
                                     Dummy menu dulu.
                                 </div>
                             </div>
@@ -230,7 +259,13 @@
                                 @csrf
                                 <button
                                     class="flex w-full items-center justify-center gap-3 rounded-xl bg-blue-600/85 px-3 py-2 text-sm font-semibold hover:bg-blue-500/85">
-                                    <span>⎋</span>
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none"
+                                        viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6A2.25 2.25 0 005.25 5.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15" />
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            d="M18 12H9m9 0l-3-3m3 3l-3 3" />
+                                    </svg>
                                     <span class="sidebar-label hidden">Logout</span>
                                 </button>
                             </form>
@@ -239,110 +274,142 @@
                 </aside>
 
                 {{-- =========================
-                MOBILE/TABLET SIDEBAR (drawer)
-                tampil di <lg=========================--}} <div id="sidebarOverlay"
-                    class="fixed inset-0 z-40 hidden bg-black/40 lg:hidden">
-            </div>
+                MOBILE/TABLET SIDEBAR (drawer) <lg
+                ========================= --}}
+                <div id="sidebarOverlay" class="fixed inset-0 z-40 hidden bg-black/40 lg:hidden"></div>
 
-            <aside id="adminSidebarMobile" @php
-                $isDashboard = request()->routeIs('admin.dashboard');
-                $isUsers = request()->routeIs('admin.cashiers.*');
-                $isRawMaterials = request()->routeIs('admin.raw_materials.*');
-                $isPurchases = request()->routeIs('admin.purchases.*');
-                $isInventory = $isRawMaterials || $isPurchases;
-            @endphp
-                class="fixed left-0 top-0 z-50 hidden h-full w-[280px] border-r border-white/20 bg-white/10 p-4 backdrop-blur-2xl lg:hidden">
-                <div class="flex items-center justify-between">
-                    <div class="rounded-2xl border border-white/20 bg-white/10 px-4 py-2">
-                        <div class="text-xs text-white/70">Admin Panel</div>
-                        <div class="text-sm font-semibold">POS Dashboard</div>
-                    </div>
+                <aside id="adminSidebarMobile"
+                    class="fixed left-0 top-0 z-50 hidden h-full w-[280px] border-r border-white/20 bg-white/10 p-4 backdrop-blur-2xl lg:hidden">
 
-                    <button id="closeMobileSidebar"
-                        class="rounded-xl border border-white/20 bg-white/10 px-3 py-2 hover:bg-white/15">
-                        ✕
-                    </button>
-                </div>
+                    @php
+                        $isDashboard = request()->routeIs('admin.dashboard');
+                        $isUsers = request()->routeIs('admin.cashiers.*');
 
-                <div class="mt-5 space-y-2 text-sm">
-                    <a href="{{ route('admin.dashboard') }}" class="relative flex items-center gap-3 rounded-xl px-3 py-2 transition-all duration-200
-   {{ $isDashboard ? 'bg-white/20 shadow-lg' : 'border border-white/10 bg-white/5 hover:bg-white/10' }}">
-                        @if($isDashboard)
-                            <span class="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r bg-white"></span>
-                        @endif
+                        $isRawMaterials = request()->routeIs('admin.raw_materials.*');
+                        $isPurchases = request()->routeIs('admin.purchases.*');
+                        $isWastes = request()->routeIs('admin.wastes.*');
+                        $isOpnames = request()->routeIs('admin.opnames.*');
+                        $isInvMovements = request()->routeIs('admin.inventory-movements.*');
 
-                        <span class="text-sm font-medium">Dashboard</span>
-                    </a>
+                        $isInventory = $isRawMaterials || $isPurchases || $isWastes || $isOpnames || $isInvMovements;
+                    @endphp
 
-                    <a href="#"
-                        class="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-3 py-2 hover:bg-white/10">📦
-                        Produk</a>
-                    <div class="rounded-xl border border-white/10 bg-white/5 p-2">
-                        <div class="flex items-center justify-between px-2 py-2">
-                            <div class="text-sm font-semibold text-white/90">Inventory</div>
-                            <span class="text-xs text-white/60">{{ $isInventory ? 'Active' : '' }}</span>
+                    <div class="flex items-center justify-between">
+                        <div class="rounded-2xl border border-white/20 bg-white/10 px-4 py-2">
+                            <div class="text-xs text-white/70">Admin Panel</div>
+                            <div class="text-sm font-semibold">POS Dashboard</div>
                         </div>
 
-                        <a href="{{ route('admin.raw_materials.index') }}"
-                            class="relative mt-1 block rounded-xl px-3 py-2 {{ $isRawMaterials ? 'bg-white/20' : 'hover:bg-white/10' }}">
-                            Bahan Baku
+                        <button id="closeMobileSidebar"
+                            class="rounded-xl border border-white/20 bg-white/10 px-3 py-2 hover:bg-white/15">
+                            ✕
+                        </button>
+                    </div>
+
+                    <div class="mt-5 space-y-2 text-sm">
+                        <a href="{{ route('admin.dashboard') }}"
+                            class="relative flex items-center gap-3 rounded-xl px-3 py-2 transition-all duration-200
+                            {{ $isDashboard ? 'bg-white/20 shadow-lg' : 'border border-white/10 bg-white/5 hover:bg-white/10' }}">
+                            @if ($isDashboard)
+                                <span
+                                    class="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r bg-white"></span>
+                            @endif
+                            <span class="text-sm font-medium">Dashboard</span>
                         </a>
 
-                        <a href="{{ route('admin.purchases.index') }}"
-                            class="relative mt-1 block rounded-xl px-3 py-2 {{ $isPurchases ? 'bg-white/20' : 'hover:bg-white/10' }}">
-                            Purchases
+                        <a href="#"
+                            class="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-3 py-2 hover:bg-white/10">
+                            Produk
+                        </a>
+
+                        {{-- Inventory group --}}
+                        <div class="rounded-xl border border-white/10 bg-white/5 p-2">
+                            <div class="flex items-center justify-between px-2 py-2">
+                                <div class="text-sm font-semibold text-white/90">Inventory</div>
+                                <span class="text-xs text-white/60">{{ $isInventory ? 'Active' : '' }}</span>
+                            </div>
+
+                            <a href="{{ route('admin.raw_materials.index') }}"
+                                class="relative mt-1 block rounded-xl px-3 py-2 {{ $isRawMaterials ? 'bg-white/20' : 'hover:bg-white/10' }}">
+                                Bahan Baku
+                            </a>
+
+                            <a href="{{ route('admin.purchases.index') }}"
+                                class="relative mt-1 block rounded-xl px-3 py-2 {{ $isPurchases ? 'bg-white/20' : 'hover:bg-white/10' }}">
+                                Purchases
+                            </a>
+
+                            <a href="{{ route('admin.wastes.index') }}"
+                                class="relative mt-1 block rounded-xl px-3 py-2 {{ $isWastes ? 'bg-white/20' : 'hover:bg-white/10' }}">
+                                Waste
+                            </a>
+
+                            <a href="{{ route('admin.opnames.index') }}"
+                                class="relative mt-1 block rounded-xl px-3 py-2 {{ $isOpnames ? 'bg-white/20' : 'hover:bg-white/10' }}">
+                                Stock Opname
+                            </a>
+
+                            <a href="{{ url('/admin/inventory-movements') }}"
+                                class="relative mt-1 block rounded-xl px-3 py-2 {{ $isInvMovements ? 'bg-white/20' : 'hover:bg-white/10' }}">
+                                Inventory Movement
+                            </a>
+                        </div>
+
+                        <a href="#"
+                            class="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-3 py-2 hover:bg-white/10">
+                            Transaksi
+                        </a>
+
+                        <a href="{{ route('admin.cashiers.index') }}"
+                            class="relative flex items-center gap-3 rounded-xl px-3 py-2 transition-all duration-200
+                            {{ $isUsers ? 'bg-white/20 shadow-lg' : 'border border-white/10 bg-white/5 hover:bg-white/10' }}">
+                            @if ($isUsers)
+                                <span
+                                    class="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r bg-white"></span>
+                            @endif
+                            <span class="text-sm font-medium">User</span>
+                        </a>
+
+                        <a href="#"
+                            class="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-3 py-2 hover:bg-white/10">
+                            Laporan
                         </a>
                     </div>
-                    <a href="#"
-                        class="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-3 py-2 hover:bg-white/10">🧾
-                        Transaksi</a>
-                    <a href="{{ route('admin.cashiers.index') }}" class="relative flex items-center gap-3 rounded-xl px-3 py-2 transition-all duration-200
-   {{ $isUsers ? 'bg-white/20 shadow-lg' : 'border border-white/10 bg-white/5 hover:bg-white/10' }}">
-                        @if($isUsers)
-                            <span class="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r bg-white"></span>
-                        @endif
 
-                        <span class="text-sm font-medium">User</span>
-                    </a>
+                    <div class="mt-6 rounded-2xl border border-white/15 bg-white/10 p-4">
+                        <div class="text-xs text-white/70">Login as</div>
+                        <div class="mt-1 text-sm font-semibold">{{ auth()->user()->name ?? 'Admin' }}</div>
+                        <div class="text-xs text-white/70">{{ auth()->user()->email }}</div>
+                    </div>
 
+                    <div class="mt-auto pt-5">
+                        <form method="POST" action="{{ route('logout') }}">
+                            @csrf
+                            <button
+                                class="w-full rounded-xl bg-blue-600/85 px-4 py-3 text-sm font-semibold hover:bg-blue-500/85">
+                                Logout
+                            </button>
+                        </form>
+                    </div>
+                </aside>
 
-                    <a href="#"
-                        class="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-3 py-2 hover:bg-white/10">📈
-                        Laporan</a>
-                </div>
+                <!-- MAIN -->
+                <main id="adminMain" class="flex-1 p-4 lg:p-6">
+                    @yield('body')
+                </main>
 
-                <div class="mt-6 rounded-2xl border border-white/15 bg-white/10 p-4">
-                    <div class="text-xs text-white/70">Login as</div>
-                    <div class="mt-1 text-sm font-semibold">{{ auth()->user()->name ?? 'Admin' }}</div>
-                    <div class="text-xs text-white/70">{{ auth()->user()->email }}</div>
-                </div>
-
-                <div class="mt-auto pt-5">
-                    <form method="POST" action="{{ route('logout') }}">
-                        @csrf
-                        <button
-                            class="w-full rounded-xl bg-blue-600/85 px-4 py-3 text-sm font-semibold hover:bg-blue-500/85">
-                            Logout
-                        </button>
-                    </form>
-                </div>
-            </aside>
-
-            <!-- MAIN -->
-            <main id="adminMain" class="flex-1 p-4 lg:p-6">
-                @yield('body')
-            </main>
-
+            </div>
         </div>
-    </div>
     </div>
 
     <script>
-        (function () {
+        (function() {
             // ===== DESKTOP COLLAPSE / HOVER =====
             const sidebarD = document.getElementById('adminSidebarDesktop');
             const main = document.getElementById('adminMain');
             const pinBtn = document.getElementById('sidebarPinBtn');
+            const pinIconGear = document.getElementById('pinIconGear');
+            const pinIconPinned = document.getElementById('pinIconPinned');
 
             if (sidebarD && main && pinBtn) {
                 let pinned = false;
@@ -359,28 +426,39 @@
                     sidebarD.querySelectorAll('.sidebar-label').forEach(el => el.classList.add('hidden'));
                 }
 
-                closeSidebar();
+                function setPinnedState(isPinned) {
+                    pinned = isPinned;
+                    pinBtn.dataset.pinned = pinned ? "1" : "0";
+                    if (pinIconGear && pinIconPinned) {
+                        pinIconGear.classList.toggle('hidden', pinned);
+                        pinIconPinned.classList.toggle('hidden', !pinned);
+                    }
+                    pinBtn.title = pinned ? 'Unpin sidebar' : 'Pin sidebar';
+                }
 
-                sidebarD.addEventListener('mouseenter', () => { if (!pinned) openSidebar(); });
-                sidebarD.addEventListener('mouseleave', () => { if (!pinned) closeSidebar(); });
-                main.addEventListener('mouseenter', () => { if (!pinned) closeSidebar(); });
+                // default collapsed
+                closeSidebar();
+                setPinnedState(false);
+
+                sidebarD.addEventListener('mouseenter', () => {
+                    if (!pinned) openSidebar();
+                });
+                sidebarD.addEventListener('mouseleave', () => {
+                    if (!pinned) closeSidebar();
+                });
+                main.addEventListener('mouseenter', () => {
+                    if (!pinned) closeSidebar();
+                });
 
                 pinBtn.addEventListener('click', () => {
-                    pinned = !pinned;
-                    if (pinned) {
-                        openSidebar();
-                        pinBtn.textContent = '📌';
-                        pinBtn.title = 'Unpin sidebar';
-                    } else {
-                        closeSidebar();
-                        pinBtn.textContent = '⚙️';
-                        pinBtn.title = 'Pin sidebar';
-                    }
+                    setPinnedState(!pinned);
+                    if (pinned) openSidebar();
+                    else closeSidebar();
                 });
             }
 
             // ===== MOBILE DRAWER =====
-            const openBtn = document.getElementById('openMobileSidebar');
+            const openBtn = document.getElementById('openMobileSidebar'); // tombolnya ada di tiap page (header)
             const closeBtn = document.getElementById('closeMobileSidebar');
             const overlay = document.getElementById('sidebarOverlay');
             const sidebarM = document.getElementById('adminSidebarMobile');
@@ -398,12 +476,9 @@
             }
 
             if (sidebarM) {
-                sidebarM.querySelectorAll('a').forEach(a => {
-                    a.addEventListener('click', closeMobile);
-                });
+                sidebarM.querySelectorAll('a').forEach(a => a.addEventListener('click', closeMobile));
             }
 
-            // tombol open ada di dashboard view (topbar)
             if (openBtn) openBtn.addEventListener('click', openMobile);
             if (closeBtn) closeBtn.addEventListener('click', closeMobile);
             if (overlay) overlay.addEventListener('click', closeMobile);
@@ -411,6 +486,8 @@
             document.addEventListener('keydown', (e) => {
                 if (e.key === 'Escape') closeMobile();
             });
+
+            // ===== INVENTORY SUBMENU (DESKTOP) =====
             const invToggle = document.getElementById('invToggleDesktop');
             const invMenu = document.getElementById('invMenuDesktop');
             const invChevron = document.getElementById('invChevronDesktop');
@@ -422,7 +499,6 @@
                     invChevron.classList.toggle('rotate-90', isHidden);
                 });
 
-                // kalau inventory active, chevron diputer
                 if (!invMenu.classList.contains('hidden')) {
                     invChevron.classList.add('rotate-90');
                 }

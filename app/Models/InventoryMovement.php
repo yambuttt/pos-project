@@ -21,4 +21,9 @@ class InventoryMovement extends Model
     {
         return $this->belongsTo(RawMaterial::class);
     }
+
+    public function creator()
+    {
+        return $this->belongsTo(\App\Models\User::class, 'created_by');
+    }
 }
