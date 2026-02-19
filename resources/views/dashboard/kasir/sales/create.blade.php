@@ -13,7 +13,7 @@
         </a>
     </div>
 
-    @if($errors->any())
+    @if ($errors->any())
         <div class="mt-4 whitespace-pre-line rounded-2xl border border-red-200/20 bg-red-500/10 px-4 py-3 text-sm">
             {{ $errors->first() }}
         </div>
@@ -26,8 +26,7 @@
         {{-- Hidden submit data --}}
         <div id="saleFormData" class="hidden"></div>
 
-        {{-- LEFT: product grid --}}
-        {{-- GRID PRODUK --}}
+        {{-- LEFT --}}
         <div class="rounded-[26px] border border-white/10 bg-white/5 backdrop-blur-2xl p-5 sm:p-6">
             <div class="flex items-center justify-between gap-3">
                 <input id="search" type="text" placeholder="Cari produk..."
@@ -37,52 +36,57 @@
                     Clear
                 </button>
             </div>
-            @foreach ($products as $p)
-                @php
-                    $maxPortions = (int) ($p->max_portions ?? 0);
-                    $isSoldOut = $maxPortions <= 0;
-                @endphp
 
-                <button type="button" class="product-card group relative overflow-hidden rounded-3xl border border-white/10 bg-white/5 p-5 text-left shadow-[0_20px_80px_rgba(0,0,0,0.35)] backdrop-blur-2xl transition hover:bg-white/10
-                                           {{ $isSoldOut ? 'opacity-50 grayscale cursor-not-allowed hover:bg-white/5' : '' }}"
-                    data-product-id="{{ $p->id }}" data-product-name="{{ $p->name }}" data-product-price="{{ (int) $p->price }}"
-                    data-product-max="{{ $maxPortions }}" {{ $isSoldOut ? 'disabled' : '' }}>
-                    <div class="flex items-start justify-between gap-3">
-                        <div>
-                            <div class="text-sm font-semibold text-white">{{ $p->name }}</div>
-                            {{-- category tidak ada, jadi kita tampilkan placeholder --}}
-                            <div class="mt-1 text-xs text-white/60">Menu</div>
+            {{-- GRID PRODUK (PENTING: harus ada id="grid") --}}
+            <div id="grid" class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                @foreach ($products as $p)
+                    @php
+                        $maxPortions = (int) ($p->max_portions ?? 0);
+                        $isSoldOut = $maxPortions <= 0;
+                    @endphp
+
+                    <button type="button"
+                        class="product-card group relative overflow-hidden rounded-3xl border border-white/10 bg-white/5 p-5 text-left shadow-[0_20px_80px_rgba(0,0,0,0.35)] backdrop-blur-2xl transition hover:bg-white/10 active:scale-[0.99]
+                               {{ $isSoldOut ? 'opacity-50 grayscale cursor-not-allowed hover:bg-white/5' : '' }}"
+                        data-product-id="{{ $p->id }}"
+                        data-product-name="{{ $p->name }}"
+                        data-product-price="{{ (int) $p->price }}"
+                        data-product-max="{{ $maxPortions }}"
+                        {{ $isSoldOut ? 'disabled' : '' }}
+                    >
+                        <div class="flex items-start justify-between gap-3">
+                            <div>
+                                <div class="text-sm font-semibold text-white">{{ $p->name }}</div>
+                                <div class="mt-1 text-xs text-white/60">Menu</div>
+                            </div>
+
+                            @if ($isSoldOut)
+                                <span class="rounded-full border border-red-300/20 bg-red-500/15 px-2.5 py-1 text-[11px] font-semibold text-red-100">
+                                    SOLD OUT
+                                </span>
+                            @else
+                                <span class="rounded-full border border-white/10 bg-white/10 px-2.5 py-1 text-[11px] font-semibold text-white/80">
+                                    Max {{ $maxPortions }}
+                                </span>
+                            @endif
+                        </div>
+
+                        <div class="mt-4 text-lg font-semibold text-white">
+                            Rp {{ number_format((int) $p->price, 0, ',', '.') }}
+                        </div>
+
+                        <div class="mt-2 text-xs text-white/60">
+                            {{ $isSoldOut ? 'Stok bahan tidak cukup' : 'Tap untuk tambah' }}
                         </div>
 
                         @if ($isSoldOut)
-                            <span
-                                class="rounded-full border border-red-300/20 bg-red-500/15 px-2.5 py-1 text-[11px] font-semibold text-red-100">
-                                SOLD OUT
-                            </span>
-                        @else
-                            <span
-                                class="rounded-full border border-white/10 bg-white/10 px-2.5 py-1 text-[11px] font-semibold text-white/80">
-                                Max {{ $maxPortions }}
-                            </span>
+                            {{-- biar aman, tapi tetap tidak mengganggu klik card lain --}}
+                            <div class="pointer-events-none absolute inset-0 bg-black/10"></div>
                         @endif
-                    </div>
-
-                    <div class="mt-4 text-lg font-semibold text-white">
-                        Rp {{ number_format((int) $p->price, 0, ',', '.') }}
-                    </div>
-
-                    <div class="mt-2 text-xs text-white/60">
-                        {{ $isSoldOut ? 'Stok bahan tidak cukup' : 'Tap untuk tambah' }}
-                    </div>
-
-                    @if ($isSoldOut)
-                        <div class="pointer-events-none absolute inset-0 bg-black/10"></div>
-                    @endif
-                </button>
-            @endforeach
+                    </button>
+                @endforeach
+            </div>
         </div>
-
-
 
         {{-- RIGHT: cart --}}
         <div class="rounded-[26px] border border-white/10 bg-white/5 backdrop-blur-2xl p-5 sm:p-6">
@@ -111,7 +115,7 @@
                     </div>
                 </div>
 
-                <button id="payBtn"
+                <button id="payBtn" type="submit"
                     class="mt-4 w-full rounded-xl bg-blue-600/85 px-5 py-3 text-sm font-semibold hover:bg-blue-500/85 disabled:opacity-40 disabled:cursor-not-allowed">
                     Bayar
                 </button>
@@ -125,8 +129,6 @@
 
     <script>
         (function () {
-            const products = @json($productsJson);
-
             const grid = document.getElementById('grid');
             const cart = document.getElementById('cart');
             const formData = document.getElementById('saleFormData');
@@ -139,30 +141,15 @@
             const payBtn = document.getElementById('payBtn');
             const clearCart = document.getElementById('clearCart');
 
-            // cartMap: productId -> {id,name,price,qty}
+            // cartMap: productId -> {id,name,price,qty,max}
             const cartMap = new Map();
 
             const fmtRp = (n) => 'Rp ' + Number(n || 0).toLocaleString('id-ID');
 
-            function renderGrid(list) {
-                grid.innerHTML = '';
-                list.forEach(p => {
-                    const div = document.createElement('button');
-                    div.type = 'button';
-                    div.className =
-                        'text-left rounded-2xl border border-white/10 bg-white/5 p-4 hover:bg-white/10 active:scale-[0.99] transition';
-                    div.innerHTML = `
-                                <div class="text-sm font-semibold line-clamp-2">${p.name}</div>
-                                <div class="mt-2 text-xs text-white/60">${p.category ?? '-'}</div>
-                                <div class="mt-3 text-sm font-semibold">${fmtRp(p.price)}</div>
-                                <div class="mt-3 text-[11px] text-white/50">Tap untuk tambah</div>
-                              `;
-                    div.addEventListener('click', () => addToCart(p));
-                    grid.appendChild(div);
-                });
-            }
-
             function addToCart(p) {
+                // safety: jangan bisa tambah kalau max <= 0
+                if (Number(p.max || 0) <= 0) return;
+
                 const item = cartMap.get(p.id) || { ...p, qty: 0 };
                 item.qty += 1;
                 cartMap.set(p.id, item);
@@ -172,9 +159,11 @@
             function changeQty(id, delta) {
                 const item = cartMap.get(id);
                 if (!item) return;
+
                 item.qty += delta;
                 if (item.qty <= 0) cartMap.delete(id);
                 else cartMap.set(id, item);
+
                 renderCart();
             }
 
@@ -183,30 +172,28 @@
                 formData.innerHTML = '';
 
                 let total = 0;
-                let count = 0;
+                let countQty = 0;
                 let index = 0;
 
                 cartMap.forEach((item) => {
                     const subtotal = item.price * item.qty;
                     total += subtotal;
-                    count += item.qty;
+                    countQty += item.qty;
 
-                    // UI
                     const row = document.createElement('div');
                     row.className = 'rounded-2xl border border-white/10 bg-white/5 p-3 flex items-center gap-3';
                     row.innerHTML = `
-                                <div class="flex-1">
-                                  <div class="text-sm font-semibold">${item.name}</div>
-                                  <div class="text-xs text-white/60">${fmtRp(item.price)} • Sub: <b>${fmtRp(subtotal)}</b></div>
-                                </div>
-                                <div class="flex items-center gap-2">
-                                  <button type="button" class="h-9 w-9 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10">-</button>
-                                  <div class="w-10 text-center text-sm font-semibold">${item.qty}</div>
-                                  <button type="button" class="h-9 w-9 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10">+</button>
-                                </div>
-                              `;
-                    const [btnMin, , btnPlus] = row.querySelectorAll('button, div');
-                    // safer: query buttons
+                        <div class="flex-1">
+                          <div class="text-sm font-semibold">${item.name}</div>
+                          <div class="text-xs text-white/60">${fmtRp(item.price)} • Sub: <b>${fmtRp(subtotal)}</b></div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                          <button type="button" class="h-9 w-9 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10">-</button>
+                          <div class="w-10 text-center text-sm font-semibold">${item.qty}</div>
+                          <button type="button" class="h-9 w-9 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10">+</button>
+                        </div>
+                    `;
+
                     const btns = row.querySelectorAll('button');
                     btns[0].addEventListener('click', () => changeQty(item.id, -1));
                     btns[1].addEventListener('click', () => changeQty(item.id, +1));
@@ -215,21 +202,52 @@
 
                     // hidden submit
                     formData.insertAdjacentHTML('beforeend', `
-                                <input type="hidden" name="items[${index}][product_id]" value="${item.id}">
-                                <input type="hidden" name="items[${index}][qty]" value="${item.qty}">
-                              `);
+                        <input type="hidden" name="items[${index}][product_id]" value="${item.id}">
+                        <input type="hidden" name="items[${index}][qty]" value="${item.qty}">
+                    `);
                     index++;
                 });
 
                 totalText.textContent = fmtRp(total);
-                cartCount.textContent = cartMap.size + ' produk • ' + count + ' qty';
+                cartCount.textContent = cartMap.size + ' produk • ' + countQty + ' qty';
 
-                // enable pay button only if cart not empty
                 payBtn.disabled = cartMap.size === 0;
 
                 const paid = Number(paidAmount.value || 0);
                 const change = Math.max(0, paid - total);
                 changeText.textContent = fmtRp(change);
+            }
+
+            // klik card produk (yang sudah dirender Blade)
+            if (grid) {
+                grid.querySelectorAll('.product-card').forEach((card) => {
+                    card.addEventListener('click', (e) => {
+                        // kalau disabled, browser biasanya sudah block, tapi ini extra safety
+                        const max = Number(card.dataset.productMax || 0);
+                        if (max <= 0 || card.disabled) {
+                            e.preventDefault();
+                            return;
+                        }
+
+                        addToCart({
+                            id: Number(card.dataset.productId),
+                            name: card.dataset.productName,
+                            price: Number(card.dataset.productPrice || 0),
+                            max: max,
+                        });
+                    });
+                });
+            }
+
+            // Search: hide/show card
+            if (search && grid) {
+                search.addEventListener('input', () => {
+                    const q = (search.value || '').toLowerCase().trim();
+                    grid.querySelectorAll('.product-card').forEach((card) => {
+                        const name = (card.dataset.productName || '').toLowerCase();
+                        card.classList.toggle('hidden', q && !name.includes(q));
+                    });
+                });
             }
 
             paidAmount.addEventListener('input', renderCart);
@@ -239,33 +257,7 @@
                 renderCart();
             });
 
-            search.addEventListener('input', () => {
-                const q = (search.value || '').toLowerCase();
-                const filtered = products.filter(p => (p.name || '').toLowerCase().includes(q));
-                renderGrid(filtered);
-            });
-
-            // init
-            renderGrid(products);
             renderCart();
         })();
     </script>
-    <script>
-        document.addEventListener('click', function (e) {
-            const card = e.target.closest('.product-card');
-            if (!card) return;
-
-            const max = Number(card.dataset.productMax || 0);
-            if (max <= 0) {
-                e.preventDefault();
-                e.stopPropagation();
-                alert('Stok bahan tidak cukup. Produk tidak bisa dijual.');
-                return;
-            }
-
-            // lanjutkan fungsi add-to-cart kamu di sini kalau perlu
-        }, true);
-    </script>
-
-
 @endsection

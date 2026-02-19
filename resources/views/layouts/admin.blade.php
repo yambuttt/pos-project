@@ -197,7 +197,7 @@
                             </div>
 
                             {{-- Transaksi (dummy dulu) --}}
-                            <a href="#"
+                            <a href="{{ route('admin.sales.index') }}"
                                 class="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-3 py-2 hover:bg-white/10">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white/90" fill="none"
                                     viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">

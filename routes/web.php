@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\StockOpnameController;
 use App\Http\Controllers\Admin\InventoryMovementController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Kasir\SaleController;
+use App\Http\Controllers\Admin\SaleController as AdminSaleController;
 Route::get('/', function () {
     return view('welcome');
 });
@@ -59,6 +60,9 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/products/{product}/recipes', [ProductController::class, 'recipes'])->name('admin.products.recipes');
     Route::post('/products/{product}/recipes', [ProductController::class, 'recipesStore'])->name('admin.products.recipes.store');
     Route::delete('/products/{product}/recipes/{recipeId}', [ProductController::class, 'recipesDestroy'])->name('admin.products.recipes.destroy');
+
+    Route::get('/sales', [AdminSaleController::class, 'index'])->name('admin.sales.index');
+    Route::get('/sales/{sale}', [AdminSaleController::class, 'show'])->name('admin.sales.show');
 });
 
 Route::prefix('kasir')->name('kasir.')->middleware(['auth', 'role:kasir'])->group(function () {
