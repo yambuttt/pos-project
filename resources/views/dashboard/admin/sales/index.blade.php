@@ -69,6 +69,20 @@
     </div>
   </div>
 </form>
+<input type="hidden" name="view" value="{{ request('view', 'all') }}">
+@php $viewMode = request('view', 'all'); @endphp
+
+<div class="mt-4 flex flex-wrap gap-2">
+  <a href="{{ request()->fullUrlWithQuery(['view' => 'all', 'page' => null]) }}"
+     class="rounded-xl border border-white/20 px-4 py-2 text-sm font-semibold {{ $viewMode === 'all' ? 'bg-white/20' : 'bg-white/10 hover:bg-white/15' }}">
+    Tampilan 1: Normal
+  </a>
+
+  <a href="{{ request()->fullUrlWithQuery(['view' => 'alt', 'page' => null]) }}"
+     class="rounded-xl border border-white/20 px-4 py-2 text-sm font-semibold {{ $viewMode === 'alt' ? 'bg-white/20' : 'bg-white/10 hover:bg-white/15' }}">
+    Tampilan 2: Selang-seling (Ganjil)
+  </a>
+</div>
 
 {{-- CHART --}}
 <div class="mt-5 rounded-[26px] border border-white/20 bg-white/10 p-5 backdrop-blur-2xl sm:p-6">

@@ -19,7 +19,7 @@ class SaleController extends Controller
         $sales = Sale::query()
             ->with('items.product')
             ->where('user_id', auth()->id())
-            ->whereDate('created_at', now()->toDateString()) 
+            ->whereDate('created_at', now()->toDateString())
             // untuk testing di kemudian hari ini kode nya  ->whereDate('created_at', now()->addDay()->toDateString())
             ->latest()
             ->paginate(10);
@@ -71,8 +71,18 @@ class SaleController extends Controller
 
         $userId = Auth::id();
 
+        // Helper: random huruf A-Z saja (bukan angka)
+        $randomLetters = function (int $len): string {
+            $alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            $out = '';
+            for ($i = 0; $i < $len; $i++) {
+                $out .= $alphabet[random_int(0, 25)];
+            }
+            return $out;
+        };
+
         try {
-            $sale = DB::transaction(function () use ($data, $userId) {
+            $sale = DB::transaction(function () use ($data, $userId, $randomLetters) {
 
                 // Ambil produk + resep
                 $productIds = collect($data['items'])->pluck('product_id')->unique()->values();
@@ -109,6 +119,7 @@ class SaleController extends Controller
                 $paid = (int) $data['paid_amount'];
                 $tax = (int) round($total * 0.11);
                 $grandTotal = $total + $tax;
+
                 if ($paid < $grandTotal) {
                     throw new \RuntimeException(
                         "Uang bayar kurang. Total (incl. pajak) Rp " . number_format($grandTotal, 0, ',', '.') . "."
@@ -140,7 +151,7 @@ class SaleController extends Controller
                     throw new \RuntimeException($msg);
                 }
 
-                // 3) Create Sale (invoice setelah id)
+                // 3) Create Sale (invoice setelah dibuat)
                 $sale = Sale::create([
                     'invoice_no' => 'TEMP',
                     'user_id' => $userId,
@@ -150,8 +161,34 @@ class SaleController extends Controller
                     'status' => 'completed',
                 ]);
 
-                $invoice = 'INV-' . now()->format('Ymd') . '-' . str_pad((string) $sale->id, 5, '0', STR_PAD_LEFT);
-                $sale->update(['invoice_no' => $invoice]);
+                // ===== INVOICE RANDOM HURUF, ANTI DUPLICATE, PANJANG DINAMIS =====
+                $datePart = now()->format('Ymd');
+                $length = 3;         // mulai dari 3 huruf
+                $maxAttempts = 50;   // kalau tabrakan terus, naikkan panjang
+
+                while (true) {
+                    $attempt = 0;
+
+                    do {
+                        $suffix = $randomLetters($length); // huruf A-Z saja
+                        $invoice = "INV-{$datePart}-{$suffix}";
+                        $attempt++;
+                    } while (
+                        Sale::where('invoice_no', $invoice)->exists()
+                        && $attempt < $maxAttempts
+                    );
+
+                    // jika masih duplicate setelah banyak percobaan, naik panjang huruf
+                    if (Sale::where('invoice_no', $invoice)->exists()) {
+                        $length++;
+                        continue;
+                    }
+
+                    // aman → pakai invoice ini
+                    $sale->update(['invoice_no' => $invoice]);
+                    break;
+                }
+                // ================================================================
 
                 // 4) Sale items
                 foreach ($data['items'] as $it) {
@@ -185,7 +222,7 @@ class SaleController extends Controller
                         'reference_type' => Sale::class,
                         'reference_id' => $sale->id,
                         'created_by' => $userId,
-                        'note' => 'Sale: ' . $invoice,
+                        'note' => 'Sale: ' . $sale->invoice_no,
                     ]);
                 }
 

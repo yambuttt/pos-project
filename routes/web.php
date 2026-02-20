@@ -12,6 +12,7 @@ use App\Http\Controllers\Admin\InventoryMovementController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Kasir\SaleController;
 use App\Http\Controllers\Admin\SaleController as AdminSaleController;
+use App\Http\Controllers\Kasir\DashboardController as KasirDashboardController;
 Route::get('/', function () {
     return view('welcome');
 });
@@ -66,7 +67,7 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
 });
 
 Route::prefix('kasir')->name('kasir.')->middleware(['auth', 'role:kasir'])->group(function () {
-    Route::get('/dashboard', fn() => view('dashboard.kasir.dashboard'))->name('dashboard');
+    Route::get('/dashboard', [KasirDashboardController::class, 'index'])->name('dashboard');
 
     Route::get('/sales', [SaleController::class, 'index'])->name('sales.index');
     Route::get('/sales/create', [SaleController::class, 'create'])->name('sales.create');

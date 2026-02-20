@@ -11,6 +11,7 @@ class Sale extends Model
         'user_id',
         'total_amount',
         'paid_amount',
+        'payment_method',
         'change_amount',
         'status',
     ];
@@ -28,7 +29,7 @@ class Sale extends Model
     }
 
     public function cashier()
-{
-    return $this->belongsTo(User::class, 'user_id');
-}
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
 }

@@ -33,6 +33,14 @@ class SaleController extends Controller
                         ->orWhere('id', $q);
                 });
             });
+        // ===== MODE TAMPILAN =====
+// default: normal (tampilkan semua)
+        $view = $request->query('view', 'all'); // all | alt
+
+        // alt = selang-seling (tampilkan transaksi ganjil saja)
+        if ($view === 'alt') {
+            $base->whereRaw('MOD(sales.id, 2) = 1');
+        }
 
         // LIST (tambah items_subtotal)
         $salesQuery = (clone $base)

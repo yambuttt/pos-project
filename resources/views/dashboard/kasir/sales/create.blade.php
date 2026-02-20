@@ -118,6 +118,14 @@
         <div class="text-white/70">Total</div>
         <div class="font-semibold" id="totalText">Rp 0</div>
     </div>
+    <div class="mt-3">
+  <label class="text-xs text-white/70">Metode Pembayaran</label>
+  <select name="payment_method" id="paymentMethod"
+      class="mt-2 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm outline-none focus:border-white/25">
+      <option value="cash">Tunai</option>
+      <option value="qris">QRIS</option>
+  </select>
+</div>
 
     <div class="mt-3">
         <label class="text-xs text-white/70">Bayar (Rp)</label>
@@ -152,6 +160,7 @@
 const taxText = document.getElementById('taxText');
             const cartCount = document.getElementById('cartCount');
             const paidAmount = document.getElementById('paidAmount');
+            const paymentMethod = document.getElementById('paymentMethod');
             const changeText = document.getElementById('changeText');
             const payBtn = document.getElementById('payBtn');
             const clearCart = document.getElementById('clearCart');
@@ -239,9 +248,20 @@ const taxText = document.getElementById('taxText');
   payBtn.disabled = cartMap.size === 0;
 
   // Kembalian pakai grand total
+ const method = (paymentMethod?.value || 'cash');
+
+if (method === 'qris') {
+  // anggap QRIS selalu pas (gateway belum siap, tapi transaksi tetap jalan)
+  paidAmount.value = String(grandTotal);
+  paidAmount.setAttribute('readonly', 'readonly');
+  const change = 0;
+  changeText.textContent = fmtRp(change);
+} else {
+  paidAmount.removeAttribute('readonly');
   const paid = Number(paidAmount.value || 0);
   const change = Math.max(0, paid - grandTotal);
   changeText.textContent = fmtRp(change);
+}
 }
 
             // klik card produk (yang sudah dirender Blade)
@@ -277,6 +297,7 @@ const taxText = document.getElementById('taxText');
             }
 
             paidAmount.addEventListener('input', renderCart);
+            paymentMethod?.addEventListener('change', renderCart);
 
             clearCart.addEventListener('click', () => {
                 cartMap.clear();
