@@ -28,9 +28,7 @@ class Sale extends Model
     }
 
     public function cashier()
-    {
-        // sesuaikan kolom:
-        // return $this->belongsTo(User::class, 'cashier_id');
-        return $this->belongsTo(\App\Models\User::class, \Illuminate\Support\Facades\Schema::hasColumn('sales', 'cashier_id') ? 'cashier_id' : 'created_by');
-    }
+{
+    return $this->belongsTo(User::class, 'user_id');
+}
 }

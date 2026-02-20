@@ -75,9 +75,23 @@
     </div>
 
     <div class="rounded-[26px] border border-white/20 bg-white/10 p-5 backdrop-blur-2xl sm:p-6">
+      @php
+  $dpp = (float) ($sale->items?->sum('subtotal') ?? 0);
+  $tax = max(0, (float) ($sale->total_amount ?? 0) - $dpp);
+@endphp
       <div class="text-sm font-semibold">Pembayaran</div>
+      
 
       <div class="mt-3 grid grid-cols-1 gap-2">
+        <div class="flex items-center justify-between rounded-2xl border border-white/15 bg-white/10 px-4 py-3">
+  <div class="text-sm text-white/70">Subtotal (DPP)</div>
+  <div class="text-sm font-semibold">Rp {{ number_format($dpp, 0, ',', '.') }}</div>
+</div>
+
+<div class="flex items-center justify-between rounded-2xl border border-white/15 bg-white/10 px-4 py-3">
+  <div class="text-sm text-white/70">Pajak 11%</div>
+  <div class="text-sm font-semibold">Rp {{ number_format($tax, 0, ',', '.') }}</div>
+</div>
         <div class="flex items-center justify-between rounded-2xl border border-white/15 bg-white/10 px-4 py-3">
           <div class="text-sm text-white/70">Total</div>
           <div class="text-sm font-semibold">Rp {{ number_format($sale->total_amount ?? 0, 0, ',', '.') }}</div>

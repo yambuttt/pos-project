@@ -11,13 +11,14 @@ use App\Models\SaleItem;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
+use Illuminate\Support\Facades\Auth;
 class SaleController extends Controller
 {
     public function index()
     {
         $sales = Sale::query()
             ->with('items.product')
-            ->where('user_id', auth()->id())
+            ->where('user_id', Auth::id())
             ->latest()
             ->paginate(10);
 
@@ -66,7 +67,7 @@ class SaleController extends Controller
             'items.*.qty' => ['required', 'integer', 'min:1'],
         ]);
 
-        $userId = auth()->id();
+        $userId = Auth::id();
 
         try {
             $sale = DB::transaction(function () use ($data, $userId) {
@@ -104,9 +105,13 @@ class SaleController extends Controller
                 }
 
                 $paid = (int) $data['paid_amount'];
-                if ($paid < $total) {
-                    throw new \RuntimeException("Uang bayar kurang. Total Rp " . number_format($total, 0, ',', '.') . ".");
-                }
+                $tax = (int) round($total * 0.11);
+$grandTotal = $total + $tax;
+                if ($paid < $grandTotal) {
+    throw new \RuntimeException(
+        "Uang bayar kurang. Total (incl. pajak) Rp " . number_format($grandTotal, 0, ',', '.') . "."
+    );
+}
 
                 // 2) Lock bahan baku yang dibutuhkan & validasi stok
                 $rawIds = collect(array_keys($needs))->values();
@@ -137,9 +142,9 @@ class SaleController extends Controller
                 $sale = Sale::create([
                     'invoice_no' => 'TEMP',
                     'user_id' => $userId,
-                    'total_amount' => $total,
-                    'paid_amount' => $paid,
-                    'change_amount' => $paid - $total,
+                    'total_amount' => $grandTotal,
+'paid_amount' => $paid,
+'change_amount' => $paid - $grandTotal,
                     'status' => 'completed',
                 ]);
 

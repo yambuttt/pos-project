@@ -12,15 +12,22 @@
     </div>
   </div>
 
-  <div class="flex items-center gap-2">
-    <div class="rounded-xl border border-white/20 bg-white/10 px-4 py-2 text-sm backdrop-blur-xl">
-      <span class="text-white/70">Total trx:</span>
-      <span class="font-semibold">{{ number_format($summary['total_trx']) }}</span>
-      <span class="mx-2 text-white/30">•</span>
-      <span class="text-white/70">Omzet:</span>
-      <span class="font-semibold">Rp {{ number_format($summary['sum_total'], 0, ',', '.') }}</span>
-    </div>
-  </div>
+  <div class="rounded-xl border border-white/20 bg-white/10 px-4 py-2 text-sm backdrop-blur-xl">
+  <span class="text-white/70">Total trx:</span>
+  <span class="font-semibold">{{ number_format($summary['total_trx']) }}</span>
+
+  <span class="mx-2 text-white/30">•</span>
+  <span class="text-white/70">DPP:</span>
+  <span class="font-semibold">Rp {{ number_format($summary['sum_subtotal'], 0, ',', '.') }}</span>
+
+  <span class="mx-2 text-white/30">•</span>
+  <span class="text-white/70">Pajak 11%:</span>
+  <span class="font-semibold">Rp {{ number_format($summary['sum_tax'], 0, ',', '.') }}</span>
+
+  <span class="mx-2 text-white/30">•</span>
+  <span class="text-white/70">Omzet:</span>
+  <span class="font-semibold">Rp {{ number_format($summary['sum_total'], 0, ',', '.') }}</span>
+</div>
 </div>
 
 {{-- FILTER --}}
@@ -98,13 +105,19 @@
             <th class="px-4 py-3">Kasir</th>
             <th class="px-4 py-3">Total</th>
             <th class="px-4 py-3">Bayar</th>
+            <th class="px-4 py-3">Pajak</th>
             <th class="px-4 py-3">Kembalian</th>
             <th class="px-4 py-3 text-right">Aksi</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-white/10">
+
           @forelse($sales as $s)
             <tr class="hover:bg-white/5">
+                        @php
+  $dpp = (float) ($s->items_subtotal ?? 0);
+  $tax = max(0, (float) ($s->total_amount ?? 0) - $dpp);
+@endphp
               <td class="px-4 py-3 text-white/80">
                 {{ $s->created_at?->format('d M Y H:i') }}
               </td>
@@ -117,6 +130,7 @@
               </td>
               <td class="px-4 py-3 font-semibold">Rp {{ number_format($s->total_amount ?? 0, 0, ',', '.') }}</td>
               <td class="px-4 py-3 text-white/80">Rp {{ number_format($s->paid_amount ?? 0, 0, ',', '.') }}</td>
+              <td class="px-4 py-3 text-white/80">Rp {{ number_format($tax, 0, ',', '.') }}</td>
               <td class="px-4 py-3 text-white/80">Rp {{ number_format($s->change_amount ?? 0, 0, ',', '.') }}</td>
               <td class="px-4 py-3 text-right">
                 <a href="{{ route('admin.sales.show', $s->id) }}"

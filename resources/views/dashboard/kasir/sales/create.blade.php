@@ -101,29 +101,42 @@
             <div id="cart" class="mt-4 space-y-2"></div>
 
             <div class="mt-4 rounded-2xl border border-white/10 bg-white/5 p-4">
-                <div class="flex items-center justify-between text-sm">
-                    <div class="text-white/70">Total</div>
-                    <div class="font-semibold" id="totalText">Rp 0</div>
-                </div>
+    {{-- Subtotal --}}
+    <div class="flex items-center justify-between text-sm">
+        <div class="text-white/70">Subtotal</div>
+        <div class="font-semibold" id="subtotalText">Rp 0</div>
+    </div>
 
-                <div class="mt-3">
-                    <label class="text-xs text-white/70">Bayar (Rp)</label>
-                    <input name="paid_amount" id="paidAmount" type="number" min="0" value="{{ old('paid_amount', 0) }}"
-                        class="mt-2 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm outline-none focus:border-white/25">
-                    <div class="mt-2 text-xs text-white/60">
-                        Kembalian: <b id="changeText">Rp 0</b>
-                    </div>
-                </div>
+    {{-- Pajak --}}
+    <div class="mt-2 flex items-center justify-between text-sm">
+        <div class="text-white/70">Pajak 11%</div>
+        <div class="font-semibold" id="taxText">Rp 0</div>
+    </div>
 
-                <button id="payBtn" type="submit"
-                    class="mt-4 w-full rounded-xl bg-blue-600/85 px-5 py-3 text-sm font-semibold hover:bg-blue-500/85 disabled:opacity-40 disabled:cursor-not-allowed">
-                    Bayar
-                </button>
+    {{-- Total --}}
+    <div class="mt-2 flex items-center justify-between text-sm">
+        <div class="text-white/70">Total</div>
+        <div class="font-semibold" id="totalText">Rp 0</div>
+    </div>
 
-                <div class="mt-2 text-[11px] text-white/50">
-                    STRICT mode aktif: kalau bahan kurang → transaksi ditolak.
-                </div>
-            </div>
+    <div class="mt-3">
+        <label class="text-xs text-white/70">Bayar (Rp)</label>
+        <input name="paid_amount" id="paidAmount" type="number" min="0" value="{{ old('paid_amount', 0) }}"
+            class="mt-2 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm outline-none focus:border-white/25">
+        <div class="mt-2 text-xs text-white/60">
+            Kembalian: <b id="changeText">Rp 0</b>
+        </div>
+    </div>
+
+    <button id="payBtn" type="submit"
+        class="mt-4 w-full rounded-xl bg-blue-600/85 px-5 py-3 text-sm font-semibold hover:bg-blue-500/85 disabled:opacity-40 disabled:cursor-not-allowed">
+        Bayar
+    </button>
+
+    <div class="mt-2 text-[11px] text-white/50">
+        STRICT mode aktif: kalau bahan kurang → transaksi ditolak.
+    </div>
+</div>
         </div>
     </form>
 
@@ -135,6 +148,8 @@
             const search = document.getElementById('search');
 
             const totalText = document.getElementById('totalText');
+            const subtotalText = document.getElementById('subtotalText');
+const taxText = document.getElementById('taxText');
             const cartCount = document.getElementById('cartCount');
             const paidAmount = document.getElementById('paidAmount');
             const changeText = document.getElementById('changeText');
@@ -168,55 +183,66 @@
             }
 
             function renderCart() {
-                cart.innerHTML = '';
-                formData.innerHTML = '';
+  const TAX_RATE = 0.11;
 
-                let total = 0;
-                let countQty = 0;
-                let index = 0;
+  cart.innerHTML = '';
+  formData.innerHTML = '';
 
-                cartMap.forEach((item) => {
-                    const subtotal = item.price * item.qty;
-                    total += subtotal;
-                    countQty += item.qty;
+  let subtotalAll = 0;
+  let countQty = 0;
+  let index = 0;
 
-                    const row = document.createElement('div');
-                    row.className = 'rounded-2xl border border-white/10 bg-white/5 p-3 flex items-center gap-3';
-                    row.innerHTML = `
-                        <div class="flex-1">
-                          <div class="text-sm font-semibold">${item.name}</div>
-                          <div class="text-xs text-white/60">${fmtRp(item.price)} • Sub: <b>${fmtRp(subtotal)}</b></div>
-                        </div>
-                        <div class="flex items-center gap-2">
-                          <button type="button" class="h-9 w-9 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10">-</button>
-                          <div class="w-10 text-center text-sm font-semibold">${item.qty}</div>
-                          <button type="button" class="h-9 w-9 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10">+</button>
-                        </div>
-                    `;
+  cartMap.forEach((item) => {
+    const subtotal = item.price * item.qty;
+    subtotalAll += subtotal;
+    countQty += item.qty;
 
-                    const btns = row.querySelectorAll('button');
-                    btns[0].addEventListener('click', () => changeQty(item.id, -1));
-                    btns[1].addEventListener('click', () => changeQty(item.id, +1));
+    const row = document.createElement('div');
+    row.className = 'rounded-2xl border border-white/10 bg-white/5 p-3 flex items-center gap-3';
+    row.innerHTML = `
+      <div class="flex-1">
+        <div class="text-sm font-semibold">${item.name}</div>
+        <div class="text-xs text-white/60">${fmtRp(item.price)} • Sub: <b>${fmtRp(subtotal)}</b></div>
+      </div>
+      <div class="flex items-center gap-2">
+        <button type="button" class="h-9 w-9 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10">-</button>
+        <div class="w-10 text-center text-sm font-semibold">${item.qty}</div>
+        <button type="button" class="h-9 w-9 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10">+</button>
+      </div>
+    `;
 
-                    cart.appendChild(row);
+    const btns = row.querySelectorAll('button');
+    btns[0].addEventListener('click', () => changeQty(item.id, -1));
+    btns[1].addEventListener('click', () => changeQty(item.id, +1));
 
-                    // hidden submit
-                    formData.insertAdjacentHTML('beforeend', `
-                        <input type="hidden" name="items[${index}][product_id]" value="${item.id}">
-                        <input type="hidden" name="items[${index}][qty]" value="${item.qty}">
-                    `);
-                    index++;
-                });
+    cart.appendChild(row);
 
-                totalText.textContent = fmtRp(total);
-                cartCount.textContent = cartMap.size + ' produk • ' + countQty + ' qty';
+    // hidden submit
+    formData.insertAdjacentHTML('beforeend', `
+      <input type="hidden" name="items[${index}][product_id]" value="${item.id}">
+      <input type="hidden" name="items[${index}][qty]" value="${item.qty}">
+    `);
+    index++;
+  });
 
-                payBtn.disabled = cartMap.size === 0;
+  // Pajak & Total
+  const tax = Math.round(subtotalAll * TAX_RATE);
+  const grandTotal = subtotalAll + tax;
 
-                const paid = Number(paidAmount.value || 0);
-                const change = Math.max(0, paid - total);
-                changeText.textContent = fmtRp(change);
-            }
+  // Update UI teks
+  if (subtotalText) subtotalText.textContent = fmtRp(subtotalAll);
+  if (taxText) taxText.textContent = fmtRp(tax);
+
+  totalText.textContent = fmtRp(grandTotal);
+  cartCount.textContent = cartMap.size + ' produk • ' + countQty + ' qty';
+
+  payBtn.disabled = cartMap.size === 0;
+
+  // Kembalian pakai grand total
+  const paid = Number(paidAmount.value || 0);
+  const change = Math.max(0, paid - grandTotal);
+  changeText.textContent = fmtRp(change);
+}
 
             // klik card produk (yang sudah dirender Blade)
             if (grid) {
