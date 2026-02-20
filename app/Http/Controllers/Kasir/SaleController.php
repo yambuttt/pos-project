@@ -18,7 +18,9 @@ class SaleController extends Controller
     {
         $sales = Sale::query()
             ->with('items.product')
-            ->where('user_id', Auth::id())
+            ->where('user_id', auth()->id())
+            ->whereDate('created_at', now()->toDateString()) 
+            // untuk testing di kemudian hari ini kode nya  ->whereDate('created_at', now()->addDay()->toDateString())
             ->latest()
             ->paginate(10);
 
@@ -106,12 +108,12 @@ class SaleController extends Controller
 
                 $paid = (int) $data['paid_amount'];
                 $tax = (int) round($total * 0.11);
-$grandTotal = $total + $tax;
+                $grandTotal = $total + $tax;
                 if ($paid < $grandTotal) {
-    throw new \RuntimeException(
-        "Uang bayar kurang. Total (incl. pajak) Rp " . number_format($grandTotal, 0, ',', '.') . "."
-    );
-}
+                    throw new \RuntimeException(
+                        "Uang bayar kurang. Total (incl. pajak) Rp " . number_format($grandTotal, 0, ',', '.') . "."
+                    );
+                }
 
                 // 2) Lock bahan baku yang dibutuhkan & validasi stok
                 $rawIds = collect(array_keys($needs))->values();
@@ -143,8 +145,8 @@ $grandTotal = $total + $tax;
                     'invoice_no' => 'TEMP',
                     'user_id' => $userId,
                     'total_amount' => $grandTotal,
-'paid_amount' => $paid,
-'change_amount' => $paid - $grandTotal,
+                    'paid_amount' => $paid,
+                    'change_amount' => $paid - $grandTotal,
                     'status' => 'completed',
                 ]);
 
