@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Sale;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-
+  use Illuminate\Http\Request;
 class DashboardController extends Controller
 {
     public function index()
@@ -53,4 +53,51 @@ class DashboardController extends Controller
 
         return view('dashboard.kasir.dashboard', compact('summary', 'labels', 'totals', 'counts'));
     }
+
+  
+
+public function readyIndex()
+{
+    return view('dashboard.kasir.ready');
+}
+
+public function readyOrders(Request $request)
+{
+    // default: hari ini saja (biar ringan)
+    $today = now()->toDateString();
+
+    $sales = Sale::query()
+        ->whereDate('created_at', $today)
+        ->where('status', 'completed')
+        ->whereIn('kitchen_status', ['done', 'delivered'])
+        ->with(['items.product', 'diningTable'])
+        ->orderByDesc('kitchen_done_at')
+        ->get();
+
+    // kirim juga "readyOnly" supaya kasir bisa fokus yang belum delivered
+    $readyOnly = $sales->where('kitchen_status', 'done')->values();
+
+    return response()->json([
+        'now' => now()->format('Y-m-d H:i:s'),
+        'ready_count' => $readyOnly->count(),
+        'ready_sales' => $readyOnly,
+        'all_sales' => $sales->values(),
+    ]);
+}
+
+public function deliver(Sale $sale)
+{
+    // hanya boleh deliver kalau statusnya done
+    if ($sale->kitchen_status !== 'done') {
+        return back()->withErrors(['sale' => 'Pesanan ini tidak dalam status READY.']);
+    }
+
+    $sale->update([
+        'kitchen_status' => 'delivered',
+        'delivered_at' => now(),
+        'delivered_user_id' => Auth::id(),
+    ]);
+
+    return back()->with('success', 'Pesanan ditandai sudah diberikan ke customer.');
+}
 }

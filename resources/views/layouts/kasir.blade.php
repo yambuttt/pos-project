@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>@yield('title','Kasir')</title>
-  @vite(['resources/css/app.css','resources/js/app.js'])
+  <title>@yield('title', 'Kasir')</title>
+  @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 
 <body class="min-h-screen text-white">
@@ -35,6 +36,7 @@
             $kDash = request()->routeIs('kasir.dashboard');
             $kCreate = request()->routeIs('kasir.sales.create');
             $kIndex = request()->routeIs('kasir.sales.index');
+            $kReady = request()->routeIs('kasir.ready.*');
           @endphp
 
           <nav class="mt-5 space-y-2 text-sm">
@@ -49,14 +51,22 @@
               class="relative block rounded-xl px-4 py-3 transition
               {{ $kCreate ? 'bg-white/15 border border-white/15' : 'bg-white/5 border border-white/10 hover:bg-white/10' }}">
               Transaksi Baru
-              @if($kCreate)<span class="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r bg-white"></span>@endif
+              @if($kCreate)<span
+              class="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r bg-white"></span>@endif
+            </a>
+            <a href="{{ route('kasir.ready.index') }}" class="relative block rounded-xl px-4 py-3 transition
+  {{ $kReady ? 'bg-white/15 border border-white/15' : 'bg-white/5 border border-white/10 hover:bg-white/10' }}">
+              Pesanan Siap
+              @if($kReady)<span
+              class="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r bg-white"></span>@endif
             </a>
 
             <a href="{{ route('kasir.sales.index') }}"
               class="relative block rounded-xl px-4 py-3 transition
               {{ $kIndex ? 'bg-white/15 border border-white/15' : 'bg-white/5 border border-white/10 hover:bg-white/10' }}">
               Riwayat Transaksi
-              @if($kIndex)<span class="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r bg-white"></span>@endif
+              @if($kIndex)<span
+              class="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r bg-white"></span>@endif
             </a>
           </nav>
 
@@ -80,18 +90,23 @@
           class="fixed left-0 top-0 z-50 hidden h-full w-[280px] border-r border-white/10 bg-white/5 backdrop-blur-2xl p-4 lg:hidden">
           <div class="flex items-center justify-between">
             <div class="text-lg font-semibold">POS Kasir</div>
-            <button id="kasirClose" class="rounded-xl border border-white/10 bg-white/5 px-3 py-2 hover:bg-white/10">✕</button>
+            <button id="kasirClose"
+              class="rounded-xl border border-white/10 bg-white/5 px-3 py-2 hover:bg-white/10">✕</button>
           </div>
 
           <div class="mt-4 space-y-2">
-            <a href="{{ route('kasir.dashboard') }}" class="block rounded-xl border border-white/10 bg-white/5 px-4 py-3 hover:bg-white/10">Dashboard</a>
-            <a href="{{ route('kasir.sales.create') }}" class="block rounded-xl border border-white/10 bg-white/5 px-4 py-3 hover:bg-white/10">Transaksi Baru</a>
-            <a href="{{ route('kasir.sales.index') }}" class="block rounded-xl border border-white/10 bg-white/5 px-4 py-3 hover:bg-white/10">Riwayat</a>
+            <a href="{{ route('kasir.dashboard') }}"
+              class="block rounded-xl border border-white/10 bg-white/5 px-4 py-3 hover:bg-white/10">Dashboard</a>
+            <a href="{{ route('kasir.sales.create') }}"
+              class="block rounded-xl border border-white/10 bg-white/5 px-4 py-3 hover:bg-white/10">Transaksi Baru</a>
+            <a href="{{ route('kasir.sales.index') }}"
+              class="block rounded-xl border border-white/10 bg-white/5 px-4 py-3 hover:bg-white/10">Riwayat</a>
           </div>
 
           <form method="POST" action="{{ route('logout') }}" class="mt-6">
             @csrf
-            <button class="w-full rounded-xl bg-blue-600/85 px-4 py-3 text-sm font-semibold hover:bg-blue-500/85">Logout</button>
+            <button
+              class="w-full rounded-xl bg-blue-600/85 px-4 py-3 text-sm font-semibold hover:bg-blue-500/85">Logout</button>
           </form>
         </aside>
 
@@ -112,7 +127,7 @@
   </div>
 
   <script>
-    (function(){
+    (function () {
       const openBtn = document.getElementById('kasirOpen');
       const closeBtn = document.getElementById('kasirClose');
       const overlay = document.getElementById('kasirOverlay');
@@ -133,8 +148,52 @@
       if (closeBtn) closeBtn.addEventListener('click', close);
       if (overlay) overlay.addEventListener('click', close);
       if (drawer) drawer.querySelectorAll('a').forEach(a => a.addEventListener('click', close));
-      document.addEventListener('keydown', (e)=>{ if(e.key==='Escape') close(); });
+      document.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
+    })();
+  </script>
+
+  <script>
+    (function () {
+      // Poll ready orders untuk notif global kasir
+      let lastReadyIds = new Set();
+      let initialLoaded = false;
+
+      async function pollReady() {
+        try {
+          const res = await fetch("{{ route('kasir.ready.orders') }}", { headers: { 'Accept': 'application/json' } });
+          const data = await res.json();
+          const readySales = data.ready_sales || [];
+          const newIds = new Set(readySales.map(s => s.id));
+
+          if (initialLoaded) {
+            let hasNew = false;
+            for (const id of newIds) {
+              if (!lastReadyIds.has(id)) { hasNew = true; break; }
+            }
+            if (hasNew) {
+              showToast(`🔔 Pesanan READY dari Kitchen: ${readySales.length} siap diambil`);
+            }
+          }
+
+          lastReadyIds = newIds;
+          initialLoaded = true;
+        } catch (e) { }
+      }
+
+      function showToast(text) {
+        const el = document.createElement('div');
+        el.className = "fixed right-4 top-4 z-[9999] rounded-2xl border border-white/10 bg-white/10 px-4 py-3 text-sm text-white backdrop-blur-2xl shadow-lg";
+        el.textContent = text;
+        document.body.appendChild(el);
+        setTimeout(() => { el.style.opacity = '0'; el.style.transition = 'opacity .3s'; }, 2500);
+        setTimeout(() => el.remove(), 3000);
+      }
+
+      // start polling
+      pollReady();
+      setInterval(pollReady, 4000);
     })();
   </script>
 </body>
+
 </html>

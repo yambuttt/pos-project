@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Sale extends Model
 {
     protected $fillable = [
-       'invoice_no',
+        'invoice_no',
         'user_id',
         'total_amount',
         'paid_amount',
@@ -16,6 +16,8 @@ class Sale extends Model
         'dining_table_id',
         'change_amount',
         'status',
+        'delivered_at',
+        'delivered_user_id',
         'kitchen_status',
         'kitchen_started_at',
         'kitchen_done_at',
@@ -38,13 +40,18 @@ class Sale extends Model
     {
         return $this->belongsTo(User::class, 'user_id');
     }
-        public function kitchenUser()
+    public function kitchenUser()
     {
         return $this->belongsTo(User::class, 'kitchen_user_id');
     }
-     public function diningTable()
+    public function diningTable()
     {
         return $this->belongsTo(DiningTable::class, 'dining_table_id');
+    }
+
+    public function deliveredUser()
+    {
+        return $this->belongsTo(User::class, 'delivered_user_id');
     }
 
 }
