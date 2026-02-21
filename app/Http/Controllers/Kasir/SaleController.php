@@ -64,12 +64,13 @@ class SaleController extends Controller
     {
         $data = $request->validate([
             'paid_amount' => ['required', 'integer', 'min:0'],
+            'payment_method' => ['required', 'in:cash,qris'],
             'items' => ['required', 'array', 'min:1'],
             'items.*.product_id' => ['required', 'exists:products,id'],
             'items.*.qty' => ['required', 'integer', 'min:1'],
         ]);
 
-        $userId = Auth::id();
+        $userId = \Illuminate\Support\Facades\Auth::id();
 
         // Helper: random huruf A-Z saja (bukan angka)
         $randomLetters = function (int $len): string {
@@ -82,13 +83,13 @@ class SaleController extends Controller
         };
 
         try {
-            $sale = DB::transaction(function () use ($data, $userId, $randomLetters) {
+            $sale = \Illuminate\Support\Facades\DB::transaction(function () use ($data, $userId, $randomLetters) {
 
                 // Ambil produk + resep
                 $productIds = collect($data['items'])->pluck('product_id')->unique()->values();
-                $products = Product::with('recipes.rawMaterial')
+                $products = \App\Models\Product::with('recipes.rawMaterial')
                     ->whereIn('id', $productIds)
-                    ->lockForUpdate() // lock product rows (opsional)
+                    ->lockForUpdate()
                     ->get()
                     ->keyBy('id');
 
@@ -120,6 +121,11 @@ class SaleController extends Controller
                 $tax = (int) round($total * 0.11);
                 $grandTotal = $total + $tax;
 
+                // Kalau QRIS: boleh “bablas” (anggap paid cukup)
+                if ($data['payment_method'] === 'qris') {
+                    $paid = $grandTotal;
+                }
+
                 if ($paid < $grandTotal) {
                     throw new \RuntimeException(
                         "Uang bayar kurang. Total (incl. pajak) Rp " . number_format($grandTotal, 0, ',', '.') . "."
@@ -128,7 +134,7 @@ class SaleController extends Controller
 
                 // 2) Lock bahan baku yang dibutuhkan & validasi stok
                 $rawIds = collect(array_keys($needs))->values();
-                $materials = RawMaterial::whereIn('id', $rawIds)->lockForUpdate()->get()->keyBy('id');
+                $materials = \App\Models\RawMaterial::whereIn('id', $rawIds)->lockForUpdate()->get()->keyBy('id');
 
                 $insufficient = [];
                 foreach ($needs as $rid => $qtyNeed) {
@@ -151,40 +157,41 @@ class SaleController extends Controller
                     throw new \RuntimeException($msg);
                 }
 
-                // 3) Create Sale (invoice setelah dibuat)
-                $sale = Sale::create([
+                // 3) Create Sale (langsung masuk antrian kitchen)
+                $sale = \App\Models\Sale::create([
                     'invoice_no' => 'TEMP',
                     'user_id' => $userId,
                     'total_amount' => $grandTotal,
                     'paid_amount' => $paid,
+                    'payment_method' => $data['payment_method'], // cash/qris
                     'change_amount' => $paid - $grandTotal,
                     'status' => 'completed',
+
+                    'kitchen_status' => 'new',
                 ]);
 
                 // ===== INVOICE RANDOM HURUF, ANTI DUPLICATE, PANJANG DINAMIS =====
                 $datePart = now()->format('Ymd');
-                $length = 3;         // mulai dari 3 huruf
-                $maxAttempts = 50;   // kalau tabrakan terus, naikkan panjang
+                $length = 3;
+                $maxAttempts = 50;
 
                 while (true) {
                     $attempt = 0;
 
                     do {
-                        $suffix = $randomLetters($length); // huruf A-Z saja
+                        $suffix = $randomLetters($length);
                         $invoice = "INV-{$datePart}-{$suffix}";
                         $attempt++;
                     } while (
-                        Sale::where('invoice_no', $invoice)->exists()
+                        \App\Models\Sale::where('invoice_no', $invoice)->exists()
                         && $attempt < $maxAttempts
                     );
 
-                    // jika masih duplicate setelah banyak percobaan, naik panjang huruf
-                    if (Sale::where('invoice_no', $invoice)->exists()) {
+                    if (\App\Models\Sale::where('invoice_no', $invoice)->exists()) {
                         $length++;
                         continue;
                     }
 
-                    // aman → pakai invoice ini
                     $sale->update(['invoice_no' => $invoice]);
                     break;
                 }
@@ -196,7 +203,7 @@ class SaleController extends Controller
                     $qty = (int) $it['qty'];
                     $subtotal = (int) $p->price * $qty;
 
-                    SaleItem::create([
+                    \App\Models\SaleItem::create([
                         'sale_id' => $sale->id,
                         'product_id' => $p->id,
                         'qty' => $qty,
@@ -207,19 +214,18 @@ class SaleController extends Controller
 
                 // 5) Deduct stock + inventory movement (sale)
                 foreach ($needs as $rid => $qtyNeed) {
-                    /** @var \App\Models\RawMaterial $m */
                     $m = $materials[$rid];
 
                     $m->update([
                         'stock_on_hand' => (float) $m->stock_on_hand - (float) $qtyNeed,
                     ]);
 
-                    InventoryMovement::create([
+                    \App\Models\InventoryMovement::create([
                         'raw_material_id' => $m->id,
                         'type' => 'sale',
                         'qty_in' => 0,
                         'qty_out' => $qtyNeed,
-                        'reference_type' => Sale::class,
+                        'reference_type' => \App\Models\Sale::class,
                         'reference_id' => $sale->id,
                         'created_by' => $userId,
                         'note' => 'Sale: ' . $sale->invoice_no,

@@ -13,6 +13,7 @@ use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Kasir\SaleController;
 use App\Http\Controllers\Admin\SaleController as AdminSaleController;
 use App\Http\Controllers\Kasir\DashboardController as KasirDashboardController;
+use App\Http\Controllers\Kitchen\KitchenController;
 Route::get('/', function () {
     return view('welcome');
 });
@@ -36,6 +37,14 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/admin/purchases', [PurchaseController::class, 'index'])->name('admin.purchases.index');
     Route::get('/admin/purchases/create', [PurchaseController::class, 'create'])->name('admin.purchases.create');
     Route::post('/admin/purchases', [PurchaseController::class, 'store'])->name('admin.purchases.store');
+    Route::get('/admin/purchases/{purchase}', [PurchaseController::class, 'show'])->name('admin.purchases.show');
+    Route::get('/admin/purchases/{purchase}/export/pdf', [\App\Http\Controllers\Admin\PurchaseController::class, 'exportPdf'])
+        ->name('admin.purchases.export.pdf');
+    Route::get('/admin/purchases/export/pdf', [\App\Http\Controllers\Admin\PurchaseController::class, 'exportPdfBulk'])
+        ->name('admin.purchases.export.pdf.bulk');
+    // Export PDF gabungan (selected / by range / by period)
+    Route::post('/admin/purchases/export-pdf', [\App\Http\Controllers\Admin\PurchaseController::class, 'exportPdf'])
+        ->name('admin.purchases.exportPdf');
 
 
     Route::get('/admin/wastes', [WasteController::class, 'index'])->name('admin.wastes.index');
@@ -64,6 +73,7 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
 
     Route::get('/sales', [AdminSaleController::class, 'index'])->name('admin.sales.index');
     Route::get('/sales/{sale}', [AdminSaleController::class, 'show'])->name('admin.sales.show');
+    ;
 });
 
 Route::prefix('kasir')->name('kasir.')->middleware(['auth', 'role:kasir'])->group(function () {
@@ -73,3 +83,16 @@ Route::prefix('kasir')->name('kasir.')->middleware(['auth', 'role:kasir'])->grou
     Route::get('/sales/create', [SaleController::class, 'create'])->name('sales.create');
     Route::post('/sales', [SaleController::class, 'store'])->name('sales.store');
 });
+
+
+
+Route::middleware(['auth', 'role:kitchen'])
+    ->prefix('kitchen')
+    ->name('kitchen.')
+    ->group(function () {
+        Route::get('/', [KitchenController::class, 'index'])->name('dashboard');
+
+        Route::get('/orders', [KitchenController::class, 'orders'])->name('orders'); // json polling
+        Route::post('/orders/{sale}/process', [KitchenController::class, 'process'])->name('orders.process');
+        Route::post('/orders/{sale}/done', [KitchenController::class, 'done'])->name('orders.done');
+    });

@@ -14,6 +14,10 @@ class Sale extends Model
         'payment_method',
         'change_amount',
         'status',
+        'kitchen_status',
+        'kitchen_started_at',
+        'kitchen_done_at',
+        'kitchen_user_id',
     ];
 
 
@@ -31,5 +35,9 @@ class Sale extends Model
     public function cashier()
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+        public function kitchenUser()
+    {
+        return $this->belongsTo(User::class, 'kitchen_user_id');
     }
 }

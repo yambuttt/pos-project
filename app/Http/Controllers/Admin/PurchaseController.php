@@ -12,6 +12,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
 
 class PurchaseController extends Controller
 {
@@ -24,7 +26,16 @@ class PurchaseController extends Controller
 
         return view('dashboard.admin.purchases.index', compact('purchases'));
     }
+    public function show(Purchase $purchase)
+    {
+        $purchase->load([
+            'supplier',
+            'creator',
+            'items.rawMaterial',
+        ]);
 
+        return view('dashboard.admin.purchases.show', compact('purchase'));
+    }
     public function create()
     {
         $materials = RawMaterial::query()->where('is_active', true)->orderBy('name')->get();
@@ -36,17 +47,17 @@ class PurchaseController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'source_type'   => ['required', Rule::in(['supplier', 'external'])],
-            'supplier_id'   => ['nullable', 'integer', 'exists:suppliers,id'],
-            'source_name'   => ['nullable', 'string', 'max:190'],
-            'invoice_no'    => ['nullable', 'string', 'max:190'],
+            'source_type' => ['required', Rule::in(['supplier', 'external'])],
+            'supplier_id' => ['nullable', 'integer', 'exists:suppliers,id'],
+            'source_name' => ['nullable', 'string', 'max:190'],
+            'invoice_no' => ['nullable', 'string', 'max:190'],
             'purchase_date' => ['required', 'date'],
-            'note'          => ['nullable', 'string'],
+            'note' => ['nullable', 'string'],
 
-            'items'                   => ['required', 'array', 'min:1'],
+            'items' => ['required', 'array', 'min:1'],
             'items.*.raw_material_id' => ['required', 'integer', 'exists:raw_materials,id'],
-            'items.*.qty'             => ['required', 'numeric', 'gt:0'],
-            'items.*.unit_cost'       => ['nullable', 'numeric', 'min:0'],
+            'items.*.qty' => ['required', 'numeric', 'gt:0'],
+            'items.*.unit_cost' => ['nullable', 'numeric', 'min:0'],
         ]);
 
         // rule tambahan biar konsisten:
@@ -59,14 +70,14 @@ class PurchaseController extends Controller
 
         DB::transaction(function () use ($data, &$purchase) {
             $purchase = Purchase::create([
-                'source_type'   => $data['source_type'],
-                'supplier_id'   => $data['source_type'] === 'supplier' ? $data['supplier_id'] : null,
-                'source_name'   => $data['source_type'] === 'external' ? $data['source_name'] : null,
-                'invoice_no'    => $data['invoice_no'] ?? null,
+                'source_type' => $data['source_type'],
+                'supplier_id' => $data['source_type'] === 'supplier' ? $data['supplier_id'] : null,
+                'source_name' => $data['source_type'] === 'external' ? $data['source_name'] : null,
+                'invoice_no' => $data['invoice_no'] ?? null,
                 'purchase_date' => $data['purchase_date'],
-                'total_amount'  => 0,
-                'created_by'    => Auth::id(),
-                'note'          => $data['note'] ?? null,
+                'total_amount' => 0,
+                'created_by' => Auth::id(),
+                'note' => $data['note'] ?? null,
             ]);
 
             $grandTotal = 0;
@@ -78,11 +89,11 @@ class PurchaseController extends Controller
                 $grandTotal += $subtotal;
 
                 PurchaseItem::create([
-                    'purchase_id'     => $purchase->id,
+                    'purchase_id' => $purchase->id,
                     'raw_material_id' => $item['raw_material_id'],
-                    'qty'             => $qty,
-                    'unit_cost'       => $unitCost,
-                    'subtotal'        => $subtotal,
+                    'qty' => $qty,
+                    'unit_cost' => $unitCost,
+                    'subtotal' => $subtotal,
                 ]);
 
                 // Tambah stok bahan
@@ -94,13 +105,13 @@ class PurchaseController extends Controller
                 // Log movement
                 InventoryMovement::create([
                     'raw_material_id' => $item['raw_material_id'],
-                    'type'            => 'purchase',
-                    'qty_in'          => $qty,
-                    'qty_out'         => 0,
-                    'reference_type'  => Purchase::class,
-                    'reference_id'    => $purchase->id,
-                    'created_by'      => Auth::id(),
-                    'note'            => 'Purchase',
+                    'type' => 'purchase',
+                    'qty_in' => $qty,
+                    'qty_out' => 0,
+                    'reference_type' => Purchase::class,
+                    'reference_id' => $purchase->id,
+                    'created_by' => Auth::id(),
+                    'note' => 'Purchase',
                 ]);
             }
 
@@ -110,5 +121,166 @@ class PurchaseController extends Controller
         return redirect()
             ->route('admin.purchases.index')
             ->with('success', 'Purchase berhasil disimpan dan stok bahan bertambah.');
+    }
+
+    public function exportPdf(Request $request)
+{
+    /**
+     * Mode export:
+     * - selected: berdasarkan checkbox purchase_ids[]
+     * - range: berdasarkan from/to (tanggal)
+     * - period: harian/mingguan/bulanan/tahunan berdasarkan anchor_date (opsional)
+     */
+    $data = $request->validate([
+        'mode' => ['required', Rule::in(['selected', 'range', 'period'])],
+
+        // mode = selected
+        'purchase_ids'   => ['nullable', 'array'],
+        'purchase_ids.*' => ['integer', 'exists:purchases,id'],
+
+        // mode = range
+        'from' => ['nullable', 'date'],
+        'to'   => ['nullable', 'date'],
+
+        // mode = period
+        'period'      => ['nullable', Rule::in(['daily', 'weekly', 'monthly', 'yearly'])],
+        'anchor_date' => ['nullable', 'date'],
+    ]);
+
+    // Base query + relasi penting untuk PDF
+    $q = \App\Models\Purchase::query()
+        ->with([
+            'supplier',
+            'creator',
+            'items.rawMaterial', // pastikan relasi ini ada di model PurchaseItem
+        ])
+        ->orderBy('purchase_date')
+        ->orderBy('id');
+
+    // Terapkan filter sesuai mode
+    if ($data['mode'] === 'selected') {
+        $ids = $data['purchase_ids'] ?? [];
+        if (count($ids) === 0) {
+            return back()->withErrors(['purchase_ids' => 'Pilih minimal 1 purchase untuk diexport.']);
+        }
+        $q->whereIn('id', $ids);
+    }
+
+    if ($data['mode'] === 'range') {
+        if (empty($data['from']) || empty($data['to'])) {
+            return back()->withErrors(['from' => 'Isi tanggal dari & sampai.']);
+        }
+
+        $from = Carbon::parse($data['from'])->startOfDay();
+        $to   = Carbon::parse($data['to'])->endOfDay();
+
+        if ($from->gt($to)) {
+            return back()->withErrors(['from' => 'Tanggal "Dari" tidak boleh lebih besar dari "Sampai".']);
+        }
+
+        // NOTE: purchase_date di tabel purchases dipakai sebagai tanggal transaksi pembelian
+        $q->whereBetween('purchase_date', [$from->toDateString(), $to->toDateString()]);
+    }
+
+    if ($data['mode'] === 'period') {
+        $period = $data['period'] ?? null;
+        if (!$period) {
+            return back()->withErrors(['period' => 'Pilih period (harian/mingguan/bulanan/tahunan).']);
+        }
+
+        $anchor = !empty($data['anchor_date'])
+            ? Carbon::parse($data['anchor_date'])
+            : now();
+
+        // Tentukan range berdasarkan period
+        switch ($period) {
+            case 'daily':
+                $from = $anchor->copy()->startOfDay();
+                $to   = $anchor->copy()->endOfDay();
+                break;
+
+            case 'weekly':
+                // Senin - Minggu
+                $from = $anchor->copy()->startOfWeek(Carbon::MONDAY)->startOfDay();
+                $to   = $anchor->copy()->endOfWeek(Carbon::SUNDAY)->endOfDay();
+                break;
+
+            case 'monthly':
+                $from = $anchor->copy()->startOfMonth()->startOfDay();
+                $to   = $anchor->copy()->endOfMonth()->endOfDay();
+                break;
+
+            case 'yearly':
+                $from = $anchor->copy()->startOfYear()->startOfDay();
+                $to   = $anchor->copy()->endOfYear()->endOfDay();
+                break;
+        }
+
+        $q->whereBetween('purchase_date', [$from->toDateString(), $to->toDateString()]);
+    }
+
+    $purchases = $q->get();
+
+    if ($purchases->isEmpty()) {
+        return back()->withErrors(['mode' => 'Tidak ada data purchase untuk diexport (sesuai filter).']);
+    }
+
+    $printedAt      = now();
+    $totalPurchases = $purchases->count();
+    $grandTotal     = (float) $purchases->sum('total_amount');
+
+    // Render PDF (format: rekap atas + setiap purchase punya tabel sendiri)
+    $pdf = Pdf::loadView('dashboard.admin.purchases.export.bulk', [
+        'purchases'      => $purchases,
+        'printedAt'      => $printedAt,
+        'totalPurchases' => $totalPurchases,
+        'grandTotal'     => $grandTotal,
+    ])->setPaper('a4', 'portrait');
+
+    $filename = 'purchases-gabungan-' . $printedAt->format('Ymd-His') . '.pdf';
+    return $pdf->download($filename);
+}
+
+    public function exportPdfBulk(Request $request)
+    {
+        $from = $request->query('from');
+        $to = $request->query('to');
+        $sourceType = $request->query('source_type'); // optional
+        $q = $request->query('q'); // optional
+
+        $purchases = \App\Models\Purchase::query()
+            ->with(['supplier', 'creator', 'items.rawMaterial'])
+            ->when($from, fn($qq) => $qq->whereDate('purchase_date', '>=', $from))
+            ->when($to, fn($qq) => $qq->whereDate('purchase_date', '<=', $to))
+            ->when($sourceType, fn($qq) => $qq->where('source_type', $sourceType))
+            ->when($q, function ($qq) use ($q) {
+                $qq->where('invoice_no', 'like', "%{$q}%")
+                    ->orWhere('source_name', 'like', "%{$q}%");
+            })
+            ->orderBy('purchase_date', 'asc')
+            ->orderBy('id', 'asc')
+            ->get();
+
+        // grand total = total semua subtotal item di semua purchase
+        $grandTotal = 0;
+        foreach ($purchases as $p) {
+            $grandTotal += (float) ($p->items?->sum('subtotal') ?? 0);
+        }
+
+        $meta = [
+            'printed_at' => now(),
+            'from' => $from,
+            'to' => $to,
+            'count_purchase' => $purchases->count(),
+            'grand_total' => $grandTotal,
+        ];
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView(
+            'dashboard.admin.purchases.export_pdf_bulk_sections',
+            compact('purchases', 'meta')
+        )->setPaper('A4', 'portrait');
+
+        $datePart = now()->format('Ymd_His');
+        return $pdf->download("PURCHASES_BULK_{$datePart}.pdf");
     }
 }
