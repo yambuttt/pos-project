@@ -7,11 +7,13 @@ use Illuminate\Database\Eloquent\Model;
 class Sale extends Model
 {
     protected $fillable = [
-        'invoice_no',
+       'invoice_no',
         'user_id',
         'total_amount',
         'paid_amount',
         'payment_method',
+        'order_type',
+        'dining_table_id',
         'change_amount',
         'status',
         'kitchen_status',
@@ -40,4 +42,9 @@ class Sale extends Model
     {
         return $this->belongsTo(User::class, 'kitchen_user_id');
     }
+     public function diningTable()
+    {
+        return $this->belongsTo(DiningTable::class, 'dining_table_id');
+    }
+
 }

@@ -15,6 +15,7 @@ use App\Http\Controllers\Admin\SaleController as AdminSaleController;
 use App\Http\Controllers\Kasir\DashboardController as KasirDashboardController;
 use App\Http\Controllers\Kitchen\KitchenController;
 use App\Http\Controllers\Kitchen\DashboardController as KitchenDashboardController;
+use App\Http\Controllers\Admin\DiningTableController;
 Route::get('/', function () {
     return view('welcome');
 });
@@ -74,7 +75,15 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
 
     Route::get('/sales', [AdminSaleController::class, 'index'])->name('admin.sales.index');
     Route::get('/sales/{sale}', [AdminSaleController::class, 'show'])->name('admin.sales.show');
-    ;
+
+    // Meja (Dine In)
+    Route::get('/admin/tables', [DiningTableController::class, 'index'])->name('admin.tables.index');
+    Route::get('/admin/tables/create', [DiningTableController::class, 'create'])->name('admin.tables.create');
+    Route::post('/admin/tables', [DiningTableController::class, 'store'])->name('admin.tables.store');
+    Route::get('/admin/tables/{table}/edit', [DiningTableController::class, 'edit'])->name('admin.tables.edit');
+    Route::put('/admin/tables/{table}', [DiningTableController::class, 'update'])->name('admin.tables.update');
+    Route::delete('/admin/tables/{table}', [DiningTableController::class, 'destroy'])->name('admin.tables.destroy');
+
 });
 
 Route::prefix('kasir')->name('kasir.')->middleware(['auth', 'role:kasir'])->group(function () {

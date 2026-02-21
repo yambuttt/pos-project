@@ -42,8 +42,9 @@
 
                         // Inventory Movement (sementara pakai URL supaya tidak error walau route belum ada)
                         $isInvMovements = request()->routeIs('admin.inventory-movements.*');
+                        $isTables = request()->routeIs('admin.tables.*');
 
-                        $isInventory = $isRawMaterials || $isPurchases || $isWastes || $isOpnames || $isInvMovements;
+                        $isInventory = $isRawMaterials || $isPurchases || $isWastes || $isOpnames || $isInvMovements || $isTables;
                     @endphp
 
                     <div class="flex h-full flex-col p-3">
@@ -96,8 +97,7 @@
                                     viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
                                     <path stroke-linecap="round" stroke-linejoin="round"
                                         d="M3 7.5L12 3l9 4.5-9 4.5L3 7.5z" />
-                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                        d="M3 7.5v9L12 21l9-4.5v-9" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 7.5v9L12 21l9-4.5v-9" />
                                 </svg>
                                 <span class="sidebar-label hidden text-sm font-medium text-white/90">Produk</span>
                             </a>
@@ -112,8 +112,8 @@
                                             class="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r bg-white"></span>
                                     @endif
 
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white/90"
-                                        fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white/90" fill="none"
+                                        viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
                                         <path stroke-linecap="round" stroke-linejoin="round"
                                             d="M3 7.5L12 3l9 4.5-9 4.5L3 7.5z" />
                                         <path stroke-linecap="round" stroke-linejoin="round"
@@ -130,8 +130,7 @@
                                     </svg>
                                 </button>
 
-                                <div id="invMenuDesktop"
-                                    class="mt-2 space-y-2 pl-2 {{ $isInventory ? '' : 'hidden' }}">
+                                <div id="invMenuDesktop" class="mt-2 space-y-2 pl-2 {{ $isInventory ? '' : 'hidden' }}">
 
                                     <a href="{{ route('admin.raw_materials.index') }}"
                                         class="relative flex items-center gap-3 rounded-xl px-3 py-2 transition-all duration-200
@@ -164,7 +163,8 @@
                                             <span
                                                 class="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r bg-white"></span>
                                         @endif
-                                        <span class="sidebar-label hidden text-sm font-medium text-white/90">Waste</span>
+                                        <span
+                                            class="sidebar-label hidden text-sm font-medium text-white/90">Waste</span>
                                         <span class="ml-auto sidebar-label hidden text-xs text-white/60">OUT</span>
                                     </a>
 
@@ -203,8 +203,7 @@
                                     viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
                                     <path stroke-linecap="round" stroke-linejoin="round"
                                         d="M7.5 3h9a1.5 1.5 0 011.5 1.5v15a1.5 1.5 0 01-1.5 1.5h-9A1.5 1.5 0 016 19.5v-15A1.5 1.5 0 017.5 3z" />
-                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                        d="M9 7.5h6M9 11h6M9 14.5h3" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 7.5h6M9 11h6M9 14.5h3" />
                                 </svg>
                                 <span class="sidebar-label hidden text-sm font-medium text-white/90">Transaksi</span>
                             </a>
@@ -228,6 +227,24 @@
                                 </svg>
 
                                 <span class="sidebar-label hidden text-sm font-medium">User</span>
+                            </a>
+
+                            {{-- Meja --}}
+                            <a href="{{ route('admin.tables.index') }}"
+                                class="relative flex items-center gap-3 rounded-xl px-3 py-2 transition-all duration-200
+   {{ $isTables ? 'bg-white/20 text-white shadow-lg' : 'border border-white/10 bg-white/5 hover:bg-white/10 text-white/90' }}">
+                                @if ($isTables)
+                                    <span
+                                        class="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r bg-white"></span>
+                                @endif
+
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white/90" fill="none"
+                                    viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M4.5 10.5h15M6 20.25V6.75A2.25 2.25 0 018.25 4.5h7.5A2.25 2.25 0 0118 6.75v13.5M7.5 20.25v-6h9v6" />
+                                </svg>
+
+                                <span class="sidebar-label hidden text-sm font-medium text-white/90">Meja</span>
                             </a>
 
                             {{-- Laporan (dummy dulu) --}}
@@ -274,136 +291,143 @@
                 </aside>
 
                 {{-- =========================
-                MOBILE/TABLET SIDEBAR (drawer) <lg
-                ========================= --}}
-                <div id="sidebarOverlay" class="fixed inset-0 z-40 hidden bg-black/40 lg:hidden"></div>
-
-                <aside id="adminSidebarMobile"
-                    class="fixed left-0 top-0 z-50 hidden h-full w-[280px] border-r border-white/20 bg-white/10 p-4 backdrop-blur-2xl lg:hidden">
-
-                    @php
-                        $isDashboard = request()->routeIs('admin.dashboard');
-                        $isUsers = request()->routeIs('admin.cashiers.*');
-
-                        $isRawMaterials = request()->routeIs('admin.raw_materials.*');
-                        $isPurchases = request()->routeIs('admin.purchases.*');
-                        $isWastes = request()->routeIs('admin.wastes.*');
-                        $isOpnames = request()->routeIs('admin.opnames.*');
-                        $isInvMovements = request()->routeIs('admin.inventory-movements.*');
-
-                        $isInventory = $isRawMaterials || $isPurchases || $isWastes || $isOpnames || $isInvMovements;
-                    @endphp
-
-                    <div class="flex items-center justify-between">
-                        <div class="rounded-2xl border border-white/20 bg-white/10 px-4 py-2">
-                            <div class="text-xs text-white/70">Admin Panel</div>
-                            <div class="text-sm font-semibold">POS Dashboard</div>
-                        </div>
-
-                        <button id="closeMobileSidebar"
-                            class="rounded-xl border border-white/20 bg-white/10 px-3 py-2 hover:bg-white/15">
-                            ✕
-                        </button>
-                    </div>
-
-                    <div class="mt-5 space-y-2 text-sm">
-                        <a href="{{ route('admin.dashboard') }}"
-                            class="relative flex items-center gap-3 rounded-xl px-3 py-2 transition-all duration-200
-                            {{ $isDashboard ? 'bg-white/20 shadow-lg' : 'border border-white/10 bg-white/5 hover:bg-white/10' }}">
-                            @if ($isDashboard)
-                                <span
-                                    class="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r bg-white"></span>
-                            @endif
-                            <span class="text-sm font-medium">Dashboard</span>
-                        </a>
-
-                        <a href="#"
-                            class="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-3 py-2 hover:bg-white/10">
-                            Produk
-                        </a>
-
-                        {{-- Inventory group --}}
-                        <div class="rounded-xl border border-white/10 bg-white/5 p-2">
-                            <div class="flex items-center justify-between px-2 py-2">
-                                <div class="text-sm font-semibold text-white/90">Inventory</div>
-                                <span class="text-xs text-white/60">{{ $isInventory ? 'Active' : '' }}</span>
-                            </div>
-
-                            <a href="{{ route('admin.raw_materials.index') }}"
-                                class="relative mt-1 block rounded-xl px-3 py-2 {{ $isRawMaterials ? 'bg-white/20' : 'hover:bg-white/10' }}">
-                                Bahan Baku
-                            </a>
-
-                            <a href="{{ route('admin.purchases.index') }}"
-                                class="relative mt-1 block rounded-xl px-3 py-2 {{ $isPurchases ? 'bg-white/20' : 'hover:bg-white/10' }}">
-                                Purchases
-                            </a>
-
-                            <a href="{{ route('admin.wastes.index') }}"
-                                class="relative mt-1 block rounded-xl px-3 py-2 {{ $isWastes ? 'bg-white/20' : 'hover:bg-white/10' }}">
-                                Waste
-                            </a>
-
-                            <a href="{{ route('admin.opnames.index') }}"
-                                class="relative mt-1 block rounded-xl px-3 py-2 {{ $isOpnames ? 'bg-white/20' : 'hover:bg-white/10' }}">
-                                Stock Opname
-                            </a>
-
-                            <a href="{{ url('/admin/inventory-movements') }}"
-                                class="relative mt-1 block rounded-xl px-3 py-2 {{ $isInvMovements ? 'bg-white/20' : 'hover:bg-white/10' }}">
-                                Inventory Movement
-                            </a>
-                        </div>
-
-                        <a href="#"
-                            class="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-3 py-2 hover:bg-white/10">
-                            Transaksi
-                        </a>
-
-                        <a href="{{ route('admin.cashiers.index') }}"
-                            class="relative flex items-center gap-3 rounded-xl px-3 py-2 transition-all duration-200
-                            {{ $isUsers ? 'bg-white/20 shadow-lg' : 'border border-white/10 bg-white/5 hover:bg-white/10' }}">
-                            @if ($isUsers)
-                                <span
-                                    class="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r bg-white"></span>
-                            @endif
-                            <span class="text-sm font-medium">User</span>
-                        </a>
-
-                        <a href="#"
-                            class="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-3 py-2 hover:bg-white/10">
-                            Laporan
-                        </a>
-                    </div>
-
-                    <div class="mt-6 rounded-2xl border border-white/15 bg-white/10 p-4">
-                        <div class="text-xs text-white/70">Login as</div>
-                        <div class="mt-1 text-sm font-semibold">{{ auth()->user()->name ?? 'Admin' }}</div>
-                        <div class="text-xs text-white/70">{{ auth()->user()->email }}</div>
-                    </div>
-
-                    <div class="mt-auto pt-5">
-                        <form method="POST" action="{{ route('logout') }}">
-                            @csrf
-                            <button
-                                class="w-full rounded-xl bg-blue-600/85 px-4 py-3 text-sm font-semibold hover:bg-blue-500/85">
-                                Logout
-                            </button>
-                        </form>
-                    </div>
-                </aside>
-
-                <!-- MAIN -->
-                <main id="adminMain" class="flex-1 p-4 lg:p-6">
-                    @yield('body')
-                </main>
-
+                MOBILE/TABLET SIDEBAR (drawer) <lg=========================--}} <div id="sidebarOverlay"
+                    class="fixed inset-0 z-40 hidden bg-black/40 lg:hidden">
             </div>
+
+            <aside id="adminSidebarMobile"
+                class="fixed left-0 top-0 z-50 hidden h-full w-[280px] border-r border-white/20 bg-white/10 p-4 backdrop-blur-2xl lg:hidden">
+
+                @php
+                    $isDashboard = request()->routeIs('admin.dashboard');
+                    $isUsers = request()->routeIs('admin.cashiers.*');
+
+                    $isRawMaterials = request()->routeIs('admin.raw_materials.*');
+                    $isPurchases = request()->routeIs('admin.purchases.*');
+                    $isWastes = request()->routeIs('admin.wastes.*');
+                    $isOpnames = request()->routeIs('admin.opnames.*');
+                    $isInvMovements = request()->routeIs('admin.inventory-movements.*');
+                    $isTables = request()->routeIs('admin.tables.*');
+
+                    $isInventory = $isRawMaterials || $isPurchases || $isWastes || $isOpnames || $isInvMovements || $isTables;
+                @endphp
+
+                <div class="flex items-center justify-between">
+                    <div class="rounded-2xl border border-white/20 bg-white/10 px-4 py-2">
+                        <div class="text-xs text-white/70">Admin Panel</div>
+                        <div class="text-sm font-semibold">POS Dashboard</div>
+                    </div>
+
+                    <button id="closeMobileSidebar"
+                        class="rounded-xl border border-white/20 bg-white/10 px-3 py-2 hover:bg-white/15">
+                        ✕
+                    </button>
+                </div>
+
+                <div class="mt-5 space-y-2 text-sm">
+                    <a href="{{ route('admin.dashboard') }}"
+                        class="relative flex items-center gap-3 rounded-xl px-3 py-2 transition-all duration-200
+                            {{ $isDashboard ? 'bg-white/20 shadow-lg' : 'border border-white/10 bg-white/5 hover:bg-white/10' }}">
+                        @if ($isDashboard)
+                            <span class="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r bg-white"></span>
+                        @endif
+                        <span class="text-sm font-medium">Dashboard</span>
+                    </a>
+
+                    <a href="#"
+                        class="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-3 py-2 hover:bg-white/10">
+                        Produk
+                    </a>
+
+                    {{-- Inventory group --}}
+                    <div class="rounded-xl border border-white/10 bg-white/5 p-2">
+                        <div class="flex items-center justify-between px-2 py-2">
+                            <div class="text-sm font-semibold text-white/90">Inventory</div>
+                            <span class="text-xs text-white/60">{{ $isInventory ? 'Active' : '' }}</span>
+                        </div>
+
+                        <a href="{{ route('admin.raw_materials.index') }}"
+                            class="relative mt-1 block rounded-xl px-3 py-2 {{ $isRawMaterials ? 'bg-white/20' : 'hover:bg-white/10' }}">
+                            Bahan Baku
+                        </a>
+
+                        <a href="{{ route('admin.purchases.index') }}"
+                            class="relative mt-1 block rounded-xl px-3 py-2 {{ $isPurchases ? 'bg-white/20' : 'hover:bg-white/10' }}">
+                            Purchases
+                        </a>
+
+                        <a href="{{ route('admin.wastes.index') }}"
+                            class="relative mt-1 block rounded-xl px-3 py-2 {{ $isWastes ? 'bg-white/20' : 'hover:bg-white/10' }}">
+                            Waste
+                        </a>
+
+                        <a href="{{ route('admin.opnames.index') }}"
+                            class="relative mt-1 block rounded-xl px-3 py-2 {{ $isOpnames ? 'bg-white/20' : 'hover:bg-white/10' }}">
+                            Stock Opname
+                        </a>
+
+                        <a href="{{ url('/admin/inventory-movements') }}"
+                            class="relative mt-1 block rounded-xl px-3 py-2 {{ $isInvMovements ? 'bg-white/20' : 'hover:bg-white/10' }}">
+                            Inventory Movement
+                        </a>
+                    </div>
+
+                    <a href="#"
+                        class="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-3 py-2 hover:bg-white/10">
+                        Transaksi
+                    </a>
+
+                    <a href="{{ route('admin.cashiers.index') }}"
+                        class="relative flex items-center gap-3 rounded-xl px-3 py-2 transition-all duration-200
+                            {{ $isUsers ? 'bg-white/20 shadow-lg' : 'border border-white/10 bg-white/5 hover:bg-white/10' }}">
+                        @if ($isUsers)
+                            <span class="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r bg-white"></span>
+                        @endif
+                        <span class="text-sm font-medium">User</span>
+                    </a>
+
+                    <a href="{{ route('admin.tables.index') }}" class="relative flex items-center gap-3 rounded-xl px-3 py-2 transition-all duration-200
+   {{ $isTables ? 'bg-white/20 shadow-lg' : 'border border-white/10 bg-white/5 hover:bg-white/10' }}">
+                        @if ($isTables)
+                            <span class="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r bg-white"></span>
+                        @endif
+                        <span class="text-sm font-medium">Meja</span>
+                    </a>
+
+                    <a href="#"
+                        class="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-3 py-2 hover:bg-white/10">
+                        Laporan
+                    </a>
+                </div>
+
+                <div class="mt-6 rounded-2xl border border-white/15 bg-white/10 p-4">
+                    <div class="text-xs text-white/70">Login as</div>
+                    <div class="mt-1 text-sm font-semibold">{{ auth()->user()->name ?? 'Admin' }}</div>
+                    <div class="text-xs text-white/70">{{ auth()->user()->email }}</div>
+                </div>
+
+                <div class="mt-auto pt-5">
+                    <form method="POST" action="{{ route('logout') }}">
+                        @csrf
+                        <button
+                            class="w-full rounded-xl bg-blue-600/85 px-4 py-3 text-sm font-semibold hover:bg-blue-500/85">
+                            Logout
+                        </button>
+                    </form>
+                </div>
+            </aside>
+
+            <!-- MAIN -->
+            <main id="adminMain" class="flex-1 p-4 lg:p-6">
+                @yield('body')
+            </main>
+
         </div>
+    </div>
     </div>
 
     <script>
-        (function() {
+        (function () {
             // ===== DESKTOP COLLAPSE / HOVER =====
             const sidebarD = document.getElementById('adminSidebarDesktop');
             const main = document.getElementById('adminMain');

@@ -15,6 +15,43 @@
     <div class="rounded-2xl border border-slate-200/70 bg-white/60 px-4 py-2 text-sm shadow-sm backdrop-blur-2xl">
       <span class="text-slate-500">Update:</span> <span id="lastUpdate" class="font-semibold">-</span>
     </div>
+    {{-- Filters --}}
+    <div class="mt-4 rounded-2xl border border-slate-200/70 bg-white/60 p-3 shadow-sm backdrop-blur-2xl">
+      <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <div>
+            <label class="text-xs text-slate-600">Filter Tipe</label>
+            <select id="filterType"
+              class="mt-1 w-full rounded-xl border border-slate-200/70 bg-white/70 px-3 py-2 text-sm outline-none">
+              <option value="all">Semua</option>
+              <option value="dine_in">Dine In</option>
+              <option value="takeaway">Take Away</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="text-xs text-slate-600">Filter Meja</label>
+            <select id="filterTable"
+              class="mt-1 w-full rounded-xl border border-slate-200/70 bg-white/70 px-3 py-2 text-sm outline-none">
+              <option value="all">Semua Meja</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="text-xs text-slate-600">Sort</label>
+            <select id="sortMode"
+              class="mt-1 w-full rounded-xl border border-slate-200/70 bg-white/70 px-3 py-2 text-sm outline-none">
+              <option value="time">Waktu</option>
+              <option value="table_time">Meja → Waktu</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="text-xs text-slate-500">
+          Tips: pilih “Meja” hanya berlaku untuk Dine In.
+        </div>
+      </div>
+    </div>
   </div>
 
   @if(session('success'))
@@ -56,13 +93,12 @@
     @csrf
   </form>
 
-<script>
+  <script>
   // ==========================
   // CONFIG SLA (menit)
   // ==========================
   const SLA_GREEN_MIN = 5;   // < 5 menit
   const SLA_YELLOW_MIN = 10; // 5-10 menit
-  // >= 10 menit = merah
 
   // ==========================
   // DOM
@@ -78,10 +114,9 @@
 
   const btnEnableSound = document.getElementById('btnEnableSound');
 
-  // Guard kalau ada element yang belum ada
-  if (!colNew || !colProc || !colDone || !lastUpdate || !countNew || !countProc || !countDone) {
-    console.error('KDS: DOM element tidak lengkap. Pastikan id colNew/colProc/colDone/count*/lastUpdate ada.');
-  }
+  const filterType = document.getElementById('filterType');
+  const filterTable = document.getElementById('filterTable');
+  const sortMode = document.getElementById('sortMode');
 
   // ==========================
   // SOUND (needs user interaction)
@@ -91,12 +126,8 @@
 
   async function ensureAudioReady() {
     try {
-      if (!audioCtx) {
-        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      }
-      if (audioCtx.state === 'suspended') {
-        await audioCtx.resume();
-      }
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === 'suspended') await audioCtx.resume();
       return true;
     } catch (e) {
       return false;
@@ -105,14 +136,12 @@
 
   async function ping() {
     if (!soundEnabled) return;
-
     const ok = await ensureAudioReady();
     if (!ok) return;
 
     try {
       const o = audioCtx.createOscillator();
       const g = audioCtx.createGain();
-
       o.type = 'sine';
       o.frequency.value = 880;
       g.gain.value = 0.0001;
@@ -126,9 +155,7 @@
 
       o.start(now);
       o.stop(now + 0.22);
-    } catch (e) {
-      // ignore
-    }
+    } catch (e) {}
   }
 
   function updateSoundButton() {
@@ -203,19 +230,10 @@
   }
 
   function sortByDateAsc(arr, getDate) {
-    return [...arr].sort((a, b) => {
-      const da = getDate(a)?.getTime?.() ?? 0;
-      const db = getDate(b)?.getTime?.() ?? 0;
-      return da - db;
-    });
+    return [...arr].sort((a, b) => (getDate(a)?.getTime?.() ?? 0) - (getDate(b)?.getTime?.() ?? 0));
   }
-
   function sortByDateDesc(arr, getDate) {
-    return [...arr].sort((a, b) => {
-      const da = getDate(a)?.getTime?.() ?? 0;
-      const db = getDate(b)?.getTime?.() ?? 0;
-      return db - da;
-    });
+    return [...arr].sort((a, b) => (getDate(b)?.getTime?.() ?? 0) - (getDate(a)?.getTime?.() ?? 0));
   }
 
   function buildQueueMapByCreatedAt(sales) {
@@ -225,20 +243,104 @@
     return map;
   }
 
+  function getOrderType(sale) {
+    return (sale.order_type || 'takeaway');
+  }
+  function getTableName(sale) {
+    return sale?.dining_table?.name || '';
+  }
+
+  // ==========================
+  // FILTER UI helpers
+  // ==========================
+  function getCurrentFilters() {
+    return {
+      type: filterType?.value || 'all',
+      table: filterTable?.value || 'all',
+      sort: sortMode?.value || 'time',
+    };
+  }
+
+  function applyFilters(sales) {
+    const f = getCurrentFilters();
+    return (sales || []).filter(s => {
+      const type = getOrderType(s);
+      const table = String(s.dining_table_id ?? '');
+
+      if (f.type !== 'all' && type !== f.type) return false;
+      if (f.table !== 'all') {
+        if (f.table === '__TA__') {
+          // khusus take away
+          if (type !== 'takeaway') return false;
+        } else {
+          // meja tertentu
+          if (type !== 'dine_in') return false;
+          if (table !== f.table) return false;
+        }
+      }
+      return true;
+    });
+  }
+
+  function rebuildTableFilterOptions(sales) {
+    if (!filterTable) return;
+
+    const current = filterTable.value || 'all';
+    const map = new Map(); // id -> name
+
+    for (const s of (sales || [])) {
+      if (getOrderType(s) === 'dine_in' && s.dining_table_id) {
+        const id = String(s.dining_table_id);
+        const name = getTableName(s) || ('Meja ' + id);
+        map.set(id, name);
+      }
+    }
+
+    const options = [];
+    options.push({ value: 'all', label: 'Semua Meja' });
+    options.push({ value: '__TA__', label: 'Take Away Saja' });
+
+    const sorted = [...map.entries()].sort((a, b) => a[1].localeCompare(b[1], 'id'));
+    for (const [id, name] of sorted) options.push({ value: id, label: name });
+
+    filterTable.innerHTML = options.map(o => `<option value="${escapeHtml(o.value)}">${escapeHtml(o.label)}</option>`).join('');
+
+    // restore kalau masih ada
+    const stillExists = options.some(o => o.value === current);
+    filterTable.value = stillExists ? current : 'all';
+  }
+
   // ==========================
   // RENDER
   // ==========================
+  function renderOrderTypeBadge(sale) {
+    const type = getOrderType(sale);
+
+    if (type === 'dine_in') {
+      const tname = getTableName(sale) || ('Meja ' + (sale.dining_table_id ?? '-'));
+      return `
+        <span class="inline-flex items-center gap-2 rounded-xl border border-sky-200/70 bg-sky-200/40 px-3 py-1 text-xs font-semibold text-sky-900">
+          🍽️ DINE IN • ${escapeHtml(tname)}
+        </span>
+      `;
+    }
+
+    return `
+      <span class="inline-flex items-center gap-2 rounded-xl border border-slate-200/70 bg-slate-900/5 px-3 py-1 text-xs font-semibold text-slate-700">
+        🥡 TAKE AWAY
+      </span>
+    `;
+  }
+
   function renderCard(sale, queueNo) {
     const now = new Date();
     const createdAt = parseISOToDate(sale.created_at);
     const startedAt = parseISOToDate(sale.kitchen_started_at);
     const doneAt = parseISOToDate(sale.kitchen_done_at);
 
-    // umur order = sejak dibuat
     const ageSec = diffSeconds(createdAt, now);
     const ageMin = Math.floor(ageSec / 60);
 
-    // durasi masak (untuk done)
     let cookSec = 0;
     if (sale.kitchen_status === 'processing' && startedAt) {
       cookSec = diffSeconds(startedAt, now);
@@ -263,13 +365,13 @@
       ? 'border-l-4 border-slate-200'
       : slaBorderClassByMinutes(ageMin);
 
-    let badge = '';
+    let timerBadge = '';
     if (sale.kitchen_status === 'new' || sale.kitchen_status === 'processing') {
-      badge = `<span class="inline-flex items-center gap-2 rounded-xl border px-3 py-1 text-xs font-semibold ${slaPillClassByMinutes(ageMin)}">
+      timerBadge = `<span class="inline-flex items-center gap-2 rounded-xl border px-3 py-1 text-xs font-semibold ${slaPillClassByMinutes(ageMin)}">
         ⏱ ${formatDuration(ageSec)}
       </span>`;
     } else if (sale.kitchen_status === 'done' && cookSec > 0) {
-      badge = `<span class="inline-flex items-center gap-2 rounded-xl border border-slate-200/70 bg-slate-900/5 px-3 py-1 text-xs font-semibold text-slate-700">
+      timerBadge = `<span class="inline-flex items-center gap-2 rounded-xl border border-slate-200/70 bg-slate-900/5 px-3 py-1 text-xs font-semibold text-slate-700">
         ✅ Cook ${formatDuration(cookSec)}
       </span>`;
     }
@@ -289,17 +391,22 @@
         </button>`;
     }
 
+    const orderTypeBadge = renderOrderTypeBadge(sale);
+
     return `
       <div class="rounded-2xl border border-slate-200/70 bg-white/60 p-4 shadow-sm backdrop-blur-2xl ${borderClass}">
         <div class="flex items-start justify-between gap-3">
           <div class="min-w-0">
-            <div class="flex items-center gap-2">
+            <div class="flex flex-wrap items-center gap-2">
               <div class="text-xl font-extrabold tracking-tight text-slate-900">${escapeHtml(queueLabel)}</div>
-              ${badge}
+              ${timerBadge}
+              ${orderTypeBadge}
             </div>
+
             <div class="mt-1 text-sm font-semibold text-slate-900">${escapeHtml(invoice)}</div>
             <div class="text-xs text-slate-500">${escapeHtml(timeText)} • Kasir: ${escapeHtml(cashier)}</div>
           </div>
+
           <div class="shrink-0 text-sm font-semibold text-slate-900">${rupiah(sale.total_amount)}</div>
         </div>
 
@@ -323,18 +430,53 @@
   let cachedSales = [];
   let cachedQueueMap = new Map();
 
+  function sortGroup(group, which) {
+    const f = getCurrentFilters();
+
+    if (f.sort === 'table_time') {
+      // sort by table name (takeaway last), then by time
+      const getT = s => (getOrderType(s) === 'dine_in' ? (getTableName(s) || '') : '~~~TA');
+      const getTime = which === 'done'
+        ? (s => parseISOToDate(s.kitchen_done_at) || parseISOToDate(s.created_at))
+        : which === 'proc'
+          ? (s => parseISOToDate(s.kitchen_started_at) || parseISOToDate(s.created_at))
+          : (s => parseISOToDate(s.created_at));
+
+      return [...group].sort((a, b) => {
+        const ta = getT(a).toLowerCase();
+        const tb = getT(b).toLowerCase();
+        if (ta < tb) return -1;
+        if (ta > tb) return 1;
+
+        const da = getTime(a)?.getTime?.() ?? 0;
+        const db = getTime(b)?.getTime?.() ?? 0;
+
+        // NEW/PROC: oldest first; DONE: newest first
+        if (which === 'done') return db - da;
+        return da - db;
+      });
+    }
+
+    // default time sorting
+    if (which === 'new') return sortByDateAsc(group, s => parseISOToDate(s.created_at));
+    if (which === 'proc') return sortByDateAsc(group, s => parseISOToDate(s.kitchen_started_at) || parseISOToDate(s.created_at));
+    return sortByDateDesc(group, s => parseISOToDate(s.kitchen_done_at) || parseISOToDate(s.created_at));
+  }
+
   function renderFromCache() {
-    const sales = cachedSales || [];
-    cachedQueueMap = buildQueueMapByCreatedAt(sales);
+    // rebuild meja options dari semua sales (biar meja muncul walau lagi difilter)
+    rebuildTableFilterOptions(cachedSales);
 
-    const groupNewRaw  = sales.filter(s => (s.kitchen_status || 'new') === 'new');
-    const groupProcRaw = sales.filter(s => s.kitchen_status === 'processing');
-    const groupDoneRaw = sales.filter(s => s.kitchen_status === 'done');
+    const filtered = applyFilters(cachedSales);
+    cachedQueueMap = buildQueueMapByCreatedAt(filtered);
 
-    // sorting rules
-    const groupNew = sortByDateAsc(groupNewRaw, s => parseISOToDate(s.created_at));
-    const groupProc = sortByDateAsc(groupProcRaw, s => parseISOToDate(s.kitchen_started_at) || parseISOToDate(s.created_at));
-    const groupDone = sortByDateDesc(groupDoneRaw, s => parseISOToDate(s.kitchen_done_at) || parseISOToDate(s.created_at));
+    const groupNewRaw  = filtered.filter(s => (s.kitchen_status || 'new') === 'new');
+    const groupProcRaw = filtered.filter(s => s.kitchen_status === 'processing');
+    const groupDoneRaw = filtered.filter(s => s.kitchen_status === 'done');
+
+    const groupNew  = sortGroup(groupNewRaw, 'new');
+    const groupProc = sortGroup(groupProcRaw, 'proc');
+    const groupDone = sortGroup(groupDoneRaw, 'done');
 
     countNew.textContent = groupNew.length;
     countProc.textContent = groupProc.length;
@@ -350,10 +492,9 @@
     const data = await res.json();
 
     lastUpdate.textContent = (data.now || '-');
-
     cachedSales = data.sales || [];
 
-    // ping kalau ada NEW id baru setelah initial load
+    // ping kalau ada NEW id baru setelah initial load (berdasarkan data mentah)
     const groupNew = cachedSales.filter(s => (s.kitchen_status || 'new') === 'new');
     const newIdsNow = new Set(groupNew.map(s => s.id));
 
@@ -370,6 +511,14 @@
 
     renderFromCache();
   }
+
+  // ==========================
+  // FILTER events
+  // ==========================
+  [filterType, filterTable, sortMode].forEach(el => {
+    if (!el) return;
+    el.addEventListener('change', () => renderFromCache());
+  });
 
   // ==========================
   // ACTION BUTTONS
@@ -396,7 +545,7 @@
   // START
   // ==========================
   loadOrders();
-  setInterval(loadOrders, 4000);   // fetch data tiap 4 detik
+  setInterval(loadOrders, 4000);      // fetch tiap 4 detik
   setInterval(renderFromCache, 1000); // update timer tiap 1 detik tanpa fetch
 </script>
 @endsection

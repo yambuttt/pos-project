@@ -119,6 +119,36 @@
         <div class="font-semibold" id="totalText">Rp 0</div>
     </div>
     <div class="mt-3">
+        <div class="mt-3">
+    <label class="text-xs text-white/70">Jenis Pesanan</label>
+
+    <div class="mt-2 grid grid-cols-2 gap-2">
+        <label class="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm hover:bg-white/10">
+            <input type="radio" name="order_type" value="takeaway" class="rounded border-white/20 bg-white/10"
+                   {{ old('order_type', 'takeaway') === 'takeaway' ? 'checked' : '' }}>
+            Take Away
+        </label>
+
+        <label class="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm hover:bg-white/10">
+            <input type="radio" name="order_type" value="dine_in" class="rounded border-white/20 bg-white/10"
+                   {{ old('order_type') === 'dine_in' ? 'checked' : '' }}>
+            Dine In
+        </label>
+    </div>
+</div>
+
+<div id="tableWrap" class="mt-3 hidden">
+    <label class="text-xs text-white/70">Meja</label>
+    <select name="dining_table_id" id="diningTable"
+        class="mt-2 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm outline-none focus:border-white/25">
+        <option value="">— Pilih meja —</option>
+        @foreach(($tables ?? []) as $t)
+            <option value="{{ $t->id }}" {{ (string)old('dining_table_id') === (string)$t->id ? 'selected' : '' }}>
+                {{ $t->name }}
+            </option>
+        @endforeach
+    </select>
+</div>
   <label class="text-xs text-white/70">Metode Pembayaran</label>
   <select name="payment_method" id="paymentMethod"
       class="mt-2 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm outline-none focus:border-white/25">
@@ -169,6 +199,32 @@ const taxText = document.getElementById('taxText');
             const cartMap = new Map();
 
             const fmtRp = (n) => 'Rp ' + Number(n || 0).toLocaleString('id-ID');
+            // ===== DINE IN / TAKEAWAY toggle =====
+const tableWrap = document.getElementById('tableWrap');
+const diningTable = document.getElementById('diningTable');
+
+function syncOrderTypeUI() {
+  const typeEl = document.querySelector('input[name="order_type"]:checked');
+  const type = typeEl ? typeEl.value : 'takeaway';
+
+  if (!tableWrap) return;
+
+  if (type === 'dine_in') {
+    tableWrap.classList.remove('hidden');
+    if (diningTable) diningTable.disabled = false;
+  } else {
+    tableWrap.classList.add('hidden');
+    if (diningTable) {
+      diningTable.value = '';
+      diningTable.disabled = true;
+    }
+  }
+}
+
+document.querySelectorAll('input[name="order_type"]').forEach(r => {
+  r.addEventListener('change', syncOrderTypeUI);
+});
+syncOrderTypeUI();
 
             function addToCart(p) {
                 // safety: jangan bisa tambah kalau max <= 0

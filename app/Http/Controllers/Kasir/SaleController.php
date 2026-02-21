@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 use Illuminate\Support\Facades\Auth;
+use App\Models\DiningTable;
 class SaleController extends Controller
 {
     public function index()
@@ -37,24 +38,27 @@ class SaleController extends Controller
 
         // Tambahkan atribut runtime untuk UI kasir
         $products->each(function (Product $p) {
-            // Method ini ada di Product model kamu (yang sebelumnya kita bahas)
             $p->max_portions = (int) $p->maxServingsFromStock();
             $p->is_sellable = $p->max_portions > 0;
         });
 
-        // Ini khusus untuk dipakai JS (lebih aman & ringan)
         $productsJson = $products->map(function (Product $p) {
             return [
                 'id' => $p->id,
                 'name' => $p->name,
-                'category' => $p->category,   // category di projectmu string, bukan relasi
+                'category' => $p->category,
                 'price' => (int) $p->price,
                 'max_portions' => (int) ($p->max_portions ?? 0),
                 'is_sellable' => (bool) ($p->is_sellable ?? false),
             ];
         })->values();
 
-        return view('dashboard.kasir.sales.create', compact('products', 'productsJson'));
+        $tables = DiningTable::query()
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get(['id', 'name']);
+
+        return view('dashboard.kasir.sales.create', compact('products', 'productsJson', 'tables'));
     }
 
 
@@ -63,12 +67,19 @@ class SaleController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
+            'order_type' => ['required', 'in:dine_in,takeaway'],
+            'dining_table_id' => ['nullable', 'exists:dining_tables,id'],
+
             'paid_amount' => ['required', 'integer', 'min:0'],
             'payment_method' => ['required', 'in:cash,qris'],
             'items' => ['required', 'array', 'min:1'],
             'items.*.product_id' => ['required', 'exists:products,id'],
             'items.*.qty' => ['required', 'integer', 'min:1'],
         ]);
+
+        if (($data['order_type'] ?? null) === 'dine_in' && empty($data['dining_table_id'])) {
+            return back()->withErrors(['sale' => 'Kalau Dine In, wajib pilih meja.'])->withInput();
+        }
 
         $userId = \Illuminate\Support\Facades\Auth::id();
 
@@ -163,10 +174,11 @@ class SaleController extends Controller
                     'user_id' => $userId,
                     'total_amount' => $grandTotal,
                     'paid_amount' => $paid,
-                    'payment_method' => $data['payment_method'], // cash/qris
+                    'payment_method' => $data['payment_method'],
+                    'order_type' => $data['order_type'],
+                    'dining_table_id' => $data['order_type'] === 'dine_in' ? ($data['dining_table_id'] ?? null) : null,
                     'change_amount' => $paid - $grandTotal,
                     'status' => 'completed',
-
                     'kitchen_status' => 'new',
                 ]);
 
