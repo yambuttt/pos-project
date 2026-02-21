@@ -16,10 +16,10 @@ use App\Http\Controllers\Kasir\DashboardController as KasirDashboardController;
 use App\Http\Controllers\Kitchen\KitchenController;
 use App\Http\Controllers\Kitchen\DashboardController as KitchenDashboardController;
 use App\Http\Controllers\Admin\DiningTableController;
-Route::get('/', function () {
-    return view('welcome');
-});
+use App\Models\Product;
+use App\Http\Controllers\PublicMenuController;
 
+Route::get('/', [PublicMenuController::class, 'index']);
 // LOGIN
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.submit');

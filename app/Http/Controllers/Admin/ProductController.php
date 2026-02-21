@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\RawMaterial;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class ProductController extends Controller
 {
@@ -26,12 +27,19 @@ class ProductController extends Controller
             'name' => ['required','string','max:150'],
             'sku' => ['nullable','string','max:100','unique:products,sku'],
             'category' => ['nullable','string','max:100'],
+            'description' => ['nullable','string','max:2000'],
             'price' => ['required','integer','min:0'],
+            'image' => ['nullable','image','mimes:jpg,jpeg,png,webp'],
             'is_active' => ['nullable'],
         ]);
 
         $data['is_active'] = $request->boolean('is_active', true);
         $data['created_by'] = auth()->id();
+
+        if ($request->hasFile('image')) {
+            // simpan ke storage/app/public/products/...
+            $data['image_path'] = $request->file('image')->store('products', 'public');
+        }
 
         $p = Product::create($data);
 
@@ -50,12 +58,22 @@ class ProductController extends Controller
             'name' => ['required','string','max:150'],
             'sku' => ['nullable','string','max:100','unique:products,sku,'.$product->id],
             'category' => ['nullable','string','max:100'],
+            'description' => ['nullable','string','max:2000'],
             'price' => ['required','integer','min:0'],
+            'image' => ['nullable','image','mimes:jpg,jpeg,png,webp'],
             'is_active' => ['nullable'],
         ]);
 
         $data['is_active'] = $request->boolean('is_active', true);
         $data['updated_by'] = auth()->id();
+
+        if ($request->hasFile('image')) {
+            // hapus lama kalau ada
+            if ($product->image_path) {
+                Storage::disk('public')->delete($product->image_path);
+            }
+            $data['image_path'] = $request->file('image')->store('products', 'public');
+        }
 
         $product->update($data);
 
@@ -64,6 +82,9 @@ class ProductController extends Controller
 
     public function destroy(Product $product)
     {
+        if ($product->image_path) {
+            Storage::disk('public')->delete($product->image_path);
+        }
         $product->delete();
         return back()->with('success','Produk dihapus.');
     }
@@ -85,7 +106,6 @@ class ProductController extends Controller
             'note' => ['nullable','string','max:150'],
         ]);
 
-        // unique per product
         $product->recipes()->updateOrCreate(
             ['raw_material_id' => $data['raw_material_id']],
             ['qty' => $data['qty'], 'note' => $data['note'] ?? null]

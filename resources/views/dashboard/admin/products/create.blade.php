@@ -21,7 +21,7 @@
     </div>
   @endif
 
-  <form method="POST" action="{{ route('admin.products.store') }}"
+  <form method="POST" action="{{ route('admin.products.store') }}" enctype="multipart/form-data"
     class="mt-5 rounded-[26px] border border-white/20 bg-white/10 p-5 backdrop-blur-2xl sm:p-7">
     @csrf
 
@@ -48,6 +48,19 @@
         <label class="text-sm text-white/80">Harga (Rp)</label>
         <input name="price" type="number" min="0" value="{{ old('price', 0) }}"
           class="mt-2 w-full rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm outline-none focus:border-white/40">
+      </div>
+
+      <div class="sm:col-span-2">
+        <label class="text-sm text-white/80">Deskripsi (opsional)</label>
+        <textarea name="description" rows="3" placeholder="Contoh: Bakso sapi + kuah gurih..."
+          class="mt-2 w-full rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm outline-none placeholder:text-white/40 focus:border-white/40">{{ old('description') }}</textarea>
+      </div>
+
+      <div class="sm:col-span-2">
+        <label class="text-sm text-white/80">Gambar Produk (opsional)</label>
+        <input name="image" type="file" accept="image/*"
+          class="mt-2 w-full rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm outline-none focus:border-white/40">
+        <p class="mt-2 text-xs text-white/50">Disarankan: JPG/PNG/WEBP, max 2MB.</p>
       </div>
     </div>
 

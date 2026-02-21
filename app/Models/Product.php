@@ -7,7 +7,15 @@ use Illuminate\Database\Eloquent\Model;
 class Product extends Model
 {
     protected $fillable = [
-        'name','sku','category','price','is_active','created_by','updated_by'
+        'name',
+        'sku',
+        'category',
+        'description',
+        'image_path',
+        'price',
+        'is_active',
+        'created_by',
+        'updated_by',
     ];
 
     public function recipes()
@@ -37,5 +45,11 @@ class Product extends Model
         }
 
         return count($mins) ? min($mins) : 0;
+    }
+
+    public function imageUrl(): ?string
+    {
+        if (!$this->image_path) return null;
+        return asset('storage/' . ltrim($this->image_path, '/'));
     }
 }
