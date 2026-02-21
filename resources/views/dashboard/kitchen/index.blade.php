@@ -371,13 +371,18 @@
       const timeText = (sale.created_at ?? '').replace('T', ' ').slice(0, 16);
       const queueLabel = `Q-${pad3(queueNo || 0)}`;
 
-      const itemsHtml = (sale.items || []).map((it) => {
-        const name = it.product?.name ?? ('Product#' + it.product_id);
-        return `<li class="flex justify-between gap-2">
-          <span class="text-slate-900">${escapeHtml(name)}</span>
-          <span class="text-slate-500">x${it.qty}</span>
-        </li>`;
-      }).join('') || `<li class="text-slate-500">Tidak ada item</li>`;
+const itemsHtml = (sale.items || []).map((it) => {
+  const name = it.product?.name ?? ('Product#' + it.product_id);
+  const note = (it.note || '').trim();
+
+  return `<li class="flex justify-between gap-3">
+    <div class="min-w-0">
+      <div class="text-slate-900">${escapeHtml(name)}</div>
+      ${note ? `<div class="mt-0.5 text-xs text-slate-500">📝 ${escapeHtml(note)}</div>` : ``}
+    </div>
+    <div class="shrink-0 text-slate-500">x${it.qty}</div>
+  </li>`;
+}).join('') || `<li class="text-slate-500">Tidak ada item</li>`;
 
       // Border:
       // delivered => emerald, done => amber, others => SLA

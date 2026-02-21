@@ -16,6 +16,7 @@ class Sale extends Model
         'dining_table_id',
         'change_amount',
         'status',
+      
         'delivered_at',
         'delivered_user_id',
         'kitchen_status',

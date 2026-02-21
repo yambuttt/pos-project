@@ -75,6 +75,7 @@ class SaleController extends Controller
             'items' => ['required', 'array', 'min:1'],
             'items.*.product_id' => ['required', 'exists:products,id'],
             'items.*.qty' => ['required', 'integer', 'min:1'],
+            'items.*.note' => ['nullable', 'string', 'max:255'],
         ]);
 
         if (($data['order_type'] ?? null) === 'dine_in' && empty($data['dining_table_id'])) {
@@ -221,6 +222,7 @@ class SaleController extends Controller
                         'qty' => $qty,
                         'price' => (int) $p->price,
                         'subtotal' => $subtotal,
+                        'note' => isset($it['note']) && trim((string) $it['note']) !== '' ? trim((string) $it['note']) : null,
                     ]);
                 }
 

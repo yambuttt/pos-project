@@ -199,6 +199,12 @@ const taxText = document.getElementById('taxText');
             const cartMap = new Map();
 
             const fmtRp = (n) => 'Rp ' + Number(n || 0).toLocaleString('id-ID');
+            const escapeAttr = (str) => String(str ?? '')
+  .replaceAll('&', '&amp;')
+  .replaceAll('<', '&lt;')
+  .replaceAll('>', '&gt;')
+  .replaceAll('"', '&quot;')
+  .replaceAll("'", '&#039;');
             // ===== DINE IN / TAKEAWAY toggle =====
 const tableWrap = document.getElementById('tableWrap');
 const diningTable = document.getElementById('diningTable');
@@ -258,21 +264,39 @@ syncOrderTypeUI();
   let index = 0;
 
   cartMap.forEach((item) => {
+    // pastikan note ada biar gak undefined
+    if (typeof item.note !== 'string') item.note = '';
+
     const subtotal = item.price * item.qty;
     subtotalAll += subtotal;
     countQty += item.qty;
 
     const row = document.createElement('div');
-    row.className = 'rounded-2xl border border-white/10 bg-white/5 p-3 flex items-center gap-3';
+    row.className = 'rounded-2xl border border-white/10 bg-white/5 p-3';
+
     row.innerHTML = `
-      <div class="flex-1">
-        <div class="text-sm font-semibold">${item.name}</div>
-        <div class="text-xs text-white/60">${fmtRp(item.price)} • Sub: <b>${fmtRp(subtotal)}</b></div>
-      </div>
-      <div class="flex items-center gap-2">
-        <button type="button" class="h-9 w-9 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10">-</button>
-        <div class="w-10 text-center text-sm font-semibold">${item.qty}</div>
-        <button type="button" class="h-9 w-9 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10">+</button>
+      <div class="flex items-start gap-3">
+        <div class="flex-1">
+          <div class="text-sm font-semibold">${item.name}</div>
+          <div class="text-xs text-white/60">${fmtRp(item.price)} • Sub: <b>${fmtRp(subtotal)}</b></div>
+
+          <div class="mt-2">
+            <label class="block text-[11px] text-white/60">Catatan item (opsional)</label>
+            <input
+              type="text"
+              class="mt-1 w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none placeholder:text-white/30 focus:border-white/25"
+              placeholder="Contoh: bakso agak asin / tanpa sambal"
+              value="${escapeAttr(item.note)}"
+              data-note-for="${item.id}"
+            />
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2 pt-1">
+          <button type="button" class="h-9 w-9 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10">-</button>
+          <div class="w-10 text-center text-sm font-semibold">${item.qty}</div>
+          <button type="button" class="h-9 w-9 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10">+</button>
+        </div>
       </div>
     `;
 
@@ -280,13 +304,29 @@ syncOrderTypeUI();
     btns[0].addEventListener('click', () => changeQty(item.id, -1));
     btns[1].addEventListener('click', () => changeQty(item.id, +1));
 
+    // input catatan
+    const noteInput = row.querySelector(`input[data-note-for="${item.id}"]`);
+    noteInput.addEventListener('input', (e) => {
+      const val = e.target.value ?? '';
+      const it = cartMap.get(item.id);
+      if (!it) return;
+      it.note = val;
+      cartMap.set(item.id, it);
+
+      // update hidden note (kalau ada)
+      const hidden = formData.querySelector(`input[data-note-hidden-for="${item.id}"]`);
+      if (hidden) hidden.value = val;
+    });
+
     cart.appendChild(row);
 
     // hidden submit
     formData.insertAdjacentHTML('beforeend', `
       <input type="hidden" name="items[${index}][product_id]" value="${item.id}">
       <input type="hidden" name="items[${index}][qty]" value="${item.qty}">
+      <input type="hidden" name="items[${index}][note]" value="${escapeAttr(item.note)}" data-note-hidden-for="${item.id}">
     `);
+
     index++;
   });
 
@@ -294,7 +334,6 @@ syncOrderTypeUI();
   const tax = Math.round(subtotalAll * TAX_RATE);
   const grandTotal = subtotalAll + tax;
 
-  // Update UI teks
   if (subtotalText) subtotalText.textContent = fmtRp(subtotalAll);
   if (taxText) taxText.textContent = fmtRp(tax);
 
@@ -303,21 +342,18 @@ syncOrderTypeUI();
 
   payBtn.disabled = cartMap.size === 0;
 
-  // Kembalian pakai grand total
- const method = (paymentMethod?.value || 'cash');
+  const method = (paymentMethod?.value || 'cash');
 
-if (method === 'qris') {
-  // anggap QRIS selalu pas (gateway belum siap, tapi transaksi tetap jalan)
-  paidAmount.value = String(grandTotal);
-  paidAmount.setAttribute('readonly', 'readonly');
-  const change = 0;
-  changeText.textContent = fmtRp(change);
-} else {
-  paidAmount.removeAttribute('readonly');
-  const paid = Number(paidAmount.value || 0);
-  const change = Math.max(0, paid - grandTotal);
-  changeText.textContent = fmtRp(change);
-}
+  if (method === 'qris') {
+    paidAmount.value = String(grandTotal);
+    paidAmount.setAttribute('readonly', 'readonly');
+    changeText.textContent = fmtRp(0);
+  } else {
+    paidAmount.removeAttribute('readonly');
+    const paid = Number(paidAmount.value || 0);
+    const change = Math.max(0, paid - grandTotal);
+    changeText.textContent = fmtRp(change);
+  }
 }
 
             // klik card produk (yang sudah dirender Blade)
