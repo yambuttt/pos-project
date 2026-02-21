@@ -14,6 +14,7 @@ use App\Http\Controllers\Kasir\SaleController;
 use App\Http\Controllers\Admin\SaleController as AdminSaleController;
 use App\Http\Controllers\Kasir\DashboardController as KasirDashboardController;
 use App\Http\Controllers\Kitchen\KitchenController;
+use App\Http\Controllers\Kitchen\DashboardController as KitchenDashboardController;
 Route::get('/', function () {
     return view('welcome');
 });

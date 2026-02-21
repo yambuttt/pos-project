@@ -28,6 +28,10 @@ class AuthController extends Controller
                 return redirect()->route('admin.dashboard');
             }
 
+            if ($role === 'kitchen') {
+                return redirect()->route('kitchen.dashboard');
+            }
+
             // default kasir
             return redirect()->route('kasir.dashboard');
         }
