@@ -482,9 +482,15 @@
             const IS_DELIVERY = {{ $isDelivery ? 'true' : 'false' }};
             const cart = loadOverview();
             const entries = Object.entries(cart);
+
+            // ✅ supaya scope aman dipakai sampai payload fetch
+            let phone = null;
+            let addr = null;
+            let diningTableId = null;
+
             if (IS_DELIVERY) {
-                const phone = (document.getElementById('deliveryPhone')?.value || '').trim();
-                const addr = (document.getElementById('deliveryAddress')?.value || '').trim();
+                phone = (document.getElementById('deliveryPhone')?.value || '').trim();
+                addr = (document.getElementById('deliveryAddress')?.value || '').trim();
 
                 if (!phone) { alert('No HP wajib diisi.'); return; }
                 if (!addr) { alert('Alamat wajib diisi.'); return; }
@@ -493,17 +499,14 @@
                     return;
                 }
             } else {
-                const diningTableId = (document.getElementById('diningTableId').value || '').trim();
+                diningTableId = (document.getElementById('diningTableId')?.value || '').trim();
                 if (!diningTableId) { alert('Meja wajib dipilih.'); return; }
             }
 
             if (entries.length === 0) { alert('Keranjang masih kosong.'); return; }
 
-            const name = (document.getElementById('custName').value || '').trim();
+            const name = (document.getElementById('custName')?.value || '').trim();
             if (!name) { alert('Nama wajib diisi.'); return; }
-
-            const diningTableId = (document.getElementById('diningTableId').value || '').trim();
-            if (!diningTableId) { alert('Meja wajib dipilih.'); return; }
 
             const items = entries.map(([id, it]) => ({
                 product_id: Number(id),
@@ -522,9 +525,10 @@
                 },
                 body: JSON.stringify({
                     customer_name: name,
-                    dining_table_id: Number(diningTableId),
+                    dining_table_id: IS_DELIVERY ? null : Number(diningTableId),
                     items,
                     order_type: IS_DELIVERY ? 'delivery' : 'dine_in',
+
                     delivery_phone: IS_DELIVERY ? phone : null,
                     delivery_address: IS_DELIVERY ? addr : null,
                     delivery_lat: IS_DELIVERY ? deliveryLat : null,
@@ -546,7 +550,6 @@
             alert('Order tersimpan! Invoice: ' + (json.invoice_no || '-'));
             window.location.href = '/';
         }
-
         // init: pastikan key qty ikut sinkron dari overview (kalau user reload di halaman ini)
         (function init() {
             const ov = loadOverview();

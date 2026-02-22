@@ -12,6 +12,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
 
 
 class PublicMenuController extends Controller
@@ -72,7 +73,42 @@ class PublicMenuController extends Controller
     {
         $data = $request->validate([
             'customer_name' => ['required', 'string', 'max:80'],
-            'dining_table_id' => ['required', 'exists:dining_tables,id'],
+
+            // ✅ wajib ada, supaya backend tahu mode apa
+            'order_type' => ['required', Rule::in(['dine_in', 'delivery'])],
+
+            // ✅ Meja hanya wajib kalau dine_in
+            'dining_table_id' => [
+                Rule::requiredIf(fn() => $request->input('order_type') === 'dine_in'),
+                'nullable',
+                'exists:dining_tables,id',
+            ],
+
+            // ✅ Field delivery hanya wajib kalau delivery
+            'delivery_phone' => [
+                Rule::requiredIf(fn() => $request->input('order_type') === 'delivery'),
+                'nullable',
+                'string',
+                'max:30',
+            ],
+            'delivery_address' => [
+                Rule::requiredIf(fn() => $request->input('order_type') === 'delivery'),
+                'nullable',
+                'string',
+                'max:500',
+            ],
+            'delivery_lat' => [
+                Rule::requiredIf(fn() => $request->input('order_type') === 'delivery'),
+                'nullable',
+                'numeric',
+            ],
+            'delivery_lng' => [
+                Rule::requiredIf(fn() => $request->input('order_type') === 'delivery'),
+                'nullable',
+                'numeric',
+            ],
+            'delivery_distance_km' => ['nullable', 'numeric', 'min:0'],
+            'delivery_fee' => ['nullable', 'integer', 'min:0'],
 
             'items' => ['required', 'array', 'min:1'],
             'items.*.product_id' => ['required', 'exists:products,id'],
@@ -177,8 +213,15 @@ class PublicMenuController extends Controller
                     'total_amount' => $grandTotal,
                     'paid_amount' => $paid,
                     'payment_method' => 'cash',
-                    'order_type' => 'dine_in',
-                    'dining_table_id' => $data['dining_table_id'],
+
+                    // ✅ ikut request
+                    'order_type' => $data['order_type'],
+
+                    // ✅ meja hanya untuk dine_in
+                    'dining_table_id' => ($data['order_type'] === 'dine_in')
+                        ? $data['dining_table_id']
+                        : null,
+
                     'change_amount' => 0,
                     'status' => 'completed',
                     'kitchen_status' => 'new',
