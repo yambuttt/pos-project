@@ -21,7 +21,8 @@ use App\Http\Controllers\PublicMenuController;
 
 Route::get('/', [PublicMenuController::class, 'index']);
 Route::get('/order/overview', [PublicMenuController::class, 'overview'])->name('public.order.overview');
-Route::post('/order/checkout', [PublicMenuController::class, 'checkout'])->name('public.order.checkout');
+Route::post('/order/checkout', [PublicMenuController::class, 'checkout'])
+    ->name('public.order.checkout');
 // LOGIN
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.submit');

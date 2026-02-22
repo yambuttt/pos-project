@@ -59,18 +59,19 @@ class PublicMenuController extends Controller
 
         $customerDisplay = trim($data['customer_name']) . '(Tamu)';
 
-        // Helper random huruf A-Z (sama konsepnya dengan kasir)
+        // Helper: random huruf A-Z (persis kasir)
         $randomLetters = function (int $len): string {
             $alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
             $out = '';
-            for ($i = 0; $i < $len; $i++) $out .= $alphabet[random_int(0, 25)];
+            for ($i = 0; $i < $len; $i++)
+                $out .= $alphabet[random_int(0, 25)];
             return $out;
         };
 
         try {
             $sale = DB::transaction(function () use ($data, $customerDisplay, $randomLetters) {
 
-                // 1) buat user "guest" khusus untuk transaksi ini (supaya user_id tetap valid)
+                // Buat user guest per transaksi (agar user_id valid untuk relasi cashier)
                 $guest = User::create([
                     'name' => $customerDisplay,
                     'email' => 'guest_' . now()->format('Ymd_His') . '_' . bin2hex(random_bytes(3)) . '@local.test',
@@ -80,58 +81,64 @@ class PublicMenuController extends Controller
 
                 $userId = $guest->id;
 
-                // 2) ambil produk + recipes + rawMaterial untuk hitung kebutuhan stok
+                // === COPY LOGIC KASIR: ambil produk + recipes, hitung total & needs ===
                 $productIds = collect($data['items'])->pluck('product_id')->unique()->values();
-                $products = Product::query()
+                $products = Product::with('recipes.rawMaterial')
                     ->whereIn('id', $productIds)
-                    ->with('recipes.rawMaterial')
+                    ->lockForUpdate()
                     ->get()
                     ->keyBy('id');
 
-                // hitung subtotal
-                $subtotalAll = 0;
-                foreach ($data['items'] as $it) {
-                    $p = $products[$it['product_id']];
-                    $subtotalAll += ((int)$p->price) * ((int)$it['qty']);
-                }
+                $total = 0;
+                $needs = []; // raw_material_id => qty_needed
 
-                $tax = (int) round($subtotalAll * 0.11);
-                $grandTotal = $subtotalAll + $tax;
-
-                // 3) hitung kebutuhan bahan (sama konsep kasir)
-                $needs = []; // raw_material_id => qtyNeed
                 foreach ($data['items'] as $it) {
-                    $p = $products[$it['product_id']];
+                    $p = $products[$it['product_id']] ?? null;
+                    if (!$p || !$p->is_active) {
+                        throw new \RuntimeException('Produk tidak ditemukan / tidak aktif.');
+                    }
+                    if ($p->recipes->count() === 0) {
+                        throw new \RuntimeException("Produk '{$p->name}' belum punya resep, tidak bisa dijual (STRICT).");
+                    }
+
                     $qty = (int) $it['qty'];
+                    $subtotal = (int) $p->price * $qty;
+                    $total += $subtotal;
 
                     foreach ($p->recipes as $r) {
-                        $rid = $r->raw_material_id;
-                        $needs[$rid] = ($needs[$rid] ?? 0) + ((float)$r->qty_needed * $qty);
+                        $rid = (int) $r->raw_material_id;
+
+                        // KUNCI: WAJIB pakai $r->qty (bukan qty_needed)
+                        $need = (float) $r->qty * $qty;
+
+                        $needs[$rid] = ($needs[$rid] ?? 0) + $need;
                     }
                 }
 
-                $materials = RawMaterial::query()
-                    ->whereIn('id', array_keys($needs))
-                    ->get()
-                    ->keyBy('id');
+                $tax = (int) round($total * 0.11);
+                $grandTotal = $total + $tax;
 
-                // 4) strict: cek stok cukup
+                // Untuk flow “tamu”: belum bayar di sistem -> set 0
+                $paid = 0;
+
+                // Lock bahan baku & validasi stok (copy kasir)
+                $rawIds = collect(array_keys($needs))->values();
+                $materials = RawMaterial::whereIn('id', $rawIds)->lockForUpdate()->get()->keyBy('id');
+
                 $insufficient = [];
                 foreach ($needs as $rid => $qtyNeed) {
                     $m = $materials[$rid] ?? null;
-                    if (!$m) continue;
+                    $stock = (float) ($m?->stock_on_hand ?? 0);
 
-                    $stock = (float) $m->stock_on_hand;
-                    if ($stock < (float)$qtyNeed) {
+                    if ($stock + 1e-9 < (float) $qtyNeed) {
                         $insufficient[] = [
-                            'name' => $m->name,
-                            'unit' => $m->unit,
+                            'name' => $m?->name ?? "Material#$rid",
+                            'unit' => $m?->unit ?? '',
                             'need' => $qtyNeed,
                             'stock' => $stock,
                         ];
                     }
                 }
-
                 if (count($insufficient)) {
                     $msg = "Stok bahan kurang:\n";
                     foreach ($insufficient as $x) {
@@ -140,26 +147,21 @@ class PublicMenuController extends Controller
                     throw new \RuntimeException($msg);
                 }
 
-                // 5) create Sale (order_type dine_in wajib, masuk kitchen_status new)
+                // Create sale (masuk kitchen)
                 $sale = Sale::create([
                     'invoice_no' => 'TEMP',
                     'user_id' => $userId,
                     'total_amount' => $grandTotal,
-
-                    // NOTE: sistemmu belum punya konsep "unpaid".
-                    // Kita set default supaya data tetap masuk & tampil.
-                    'paid_amount' => 0,
+                    'paid_amount' => $paid,
                     'payment_method' => 'cash',
-
                     'order_type' => 'dine_in',
                     'dining_table_id' => $data['dining_table_id'],
-
                     'change_amount' => 0,
                     'status' => 'completed',
                     'kitchen_status' => 'new',
                 ]);
 
-                // 6) generate invoice unik (mengikuti pola kasir :contentReference[oaicite:8]{index=8})
+                // Generate invoice unik (copy kasir)
                 $datePart = now()->format('Ymd');
                 $length = 3;
                 $maxAttempts = 50;
@@ -182,11 +184,11 @@ class PublicMenuController extends Controller
                     break;
                 }
 
-                // 7) sale items + note per item
+                // Sale items (note per item)
                 foreach ($data['items'] as $it) {
                     $p = $products[$it['product_id']];
                     $qty = (int) $it['qty'];
-                    $subtotal = ((int)$p->price) * $qty;
+                    $subtotal = (int) $p->price * $qty;
 
                     SaleItem::create([
                         'sale_id' => $sale->id,
@@ -194,11 +196,11 @@ class PublicMenuController extends Controller
                         'qty' => $qty,
                         'price' => (int) $p->price,
                         'subtotal' => $subtotal,
-                        'note' => isset($it['note']) && trim((string)$it['note']) !== '' ? trim((string)$it['note']) : null,
+                        'note' => isset($it['note']) && trim((string) $it['note']) !== '' ? trim((string) $it['note']) : null,
                     ]);
                 }
 
-                // 8) deduct stock + inventory movement (sale) (pola kasir :contentReference[oaicite:9]{index=9})
+                // Deduct stock + inventory movement (sale) (copy kasir)
                 foreach ($needs as $rid => $qtyNeed) {
                     $m = $materials[$rid];
 
