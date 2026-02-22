@@ -47,25 +47,26 @@ class PublicMenuController extends Controller
         return redirect('/?table=' . $table->qr_token);
     }
 
-public function overview(Request $request)
-{
-    $tables = DiningTable::query()
-        ->where('is_active', true)
-        ->orderBy('name')
-        ->get(['id', 'name', 'qr_token']);
-
-    $lockedTable = null;
-
-    $token = (string) $request->query('table', '');
-    if ($token !== '') {
-        $lockedTable = DiningTable::query()
-            ->where('qr_token', $token)
+    public function overview(Request $request)
+    {
+        $tables = DiningTable::query()
             ->where('is_active', true)
-            ->first();
-    }
+            ->orderBy('name')
+            ->get(['id', 'name', 'qr_token']);
 
-    return view('order.overview', compact('tables', 'lockedTable'));
-}
+        $lockedTable = null;
+
+        $token = (string) $request->query('table', '');
+        if ($token !== '') {
+            $lockedTable = DiningTable::query()
+                ->where('qr_token', $token)
+                ->where('is_active', true)
+                ->first();
+        }
+        $isDelivery = !$lockedTable;
+
+        return view('order.overview', compact('tables', 'lockedTable', 'isDelivery'));
+    }
 
     public function checkout(Request $request)
     {
