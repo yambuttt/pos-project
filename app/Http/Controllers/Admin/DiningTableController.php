@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\DiningTable;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class DiningTableController extends Controller
 {
@@ -19,6 +20,15 @@ class DiningTableController extends Controller
         return view('dashboard.admin.tables.create');
     }
 
+    public function regenerateQr(DiningTable $table)
+{
+    $table->update([
+        'qr_token' => Str::random(32),
+    ]);
+
+    return back()->with('success', 'QR token meja berhasil diganti.');
+}
+
     public function store(Request $request)
     {
         $data = $request->validate([
@@ -27,6 +37,7 @@ class DiningTableController extends Controller
         ]);
 
         $data['is_active'] = $request->boolean('is_active', true);
+        $data['qr_token'] = Str::random(32);
 
         DiningTable::create($data);
 

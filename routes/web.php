@@ -20,6 +20,8 @@ use App\Models\Product;
 use App\Http\Controllers\PublicMenuController;
 
 Route::get('/', [PublicMenuController::class, 'index']);
+Route::get('/t/{token}', [PublicMenuController::class, 'byTableToken'])
+    ->name('public.table.token');
 Route::get('/order/overview', [PublicMenuController::class, 'overview'])->name('public.order.overview');
 Route::post('/order/checkout', [PublicMenuController::class, 'checkout'])
     ->name('public.order.checkout');
@@ -86,6 +88,8 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/admin/tables/{table}/edit', [DiningTableController::class, 'edit'])->name('admin.tables.edit');
     Route::put('/admin/tables/{table}', [DiningTableController::class, 'update'])->name('admin.tables.update');
     Route::delete('/admin/tables/{table}', [DiningTableController::class, 'destroy'])->name('admin.tables.destroy');
+    Route::post('/admin/tables/{table}/regenerate-qr', [DiningTableController::class, 'regenerateQr'])
+    ->name('admin.tables.regenerateQr');
 
 });
 

@@ -13,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 
+
 class PublicMenuController extends Controller
 {
     public function index()
@@ -34,15 +35,35 @@ class PublicMenuController extends Controller
         return view('welcome', compact('products', 'categories'));
     }
 
-    public function overview()
+
+    public function byTableToken(string $token)
     {
-        // NEW: ambil meja aktif untuk dropdown
+        $table = DiningTable::where('qr_token', $token)
+            ->where('is_active', true)
+            ->firstOrFail();
+
+        return redirect()->route('public.order.overview', [
+            'table' => $table->qr_token,
+        ]);
+    }
+
+    public function overview(Request $request)
+    {
         $tables = DiningTable::query()
             ->where('is_active', true)
             ->orderBy('name')
-            ->get(['id', 'name']);
+            ->get(['id', 'name', 'qr_token']);
 
-        return view('order.overview', compact('tables'));
+        $lockedTable = null;
+
+        $token = (string) $request->query('table', '');
+        if ($token !== '') {
+            $lockedTable = DiningTable::where('qr_token', $token)
+                ->where('is_active', true)
+                ->first();
+        }
+
+        return view('order.overview', compact('tables', 'lockedTable'));
     }
 
     public function checkout(Request $request)

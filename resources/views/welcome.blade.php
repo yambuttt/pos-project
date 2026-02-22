@@ -388,6 +388,22 @@
             applyFilters();
         });
 
+        // ===== Table token (QR) =====
+const TABLE_TOKEN_KEY = 'ayo_renne_table_token_v1';
+
+(function captureTableTokenFromUrl(){
+  const u = new URL(window.location.href);
+  const token = (u.searchParams.get('table') || '').trim();
+
+  if (token) {
+    localStorage.setItem(TABLE_TOKEN_KEY, token);
+
+    // (opsional) rapihin URL supaya param hilang (biar enak dilihat)
+    u.searchParams.delete('table');
+    window.history.replaceState({}, '', u.toString());
+  }
+})();
+
         // ===== Cart storage keys (fix [object Object]) =====
         const CART_QTY_KEY = 'ayo_renne_cart_v1';                 // qty map {id: number}
         const CART_OVERVIEW_KEY = 'ayo_renne_order_overview_v1';  // detail {id: {name, price, qty}}
@@ -583,7 +599,9 @@
                 overview[id] = { name: p.name, price: p.price, qty: Number(qty) || 0 };
             }
             localStorage.setItem(CART_OVERVIEW_KEY, JSON.stringify(overview));
-            window.location.href = '/order/overview';
+           const token = (localStorage.getItem(TABLE_TOKEN_KEY) || '').trim();
+const url = token ? ('/order/overview?table=' + encodeURIComponent(token)) : '/order/overview';
+window.location.href = url;
         }
 
         // ===== Product Modal =====

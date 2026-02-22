@@ -11,5 +11,6 @@ class DiningTable extends Model
     protected $fillable = [
         'name',
         'is_active',
+        'qr_token',
     ];
 }
