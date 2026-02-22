@@ -79,7 +79,7 @@
                     @else
                         <p class="mt-2 text-xs text-white/45">* Order Type otomatis: <b>Dine In</b></p>
                     @endif
-                    <p class="mt-2 text-xs text-white/45">* Order Type otomatis: <b>Dine In</b></p>
+
                 </div>
             </div>
 
@@ -279,6 +279,7 @@
             }
 
             clearAll();
+            localStorage.removeItem('ayo_renne_table_token_v1');
             alert('Order tersimpan! Invoice: ' + (json.invoice_no || '-'));
             window.location.href = '/';
         }

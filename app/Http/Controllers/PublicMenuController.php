@@ -38,33 +38,34 @@ class PublicMenuController extends Controller
 
     public function byTableToken(string $token)
     {
-        $table = DiningTable::where('qr_token', $token)
+        $table = DiningTable::query()
+            ->where('qr_token', $token)
             ->where('is_active', true)
             ->firstOrFail();
 
-        return redirect()->route('public.order.overview', [
-            'table' => $table->qr_token,
-        ]);
+        // PENTING: arahin ke halaman utama menu, BUKAN overview
+        return redirect('/?table=' . $table->qr_token);
     }
 
-    public function overview(Request $request)
-    {
-        $tables = DiningTable::query()
+public function overview(Request $request)
+{
+    $tables = DiningTable::query()
+        ->where('is_active', true)
+        ->orderBy('name')
+        ->get(['id', 'name', 'qr_token']);
+
+    $lockedTable = null;
+
+    $token = (string) $request->query('table', '');
+    if ($token !== '') {
+        $lockedTable = DiningTable::query()
+            ->where('qr_token', $token)
             ->where('is_active', true)
-            ->orderBy('name')
-            ->get(['id', 'name', 'qr_token']);
-
-        $lockedTable = null;
-
-        $token = (string) $request->query('table', '');
-        if ($token !== '') {
-            $lockedTable = DiningTable::where('qr_token', $token)
-                ->where('is_active', true)
-                ->first();
-        }
-
-        return view('order.overview', compact('tables', 'lockedTable'));
+            ->first();
     }
+
+    return view('order.overview', compact('tables', 'lockedTable'));
+}
 
     public function checkout(Request $request)
     {

@@ -29,22 +29,21 @@ class DiningTableController extends Controller
     return back()->with('success', 'QR token meja berhasil diganti.');
 }
 
-    public function store(Request $request)
-    {
-        $data = $request->validate([
-            'name' => ['required', 'string', 'max:80', 'unique:dining_tables,name'],
-            'is_active' => ['nullable'],
-        ]);
+public function store(Request $request)
+{
+    $data = $request->validate([
+        'name' => ['required', 'string', 'max:80', 'unique:dining_tables,name'],
+        'is_active' => ['nullable'],
+    ]);
 
-        $data['is_active'] = $request->boolean('is_active', true);
-        $data['qr_token'] = Str::random(32);
+    $data['is_active'] = $request->boolean('is_active', true);
+    $data['qr_token'] = Str::random(32);
 
-        DiningTable::create($data);
+    DiningTable::create($data);
 
-        return redirect()->route('admin.tables.index')
-            ->with('success', 'Meja berhasil ditambahkan.');
-    }
-
+    return redirect()->route('admin.tables.index')
+        ->with('success', 'Meja berhasil ditambahkan.');
+}
     public function edit(DiningTable $table)
     {
         return view('dashboard.admin.tables.edit', compact('table'));
