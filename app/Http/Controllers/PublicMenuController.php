@@ -214,13 +214,16 @@ class PublicMenuController extends Controller
                     'paid_amount' => $paid,
                     'payment_method' => 'cash',
 
-                    // ✅ ikut request
                     'order_type' => $data['order_type'],
+                    'dining_table_id' => ($data['order_type'] === 'dine_in') ? $data['dining_table_id'] : null,
 
-                    // ✅ meja hanya untuk dine_in
-                    'dining_table_id' => ($data['order_type'] === 'dine_in')
-                        ? $data['dining_table_id']
-                        : null,
+                    // ✅ TAMBAHKAN INI (biar tidak null)
+                    'delivery_phone' => $data['order_type'] === 'delivery' ? ($data['delivery_phone'] ?? null) : null,
+                    'delivery_address' => $data['order_type'] === 'delivery' ? ($data['delivery_address'] ?? null) : null,
+                    'delivery_lat' => $data['order_type'] === 'delivery' ? ($data['delivery_lat'] ?? null) : null,
+                    'delivery_lng' => $data['order_type'] === 'delivery' ? ($data['delivery_lng'] ?? null) : null,
+                    'delivery_distance_km' => $data['order_type'] === 'delivery' ? ($data['delivery_distance_km'] ?? null) : null,
+                    'delivery_fee' => $data['order_type'] === 'delivery' ? (int) ($data['delivery_fee'] ?? 0) : 0,
 
                     'change_amount' => 0,
                     'status' => 'completed',

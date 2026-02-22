@@ -16,7 +16,13 @@ class Sale extends Model
         'dining_table_id',
         'change_amount',
         'status',
-      
+        'delivery_phone',
+        'delivery_address',
+        'delivery_lat',
+        'delivery_lng',
+        'delivery_distance_km',
+        'delivery_fee',
+
         'delivered_at',
         'delivered_user_id',
         'kitchen_status',

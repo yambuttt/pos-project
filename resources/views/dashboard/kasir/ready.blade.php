@@ -61,11 +61,18 @@
         const t = s.dining_table?.name ?? ('Meja ' + (s.dining_table_id ?? '-'));
         return `<span class="inline-flex items-center gap-2 rounded-xl border border-sky-300/20 bg-sky-500/10 px-3 py-1 text-xs font-semibold text-sky-100">🍽️ DINE IN • ${escapeHtml(t)}</span>`;
       }
+
+      // ✅ delivery badge
+      if(s.order_type === 'delivery'){
+        return `<span class="inline-flex items-center gap-2 rounded-xl border border-emerald-300/20 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-100">🚚 DELIVERY</span>`;
+      }
+
       return `<span class="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-1 text-xs font-semibold text-white/80">🥡 TAKE AWAY</span>`;
     }
 
     function renderCard(s, showAction){
       const invoice = s.invoice_no ?? ('#' + s.id);
+
       const items = (s.items||[]).map(it => {
         const name = it.product?.name ?? ('Product#'+it.product_id);
         return `<li class="flex justify-between gap-2 text-sm">
@@ -84,6 +91,38 @@
           </button>`
         : '';
 
+      // ✅ delivery info block
+      const isDelivery = (s.order_type === 'delivery');
+      const hasLatLng = (s.delivery_lat != null && s.delivery_lng != null);
+      const mapsUrl = (isDelivery && hasLatLng)
+        ? `https://www.google.com/maps?q=${encodeURIComponent(s.delivery_lat)},${encodeURIComponent(s.delivery_lng)}`
+        : null;
+
+      const customerNameRaw = (s.user?.name || '').trim();
+      const customerName = customerNameRaw ? customerNameRaw.replace('(Tamu)', '').trim() : '';
+
+      const deliveryBlock = isDelivery ? `
+        <div class="mt-3 rounded-2xl border border-emerald-300/15 bg-emerald-500/5 p-3 text-xs text-white/80">
+          <div class="font-semibold text-emerald-100">🚚 Info Pengantaran</div>
+          <div class="mt-2 space-y-1">
+            ${customerName ? `<div>Nama: <b>${escapeHtml(customerName)}</b></div>` : ''}
+            ${s.delivery_phone ? `<div>No HP: <b>${escapeHtml(s.delivery_phone)}</b></div>` : ''}
+            ${s.delivery_address ? `<div>Alamat: <span class="text-white/70">${escapeHtml(s.delivery_address)}</span></div>` : ''}
+            ${hasLatLng ? `
+              <div>
+                Koordinat:
+                ${mapsUrl
+                  ? `<a class="underline text-emerald-200" href="${mapsUrl}" target="_blank">${escapeHtml(s.delivery_lat)}, ${escapeHtml(s.delivery_lng)}</a>`
+                  : `<span>${escapeHtml(s.delivery_lat)}, ${escapeHtml(s.delivery_lng)}</span>`
+                }
+              </div>
+            ` : ''}
+            ${s.delivery_distance_km != null ? `<div>Jarak: ${escapeHtml(s.delivery_distance_km)} km</div>` : ''}
+            <div>Ongkir: <b>${rupiah(s.delivery_fee || 0)}</b></div>
+          </div>
+        </div>
+      ` : '';
+
       return `
         <div class="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-2xl p-4">
           <div class="flex items-start justify-between gap-3">
@@ -98,6 +137,8 @@
           </div>
 
           <ul class="mt-3 space-y-1">${items}</ul>
+
+          ${deliveryBlock}
 
           ${showAction ? `<div class="mt-3 flex justify-end">${actionBtn}</div>` : ''}
         </div>
