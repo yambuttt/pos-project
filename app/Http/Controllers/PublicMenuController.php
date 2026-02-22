@@ -25,4 +25,10 @@ class PublicMenuController extends Controller
 
         return view('welcome', compact('products', 'categories'));
     }
+
+    public function overview()
+    {
+        // Halaman ini render view saja. Data cart ambil dari localStorage di browser.
+        return view('order.overview');
+    }
 }
