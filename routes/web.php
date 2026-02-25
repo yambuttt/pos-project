@@ -19,6 +19,9 @@ use App\Http\Controllers\Admin\DiningTableController;
 use App\Models\Product;
 use App\Http\Controllers\PublicMenuController;
 use App\Http\Controllers\Pegawai\DashboardController as PegawaiDashboardController;
+use App\Http\Controllers\Pegawai\FaceController;
+use App\Http\Controllers\Pegawai\AttendanceController;
+
 
 
 Route::get('/', [PublicMenuController::class, 'index']);
@@ -121,6 +124,15 @@ Route::middleware(['auth', 'role:kitchen'])
         Route::post('/orders/{sale}/done', [KitchenController::class, 'done'])->name('orders.done');
     });
 
-    Route::prefix('pegawai')->name('pegawai.')->middleware(['auth', 'role:pegawai'])->group(function () {
+Route::prefix('pegawai')->name('pegawai.')->middleware(['auth', 'role:pegawai'])->group(function () {
     Route::get('/dashboard', [PegawaiDashboardController::class, 'index'])->name('dashboard');
+
+    // Face enrollment
+    Route::get('/face/enroll', [FaceController::class, 'showEnroll'])->name('face.enroll');
+    Route::post('/face/enroll', [FaceController::class, 'storeEnroll'])->name('face.enroll.store');
+
+    // Attendance
+    Route::get('/absensi', [AttendanceController::class, 'index'])->name('attendance');
+    Route::post('/absensi/check-in', [AttendanceController::class, 'checkIn'])->name('attendance.checkin');
+    Route::post('/absensi/check-out', [AttendanceController::class, 'checkOut'])->name('attendance.checkout');
 });

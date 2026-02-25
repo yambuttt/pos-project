@@ -201,6 +201,9 @@
             const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
             return R * c;
         }
+        function haversinemeter (lat1,lat2,lat3,lng2){
+            const R =6371e3;
+        }
 
         function rupiah(n) {
             n = Math.round(Number(n) || 0);
