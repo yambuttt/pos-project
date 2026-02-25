@@ -14,7 +14,7 @@ class CashierController extends Controller
     {
         // List kasir + siapa yang membuat
         $cashiers = User::query()
-            ->where('role', 'kasir')
+            ->whereIn('role', ['kasir', 'kitchen', 'pegawai'])
             ->with(['creator'])
             ->latest()
             ->paginate(10);
@@ -33,13 +33,14 @@ class CashierController extends Controller
             'name' => ['required', 'string', 'max:120'],
             'email' => ['required', 'email', 'max:190', 'unique:users,email'],
             'password' => ['required', 'string', 'min:6', 'confirmed'],
+            'role' => ['required', 'in:kasir,kitchen,pegawai'],
         ]);
 
         User::create([
             'name' => $data['name'],
             'email' => $data['email'],
             'password' => Hash::make($data['password']),
-            'role' => 'kasir',
+            'role' => $data['role'],
             'created_by' => Auth::id(),
         ]);
 

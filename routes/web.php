@@ -18,6 +18,8 @@ use App\Http\Controllers\Kitchen\DashboardController as KitchenDashboardControll
 use App\Http\Controllers\Admin\DiningTableController;
 use App\Models\Product;
 use App\Http\Controllers\PublicMenuController;
+use App\Http\Controllers\Pegawai\DashboardController as PegawaiDashboardController;
+
 
 Route::get('/', [PublicMenuController::class, 'index']);
 Route::get('/t/{token}', [PublicMenuController::class, 'byTableToken'])
@@ -118,3 +120,7 @@ Route::middleware(['auth', 'role:kitchen'])
         Route::post('/orders/{sale}/process', [KitchenController::class, 'process'])->name('orders.process');
         Route::post('/orders/{sale}/done', [KitchenController::class, 'done'])->name('orders.done');
     });
+
+    Route::prefix('pegawai')->name('pegawai.')->middleware(['auth', 'role:pegawai'])->group(function () {
+    Route::get('/dashboard', [PegawaiDashboardController::class, 'index'])->name('dashboard');
+});

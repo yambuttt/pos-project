@@ -45,6 +45,17 @@
                 </div>
 
                 <div>
+                    <label class="text-sm text-white/80">Role</label>
+                    <select name="role"
+                        class="mt-2 w-full rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm outline-none focus:border-white/40">
+                        <option value="kasir" {{ old('role', 'kasir') === 'kasir' ? 'selected' : '' }}>Cashier (Kasir)</option>
+                        <option value="kitchen" {{ old('role') === 'kitchen' ? 'selected' : '' }}>Dapur (Kitchen)</option>
+                        <option value="pegawai" {{ old('role') === 'pegawai' ? 'selected' : '' }}>Pegawai</option>
+                    </select>
+                    @error('role') <p class="mt-2 text-xs text-red-100/90">{{ $message }}</p> @enderror
+                </div>
+
+                <div>
                     <label class="text-sm text-white/80">Password</label>
 
                     <div

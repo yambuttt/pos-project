@@ -32,6 +32,10 @@ class AuthController extends Controller
                 return redirect()->route('kitchen.dashboard');
             }
 
+            if ($role === 'pegawai') {
+                return redirect()->route('pegawai.dashboard');
+            }
+
             // default kasir
             return redirect()->route('kasir.dashboard');
         }
