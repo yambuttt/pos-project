@@ -10,7 +10,7 @@ use Illuminate\Http\Request;
 class AttendanceController extends Controller
 {
     // threshold makin kecil makin ketat (umumnya 0.45 - 0.60 tergantung kondisi)
-    private float $threshold = 0.55;
+    private float $threshold = 0.40;
 
     public function index()
     {
