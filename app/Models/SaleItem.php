@@ -10,11 +10,18 @@ class SaleItem extends Model
         'sale_id',
         'product_id',
         'qty',
-         'note',
+        'note',
         'price',
         'subtotal',
+        'kitchen_cooked_qty',
+        'kitchen_started_at',
+        'kitchen_done_at',
     ];
 
+    protected $casts = [
+        'kitchen_started_at' => 'datetime',
+        'kitchen_done_at' => 'datetime',
+    ];
     public function product()
     {
         return $this->belongsTo(Product::class);

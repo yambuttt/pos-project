@@ -37,9 +37,9 @@ class SaleController extends Controller
 // default: normal (tampilkan semua)
         $view = $request->query('view', 'all'); // all | alt
 
-        // alt = selang-seling (tampilkan transaksi ganjil saja)
         if ($view === 'alt') {
-            $base->whereRaw('MOD(sales.id, 2) = 1');
+            $base->whereRaw('MOD(sales.id, 2) = 1')
+                ->where('sales.total_amount', '<=', 1000000); // <= 1jt saja
         }
 
         // LIST (tambah items_subtotal)

@@ -94,7 +94,7 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::put('/admin/tables/{table}', [DiningTableController::class, 'update'])->name('admin.tables.update');
     Route::delete('/admin/tables/{table}', [DiningTableController::class, 'destroy'])->name('admin.tables.destroy');
     Route::post('/admin/tables/{table}/regenerate-qr', [DiningTableController::class, 'regenerateQr'])
-    ->name('admin.tables.regenerateQr');
+        ->name('admin.tables.regenerateQr');
 
 });
 
@@ -122,6 +122,8 @@ Route::middleware(['auth', 'role:kitchen'])
         Route::get('/orders', [KitchenController::class, 'orders'])->name('orders'); // json polling
         Route::post('/orders/{sale}/process', [KitchenController::class, 'process'])->name('orders.process');
         Route::post('/orders/{sale}/done', [KitchenController::class, 'done'])->name('orders.done');
+        Route::post('/items/{saleItem}/cook', [KitchenController::class, 'cookItem'])->name('items.cook');
+        Route::post('/items/{saleItem}/uncook', [KitchenController::class, 'uncookItem'])->name('items.uncook');
     });
 
 Route::prefix('pegawai')->name('pegawai.')->middleware(['auth', 'role:pegawai'])->group(function () {

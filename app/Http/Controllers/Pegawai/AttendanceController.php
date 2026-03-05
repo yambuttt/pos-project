@@ -9,8 +9,8 @@ use Illuminate\Http\Request;
 
 class AttendanceController extends Controller
 {
-    // threshold makin kecil makin ketat (umumnya 0.45 - 0.60 tergantung kondisi)
-    private float $threshold = 0.40;
+
+    private float $threshold = 0.45;
 
     public function index()
     {
@@ -37,7 +37,9 @@ class AttendanceController extends Controller
     private function handleAttendance(Request $request, string $mode)
     {
         $data = $request->validate([
-            'descriptor' => ['required', 'array'],
+            // kirim 3 descriptor dari client
+            'descriptors' => ['required', 'array', 'min:2'],
+            'descriptors.*' => ['array'],
         ]);
 
         $profile = FaceProfile::where('user_id', auth()->id())->first();
@@ -45,12 +47,22 @@ class AttendanceController extends Controller
             return response()->json(['ok' => false, 'message' => 'Wajah belum didaftarkan.'], 422);
         }
 
-        $live = array_map('floatval', $data['descriptor']);
-        $best = $this->bestDistance($live, $profile->descriptors ?? []);
+        $bests = [];
 
-        if ($best === null) {
+        foreach ($data['descriptors'] as $desc) {
+            $live = array_map('floatval', $desc);
+            $d = $this->bestDistance($live, $profile->descriptors ?? []);
+            if ($d !== null)
+                $bests[] = $d;
+        }
+
+        if (count($bests) < 2) {
             return response()->json(['ok' => false, 'message' => 'Data wajah tidak valid.'], 422);
         }
+
+        // pakai median biar tahan noise (1 frame jelek tidak langsung menang)
+        sort($bests);
+        $best = $bests[(int) floor(count($bests) / 2)];
 
         if ($best > $this->threshold) {
             return response()->json([
@@ -63,11 +75,12 @@ class AttendanceController extends Controller
         $today = now()->toDateString();
         $att = Attendance::firstOrCreate(
             ['user_id' => auth()->id(), 'date' => $today],
-            ['ip' => $request->ip(), 'device' => substr((string)$request->userAgent(), 0, 180)]
+            ['ip' => $request->ip(), 'device' => substr((string) $request->userAgent(), 0, 180)]
         );
 
         if ($mode === 'in') {
             if ($att->check_in_at) {
+                // sudah check-in hari ini
                 return response()->json(['ok' => false, 'message' => 'Kamu sudah check-in hari ini.'], 422);
             }
             $att->check_in_at = now();
@@ -89,14 +102,19 @@ class AttendanceController extends Controller
 
     private function bestDistance(array $live, array $storedDescriptors): ?float
     {
-        if (count($live) < 32) return null; // minimal sanity
+        // descriptor face-api biasanya 128 dimensi — wajib valid
+        if (count($live) !== 128)
+            return null;
 
         $best = null;
+
         foreach ($storedDescriptors as $d) {
-            if (!is_array($d) || count($d) !== count($live)) continue;
+            if (!is_array($d) || count($d) !== 128)
+                continue;
             $dist = $this->euclidean($live, array_map('floatval', $d));
             $best = $best === null ? $dist : min($best, $dist);
         }
+
         return $best;
     }
 
@@ -104,7 +122,7 @@ class AttendanceController extends Controller
     {
         $sum = 0.0;
         $n = min(count($a), count($b));
-        for ($i=0; $i<$n; $i++) {
+        for ($i = 0; $i < $n; $i++) {
             $diff = $a[$i] - $b[$i];
             $sum += $diff * $diff;
         }

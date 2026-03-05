@@ -77,6 +77,7 @@
 
     <script>
         const MODEL_URL = "/face/models";
+
         const video = document.getElementById('video');
         const btnStart = document.getElementById('btnStart');
         const btnCheckIn = document.getElementById('btnCheckIn');
@@ -90,8 +91,14 @@
         let challengePassed = false;
 
         function setStatus(t) { if (statusEl) statusEl.textContent = "Status: " + t; }
-        function setChallenge(t, pct) { if (challengeText) challengeText.textContent = t; if (challengeBar) challengeBar.style.width = (pct || 0) + "%"; }
+        function setChallenge(t, pct) {
+            if (challengeText) challengeText.textContent = t;
+            if (challengeBar) challengeBar.style.width = (pct || 0) + "%";
+        }
         function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+        // Detektor yang lebih stabil untuk HP
+        let DETECTOR_OPTS = null;
 
         async function loadModels() {
             if (modelsLoaded) return;
@@ -99,23 +106,43 @@
             await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
             await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
             await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
+
+            DETECTOR_OPTS = new faceapi.TinyFaceDetectorOptions({
+                inputSize: 320,
+                scoreThreshold: 0.35
+            });
+
             modelsLoaded = true;
             setStatus("model siap.");
         }
 
         async function startCamera() {
             await loadModels();
-            stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: false });
+
+            stream = await navigator.mediaDevices.getUserMedia({
+                video: {
+                    facingMode: "user",
+                    width: { ideal: 640 },
+                    height: { ideal: 480 }
+                },
+                audio: false
+            });
+
             video.srcObject = stream;
             await video.play();
+
+            // Warm-up kamera biar exposure stabil
+            await new Promise(r => video.onloadedmetadata = r);
+            await sleep(700);
+
             setStatus("kamera aktif. mulai challenge...");
             await runChallenge();
         }
 
-        // deteksi arah kepala sederhana dari posisi hidung relatif ke mata
+        // === Pose detection sederhana dari landmark ===
         async function getPose() {
             const det = await faceapi
-                .detectSingleFace(video, new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.5 }))
+                .detectSingleFace(video, DETECTOR_OPTS)
                 .withFaceLandmarks();
 
             if (!det) return null;
@@ -126,58 +153,81 @@
             const nose = lm.getNose();
 
             const eyeCenterX = (leftEye[0].x + rightEye[3].x) / 2;
-            const noseTipX = nose[3].x; // titik hidung kira-kira
+            const noseTipX = nose[3].x;
 
             const diff = noseTipX - eyeCenterX;
 
-            // threshold pose: sesuaikan jika terlalu sensitif
-            if (diff < -12) return "left";
-            if (diff > 12) return "right";
+            // lebih toleran supaya challenge tidak “sensitif”
+            if (diff < -8) return "left";
+            if (diff > 8) return "right";
             return "center";
         }
 
         async function runChallenge() {
             challengePassed = false;
-            btnCheckIn.disabled = true;
-            btnCheckOut.disabled = true;
+            if (btnCheckIn) btnCheckIn.disabled = true;
+            if (btnCheckOut) btnCheckOut.disabled = true;
 
             setChallenge("1/2: Hadap KIRI", 10);
 
             let okLeft = false;
-            for (let i = 0; i < 40; i++) { // ~ 8 detik
+            for (let i = 0; i < 45; i++) { // ~9 detik
                 const pose = await getPose();
                 if (pose === "left") { okLeft = true; break; }
-                setChallenge("1/2: Hadap KIRI (posisikan wajah)", 10 + i * 1.5);
+                setChallenge("1/2: Hadap KIRI (posisikan wajah)", Math.min(55, 10 + i * 1.2));
                 await sleep(200);
             }
-            if (!okLeft) { setChallenge("Gagal: tidak terdeteksi hadap kiri. Coba lagi.", 0); setStatus("challenge gagal"); return; }
+            if (!okLeft) {
+                setChallenge("Gagal: tidak terdeteksi hadap kiri. Coba lagi.", 0);
+                setStatus("challenge gagal");
+                return;
+            }
 
             setChallenge("2/2: Hadap KANAN", 60);
 
             let okRight = false;
-            for (let i = 0; i < 40; i++) {
+            for (let i = 0; i < 45; i++) {
                 const pose = await getPose();
                 if (pose === "right") { okRight = true; break; }
-                setChallenge("2/2: Hadap KANAN (posisikan wajah)", 60 + i);
+                setChallenge("2/2: Hadap KANAN (posisikan wajah)", Math.min(95, 60 + i * 0.8));
                 await sleep(200);
             }
-            if (!okRight) { setChallenge("Gagal: tidak terdeteksi hadap kanan. Coba lagi.", 0); setStatus("challenge gagal"); return; }
+            if (!okRight) {
+                setChallenge("Gagal: tidak terdeteksi hadap kanan. Coba lagi.", 0);
+                setStatus("challenge gagal");
+                return;
+            }
 
             challengePassed = true;
             setChallenge("Challenge lolos ✅", 100);
             setStatus("siap verifikasi wajah.");
-            btnCheckIn.disabled = false;
-            btnCheckOut.disabled = false;
+            if (btnCheckIn) btnCheckIn.disabled = false;
+            if (btnCheckOut) btnCheckOut.disabled = false;
         }
 
-        async function captureDescriptor() {
-            const det = await faceapi
-                .detectSingleFace(video, new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.5 }))
-                .withFaceLandmarks()
-                .withFaceDescriptor();
+        // === Ambil descriptor lebih stabil: retry + multi frame ===
+        async function captureDescriptorRetry(maxTries = 10) {
+            for (let i = 0; i < maxTries; i++) {
+                const det = await faceapi
+                    .detectSingleFace(video, DETECTOR_OPTS)
+                    .withFaceLandmarks()
+                    .withFaceDescriptor();
 
-            if (!det) return null;
-            return Array.from(det.descriptor);
+                if (det) return Array.from(det.descriptor);
+                await sleep(150);
+            }
+            return null;
+        }
+
+        async function captureMultiDescriptors(n = 3) {
+            const arr = [];
+            for (let i = 0; i < n; i++) {
+                const d = await captureDescriptorRetry(12);
+                if (!d) return null;
+                arr.push(d);
+                await sleep(200);
+            }
+            return arr;
         }
 
         async function submitAttendance(url) {
@@ -186,9 +236,13 @@
                 return;
             }
 
-            setStatus("mengambil wajah...");
-            const descriptor = await captureDescriptor();
-            if (!descriptor) { setStatus("wajah tidak terdeteksi. coba lagi."); return; }
+            setStatus("mengambil wajah (3 frame)...");
+            const descriptors = await captureMultiDescriptors(3);
+
+            if (!descriptors) {
+                setStatus("wajah tidak terdeteksi. coba tempat lebih terang / wajah lebih dekat.");
+                return;
+            }
 
             setStatus("verifikasi & simpan...");
             const res = await fetch(url, {
@@ -197,23 +251,24 @@
                     "Content-Type": "application/json",
                     "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content
                 },
-                body: JSON.stringify({ descriptor })
+                body: JSON.stringify({ descriptors })
             });
 
             const json = await res.json().catch(() => ({}));
+
             if (!res.ok) {
                 setStatus(json.message || "gagal verifikasi.");
-                // ulang challenge biar tidak spam
+                // ulang challenge biar tidak spam verifikasi
                 await sleep(600);
                 await runChallenge();
                 return;
             }
 
             setStatus(`berhasil ✅ (distance: ${json.distance?.toFixed?.(4) ?? '-'})`);
-            // optional: refresh untuk update jam masuk/pulang di panel kanan
             setTimeout(() => window.location.reload(), 900);
         }
 
+        // === Bind tombol ===
         if (btnStart) btnStart.addEventListener('click', startCamera);
         if (btnCheckIn) btnCheckIn.addEventListener('click', () => submitAttendance("{{ route('pegawai.attendance.checkin') }}"));
         if (btnCheckOut) btnCheckOut.addEventListener('click', () => submitAttendance("{{ route('pegawai.attendance.checkout') }}"));

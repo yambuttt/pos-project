@@ -189,7 +189,7 @@
         .replaceAll('&', '&amp;')
         .replaceAll('<', '&lt;')
         .replaceAll('>', '&gt;')
-        .replaceAll('"', '&quot;')
+        .replaceAll('\"', '&quot;')
         .replaceAll("'", '&#039;');
     }
 
@@ -317,34 +317,34 @@
       if (type === 'dine_in') {
         const tname = getTableName(sale) || ('Meja ' + (sale.dining_table_id ?? '-'));
         return `
-          <span class="inline-flex items-center gap-2 rounded-xl border border-sky-200/70 bg-sky-200/40 px-3 py-1 text-xs font-semibold text-sky-900">
-            🍽️ DINE IN • ${escapeHtml(tname)}
-          </span>
-        `;
+              <span class="inline-flex items-center gap-2 rounded-xl border border-sky-200/70 bg-sky-200/40 px-3 py-1 text-xs font-semibold text-sky-900">
+                🍽️ DINE IN • ${escapeHtml(tname)}
+              </span>
+            `;
       }
 
       return `
-        <span class="inline-flex items-center gap-2 rounded-xl border border-slate-200/70 bg-slate-900/5 px-3 py-1 text-xs font-semibold text-slate-700">
-          🥡 TAKE AWAY
-        </span>
-      `;
+            <span class="inline-flex items-center gap-2 rounded-xl border border-slate-200/70 bg-slate-900/5 px-3 py-1 text-xs font-semibold text-slate-700">
+              🥡 TAKE AWAY
+            </span>
+          `;
     }
 
     function renderKitchenStatusBadge(sale) {
       const st = sale.kitchen_status || 'new';
       if (st === 'delivered') {
         return `
-          <span class="inline-flex items-center gap-2 rounded-xl border border-emerald-200/70 bg-emerald-200/40 px-3 py-1 text-xs font-semibold text-emerald-900">
-            🚚 DELIVERED
-          </span>
-        `;
+              <span class="inline-flex items-center gap-2 rounded-xl border border-emerald-200/70 bg-emerald-200/40 px-3 py-1 text-xs font-semibold text-emerald-900">
+                🚚 DELIVERED
+              </span>
+            `;
       }
       if (st === 'done') {
         return `
-          <span class="inline-flex items-center gap-2 rounded-xl border border-amber-200/70 bg-amber-200/40 px-3 py-1 text-xs font-semibold text-amber-900">
-            ✅ READY
-          </span>
-        `;
+              <span class="inline-flex items-center gap-2 rounded-xl border border-amber-200/70 bg-amber-200/40 px-3 py-1 text-xs font-semibold text-amber-900">
+                ✅ READY
+              </span>
+            `;
       }
       return '';
     }
@@ -354,7 +354,6 @@
       const createdAt = parseISOToDate(sale.created_at);
       const startedAt = parseISOToDate(sale.kitchen_started_at);
       const doneAt = parseISOToDate(sale.kitchen_done_at);
-      const deliveredAt = parseISOToDate(sale.delivered_at);
 
       const ageSec = diffSeconds(createdAt, now);
       const ageMin = Math.floor(ageSec / 60);
@@ -371,18 +370,81 @@
       const timeText = (sale.created_at ?? '').replace('T', ' ').slice(0, 16);
       const queueLabel = `Q-${pad3(queueNo || 0)}`;
 
-const itemsHtml = (sale.items || []).map((it) => {
-  const name = it.product?.name ?? ('Product#' + it.product_id);
-  const note = (it.note || '').trim();
+      // ========= ITEM CHECKLIST + TIMER (UPDATED) =========
+      const itemsHtml = (sale.items || []).map((it) => {
+        const name = it.product?.name ?? ('Product#' + it.product_id);
+        const note = (it.note || '').trim();
 
-  return `<li class="flex justify-between gap-3">
-    <div class="min-w-0">
-      <div class="text-slate-900">${escapeHtml(name)}</div>
-      ${note ? `<div class="mt-0.5 text-xs text-slate-500">📝 ${escapeHtml(note)}</div>` : ``}
-    </div>
-    <div class="shrink-0 text-slate-500">x${it.qty}</div>
-  </li>`;
-}).join('') || `<li class="text-slate-500">Tidak ada item</li>`;
+        const cooked = Number(it.kitchen_cooked_qty || 0);
+        const qty = Number(it.qty || 0);
+
+        const startedAtItem = parseISOToDate(it.kitchen_started_at);
+        const doneAtItem = parseISOToDate(it.kitchen_done_at);
+
+        let itemSec = 0;
+        if (startedAtItem && !doneAtItem) itemSec = diffSeconds(startedAtItem, new Date());
+        if (startedAtItem && doneAtItem) itemSec = diffSeconds(startedAtItem, doneAtItem);
+
+        const timeBadge = doneAtItem
+          ? `<span class="ml-2 inline-flex items-center rounded-lg border border-slate-200/70 bg-white/70 px-2 py-0.5 text-[11px] text-slate-700">
+        ⏱ ${formatDuration(itemSec)}
+      </span>`
+          : '';
+
+        // qty 1 => toggle check
+        if (qty <= 1) {
+          const checked = cooked >= 1;
+          return `
+                <li class="flex items-start justify-between gap-3">
+                  <button type="button"
+                    class="flex min-w-0 items-start gap-2 text-left"
+                    data-item-action="${checked ? 'uncook' : 'cook'}"
+                    data-item-id="${it.id}">
+                    <span class="mt-0.5 inline-flex h-5 w-5 items-center justify-center rounded-md border
+                      ${checked ? 'bg-emerald-200/70 border-emerald-200/70' : 'bg-white/60 border-slate-200/70'}">
+                      ${checked ? '✓' : ''}
+                    </span>
+                    <div class="min-w-0">
+                      <div class="text-slate-900 ${checked ? 'line-through opacity-70' : ''}">
+                        ${escapeHtml(name)} ${timeBadge}
+                      </div>
+                      ${note ? `<div class="mt-0.5 text-xs text-slate-500">📝 ${escapeHtml(note)}</div>` : ``}
+                    </div>
+                  </button>
+                </li>
+              `;
+        }
+
+        // qty > 1 => boxes per pcs
+        const boxes = Array.from({ length: qty }).map((_, idx) => {
+          const done = (idx + 1) <= cooked;
+          return `
+                <button type="button"
+                  data-item-action="${done ? 'uncook' : 'cook'}"
+                  data-item-id="${it.id}"
+                  class="h-6 w-6 rounded-md border text-xs font-bold
+                    ${done ? 'bg-emerald-200/70 border-emerald-200/70' : 'bg-white/60 border-slate-200/70'}">
+                  ${done ? '✓' : ''}
+                </button>
+              `;
+        }).join('');
+
+        const allDone = cooked >= qty;
+
+        return `
+              <li class="flex items-start justify-between gap-3">
+                <div class="min-w-0">
+                  <div class="text-slate-900 ${allDone ? 'line-through opacity-70' : ''}">
+                    ${escapeHtml(name)} ${timeBadge}
+                  </div>
+                  ${note ? `<div class="mt-0.5 text-xs text-slate-500">📝 ${escapeHtml(note)}</div>` : ``}
+                  <div class="mt-2 flex flex-wrap gap-1">${boxes}</div>
+                </div>
+                <div class="shrink-0 text-slate-500">x${qty}</div>
+              </li>
+            `;
+      }).join('') || `<li class="text-slate-500">Tidak ada item</li>`;
+      // ================================================
 
       // Border:
       // delivered => emerald, done => amber, others => SLA
@@ -394,27 +456,27 @@ const itemsHtml = (sale.items || []).map((it) => {
       let timerBadge = '';
       if (sale.kitchen_status === 'new' || sale.kitchen_status === 'processing') {
         timerBadge = `<span class="inline-flex items-center gap-2 rounded-xl border px-3 py-1 text-xs font-semibold ${slaPillClassByMinutes(ageMin)}">
-          ⏱ ${formatDuration(ageSec)}
-        </span>`;
+              ⏱ ${formatDuration(ageSec)}
+            </span>`;
       } else if ((sale.kitchen_status === 'done' || sale.kitchen_status === 'delivered') && cookSec > 0) {
         timerBadge = `<span class="inline-flex items-center gap-2 rounded-xl border border-slate-200/70 bg-slate-900/5 px-3 py-1 text-xs font-semibold text-slate-700">
-          🍳 Cook ${formatDuration(cookSec)}
-        </span>`;
+              🍳 Cook ${formatDuration(cookSec)}
+            </span>`;
       }
 
       let buttons = '';
       if (sale.kitchen_status === 'new') {
         buttons = `
-          <button type="button" data-action="process" data-id="${sale.id}"
-            class="rounded-xl border border-amber-200/70 bg-amber-200/40 px-3 py-2 text-xs font-semibold text-amber-900 hover:bg-amber-200/55 backdrop-blur-2xl">
-            Proses
-          </button>`;
+              <button type="button" data-action="process" data-id="${sale.id}"
+                class="rounded-xl border border-amber-200/70 bg-amber-200/40 px-3 py-2 text-xs font-semibold text-amber-900 hover:bg-amber-200/55 backdrop-blur-2xl">
+                Proses
+              </button>`;
       } else if (sale.kitchen_status === 'processing') {
         buttons = `
-          <button type="button" data-action="done" data-id="${sale.id}"
-            class="rounded-xl border border-emerald-200/70 bg-emerald-200/40 px-3 py-2 text-xs font-semibold text-emerald-900 hover:bg-emerald-200/55 backdrop-blur-2xl">
-            Selesai
-          </button>`;
+              <button type="button" data-action="done" data-id="${sale.id}"
+                class="rounded-xl border border-emerald-200/70 bg-emerald-200/40 px-3 py-2 text-xs font-semibold text-emerald-900 hover:bg-emerald-200/55 backdrop-blur-2xl">
+                Selesai
+              </button>`;
       }
       // done/delivered: tidak ada tombol di kitchen
 
@@ -422,32 +484,32 @@ const itemsHtml = (sale.items || []).map((it) => {
       const kitchenStatusBadge = renderKitchenStatusBadge(sale);
 
       return `
-        <div class="rounded-2xl border border-slate-200/70 bg-white/60 p-4 shadow-sm backdrop-blur-2xl ${borderClass}">
-          <div class="flex items-start justify-between gap-3">
-            <div class="min-w-0">
-              <div class="flex flex-wrap items-center gap-2">
-                <div class="text-xl font-extrabold tracking-tight text-slate-900">${escapeHtml(queueLabel)}</div>
-                ${timerBadge}
-                ${orderTypeBadge}
-                ${kitchenStatusBadge}
+            <div class="rounded-2xl border border-slate-200/70 bg-white/60 p-4 shadow-sm backdrop-blur-2xl ${borderClass}">
+              <div class="flex items-start justify-between gap-3">
+                <div class="min-w-0">
+                  <div class="flex flex-wrap items-center gap-2">
+                    <div class="text-xl font-extrabold tracking-tight text-slate-900">${escapeHtml(queueLabel)}</div>
+                    ${timerBadge}
+                    ${orderTypeBadge}
+                    ${kitchenStatusBadge}
+                  </div>
+
+                  <div class="mt-1 text-sm font-semibold text-slate-900">${escapeHtml(invoice)}</div>
+                  <div class="text-xs text-slate-500">${escapeHtml(timeText)} • Kasir: ${escapeHtml(cashier)}</div>
+                </div>
+
+                <div class="shrink-0 text-sm font-semibold text-slate-900">${rupiah(sale.total_amount)}</div>
               </div>
 
-              <div class="mt-1 text-sm font-semibold text-slate-900">${escapeHtml(invoice)}</div>
-              <div class="text-xs text-slate-500">${escapeHtml(timeText)} • Kasir: ${escapeHtml(cashier)}</div>
+              <ul class="mt-3 space-y-1 text-sm">
+                ${itemsHtml}
+              </ul>
+
+              <div class="mt-3 flex items-center justify-end gap-2">
+                ${buttons}
+              </div>
             </div>
-
-            <div class="shrink-0 text-sm font-semibold text-slate-900">${rupiah(sale.total_amount)}</div>
-          </div>
-
-          <ul class="mt-3 space-y-1 text-sm">
-            ${itemsHtml}
-          </ul>
-
-          <div class="mt-3 flex items-center justify-end gap-2">
-            ${buttons}
-          </div>
-        </div>
-      `;
+          `;
     }
 
     // ==========================
@@ -548,7 +610,46 @@ const itemsHtml = (sale.items || []).map((it) => {
     });
 
     // ==========================
-    // ACTION BUTTONS (kitchen)
+    // HELPER: POST (AJAX) untuk cook/uncook item
+    // ==========================
+    async function postKitchen(url) {
+      const token = document.querySelector('#actionForm input[name=_token]')?.value;
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'X-CSRF-TOKEN': token,
+          'Accept': 'application/json',
+        },
+      });
+      return res.ok;
+    }
+
+    // ==========================
+    // ITEM ACTIONS (cook / uncook)
+    // ==========================
+    document.addEventListener('click', async (e) => {
+      const btn = e.target.closest('button[data-item-action][data-item-id]');
+      if (!btn) return;
+
+      const action = btn.getAttribute('data-item-action');
+      const id = btn.getAttribute('data-item-id');
+
+      btn.disabled = true;
+
+      const url = action === 'cook'
+        ? `{{ url('/kitchen/items') }}/${id}/cook`
+        : `{{ url('/kitchen/items') }}/${id}/uncook`;
+
+      const ok = await postKitchen(url);
+      btn.disabled = false;
+
+      if (ok) {
+        await loadOrders();
+      }
+    });
+
+    // ==========================
+    // ACTION BUTTONS (order-level: process / done)
     // ==========================
     document.addEventListener('click', (e) => {
       const btn = e.target.closest('button[data-action]');
