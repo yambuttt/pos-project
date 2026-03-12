@@ -35,4 +35,13 @@ return [
         ],
     ],
 
+    'midtrans' => [
+    'is_production' => (bool) env('MIDTRANS_IS_PRODUCTION', false),
+    'server_key' => env('MIDTRANS_SERVER_KEY'),
+    'client_key' => env('MIDTRANS_CLIENT_KEY'),
+    'merchant_id' => env('MIDTRANS_MERCHANT_ID'),
+    'expiry_minutes' => (int) env('MIDTRANS_EXPIRY_MINUTES', 15),
+    'qris_acquirer' => env('MIDTRANS_QRIS_ACQUIRER', 'gopay'),
+],
+
 ];

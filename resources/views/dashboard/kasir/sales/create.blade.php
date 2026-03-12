@@ -19,7 +19,7 @@
         </div>
     @endif
 
-    <form method="POST" action="{{ route('kasir.sales.store') }}"
+    <form id="saleForm" method="POST" action="{{ route('kasir.sales.store') }}"
         class="mt-5 grid grid-cols-1 gap-5 lg:grid-cols-[1.2fr_.8fr]">
         @csrf
 
@@ -152,8 +152,12 @@
   <label class="text-xs text-white/70">Metode Pembayaran</label>
   <select name="payment_method" id="paymentMethod"
       class="mt-2 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm outline-none focus:border-white/25">
-      <option value="cash">Tunai</option>
-      <option value="qris">QRIS</option>
+<option value="cash" {{ old('payment_method') === 'cash' ? 'selected' : '' }}>Tunai</option>
+<option value="qris" {{ old('payment_method') === 'qris' ? 'selected' : '' }}>QRIS</option>
+<option value="bca_va" {{ old('payment_method') === 'bca_va' ? 'selected' : '' }}>VA BCA</option>
+<option value="bni_va" {{ old('payment_method') === 'bni_va' ? 'selected' : '' }}>VA BNI</option>
+<option value="bri_va" {{ old('payment_method') === 'bri_va' ? 'selected' : '' }}>VA BRI</option>
+<option value="permata_va" {{ old('payment_method') === 'permata_va' ? 'selected' : '' }}>VA Permata</option>
   </select>
 </div>
 
@@ -170,6 +174,25 @@
         class="mt-4 w-full rounded-xl bg-blue-600/85 px-5 py-3 text-sm font-semibold hover:bg-blue-500/85 disabled:opacity-40 disabled:cursor-not-allowed">
         Bayar
     </button>
+    <div id="paymentResult" class="mt-4 hidden rounded-2xl border border-white/10 bg-white/5 p-4">
+    <div class="text-sm font-semibold">Instruksi Pembayaran</div>
+    <div class="mt-2 text-xs text-white/60" id="paymentResultMeta"></div>
+
+    <div id="paymentQrisWrap" class="mt-4 hidden">
+        <div class="text-xs text-white/70">Scan QRIS ini:</div>
+        <img id="paymentQrImage" src="" alt="QRIS"
+            class="mt-3 w-full max-w-[280px] rounded-2xl bg-white p-3">
+    </div>
+
+    <div id="paymentVaWrap" class="mt-4 hidden">
+        <div class="text-xs text-white/70">Nomor VA:</div>
+        <div id="paymentVaNumber"
+            class="mt-2 rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-lg font-semibold tracking-wider"></div>
+        <div id="paymentVaBank" class="mt-2 text-xs text-white/60"></div>
+    </div>
+
+    <div id="paymentStatusText" class="mt-4 text-sm text-emerald-300"></div>
+</div>
 
     <div class="mt-2 text-[11px] text-white/50">
         STRICT mode aktif: kalau bahan kurang → transaksi ditolak.
@@ -184,10 +207,20 @@
             const cart = document.getElementById('cart');
             const formData = document.getElementById('saleFormData');
             const search = document.getElementById('search');
+            const saleForm = document.getElementById('saleForm');
+const paymentResult = document.getElementById('paymentResult');
+const paymentResultMeta = document.getElementById('paymentResultMeta');
+const paymentQrisWrap = document.getElementById('paymentQrisWrap');
+const paymentQrImage = document.getElementById('paymentQrImage');
+const paymentVaWrap = document.getElementById('paymentVaWrap');
+const paymentVaNumber = document.getElementById('paymentVaNumber');
+const paymentVaBank = document.getElementById('paymentVaBank');
+const paymentStatusText = document.getElementById('paymentStatusText');
+let paymentPoller = null;
 
             const totalText = document.getElementById('totalText');
             const subtotalText = document.getElementById('subtotalText');
-const taxText = document.getElementById('taxText');
+            const taxText = document.getElementById('taxText');
             const cartCount = document.getElementById('cartCount');
             const paidAmount = document.getElementById('paidAmount');
             const paymentMethod = document.getElementById('paymentMethod');
@@ -342,18 +375,18 @@ syncOrderTypeUI();
 
   payBtn.disabled = cartMap.size === 0;
 
-  const method = (paymentMethod?.value || 'cash');
+const method = (paymentMethod?.value || 'cash');
 
-  if (method === 'qris') {
+if (isMidtransMethod(method)) {
     paidAmount.value = String(grandTotal);
     paidAmount.setAttribute('readonly', 'readonly');
     changeText.textContent = fmtRp(0);
-  } else {
+} else {
     paidAmount.removeAttribute('readonly');
     const paid = Number(paidAmount.value || 0);
     const change = Math.max(0, paid - grandTotal);
     changeText.textContent = fmtRp(change);
-  }
+}
 }
 
             // klik card produk (yang sudah dirender Blade)
@@ -395,6 +428,98 @@ syncOrderTypeUI();
                 cartMap.clear();
                 renderCart();
             });
+
+            function isMidtransMethod(method) {
+    return ['qris', 'bca_va', 'bni_va', 'bri_va', 'permata_va'].includes(method);
+}
+
+function renderPaymentResult(resp) {
+    const payment = resp.payment || {};
+
+    paymentResult.classList.remove('hidden');
+    paymentQrisWrap.classList.add('hidden');
+    paymentVaWrap.classList.add('hidden');
+    paymentStatusText.textContent = 'Menunggu pembayaran...';
+
+    paymentResultMeta.textContent =
+        `Invoice: ${resp.invoice_no || '-'} • Expired: ${payment.expires_at || '-'}`;
+
+    if (payment.payment_type === 'qris' && payment.qr_url) {
+        paymentQrisWrap.classList.remove('hidden');
+        paymentQrImage.src = payment.qr_url;
+    }
+
+    if (payment.va_number) {
+        paymentVaWrap.classList.remove('hidden');
+        paymentVaNumber.textContent = payment.va_number;
+        paymentVaBank.textContent = `Bank: ${(payment.bank || '-').toUpperCase()}`;
+    }
+
+    startPollingPaymentStatus(resp.sale_id);
+}
+
+function startPollingPaymentStatus(saleId) {
+    if (paymentPoller) clearInterval(paymentPoller);
+
+    paymentPoller = setInterval(async () => {
+        try {
+            const res = await fetch(`/kasir/sales/${saleId}/payment-status`, {
+                headers: { 'Accept': 'application/json' }
+            });
+            const data = await res.json();
+
+            if (data.payment_status === 'paid') {
+                paymentStatusText.textContent = 'Pembayaran berhasil. Mengalihkan ke riwayat transaksi...';
+                clearInterval(paymentPoller);
+                setTimeout(() => {
+                    window.location.href = "{{ route('kasir.sales.index') }}";
+                }, 1500);
+            }
+
+            if (['expired', 'failed'].includes(data.payment_status)) {
+                paymentStatusText.textContent = 'Pembayaran gagal atau expired.';
+                clearInterval(paymentPoller);
+            }
+        } catch (e) {}
+    }, 5000);
+}
+
+saleForm.addEventListener('submit', async (e) => {
+    const method = paymentMethod?.value || 'cash';
+
+    if (!isMidtransMethod(method)) return;
+
+    e.preventDefault();
+
+    const form = new FormData(saleForm);
+
+    payBtn.disabled = true;
+    payBtn.textContent = 'Memproses...';
+
+    try {
+        const res = await fetch(saleForm.action, {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+            body: form,
+        });
+
+        const data = await res.json();
+
+        if (!res.ok || !data.ok) {
+            throw new Error(data.message || 'Gagal membuat transaksi pembayaran.');
+        }
+
+        renderPaymentResult(data);
+        payBtn.textContent = 'Menunggu Pembayaran';
+    } catch (err) {
+        alert(err.message || 'Terjadi kesalahan saat membuat pembayaran.');
+        payBtn.disabled = false;
+        payBtn.textContent = 'Bayar';
+    }
+});
 
             renderCart();
         })();

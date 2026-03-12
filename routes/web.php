@@ -21,6 +21,7 @@ use App\Http\Controllers\PublicMenuController;
 use App\Http\Controllers\Pegawai\DashboardController as PegawaiDashboardController;
 use App\Http\Controllers\Pegawai\FaceController;
 use App\Http\Controllers\Pegawai\AttendanceController;
+use App\Http\Controllers\Payment\MidtransWebhookController;
 
 
 
@@ -34,6 +35,10 @@ Route::post('/order/checkout', [PublicMenuController::class, 'checkout'])
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.submit');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+
+Route::post('/payments/midtrans/notification', [MidtransWebhookController::class, 'handle'])
+    ->name('payments.midtrans.notification')
+    ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);
 
 // DASHBOARDS (wajib login + role)
 Route::middleware(['auth', 'role:admin'])->group(function () {
@@ -108,6 +113,8 @@ Route::prefix('kasir')->name('kasir.')->middleware(['auth', 'role:kasir'])->grou
     Route::get('/ready', [KasirDashboardController::class, 'readyIndex'])->name('ready.index');
     Route::get('/ready-orders', [KasirDashboardController::class, 'readyOrders'])->name('ready.orders');
     Route::post('/ready-orders/{sale}/deliver', [KasirDashboardController::class, 'deliver'])->name('ready.deliver');
+    Route::get('/sales/{sale}/payment-status', [SaleController::class, 'paymentStatus'])
+    ->name('sales.payment-status');
 });
 
 

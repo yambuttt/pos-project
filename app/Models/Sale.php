@@ -12,6 +12,15 @@ class Sale extends Model
         'total_amount',
         'paid_amount',
         'payment_method',
+        'payment_status',
+        'midtrans_order_id',
+        'midtrans_transaction_id',
+        'midtrans_transaction_status',
+        'midtrans_payment_type',
+        'midtrans_response',
+        'payment_expires_at',
+        'paid_at',
+        'stock_released_at',
         'order_type',
         'dining_table_id',
         'change_amount',
@@ -22,13 +31,22 @@ class Sale extends Model
         'delivery_lng',
         'delivery_distance_km',
         'delivery_fee',
-
         'delivered_at',
         'delivered_user_id',
         'kitchen_status',
         'kitchen_started_at',
         'kitchen_done_at',
         'kitchen_user_id',
+    ];
+
+    protected $casts = [
+        'midtrans_response' => 'array',
+        'payment_expires_at' => 'datetime',
+        'paid_at' => 'datetime',
+        'stock_released_at' => 'datetime',
+        'delivered_at' => 'datetime',
+        'kitchen_started_at' => 'datetime',
+        'kitchen_done_at' => 'datetime',
     ];
 
 

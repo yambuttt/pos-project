@@ -3,16 +3,16 @@
 namespace App\Http\Controllers\Kasir;
 
 use App\Http\Controllers\Controller;
-use App\Models\InventoryMovement;
 use App\Models\Product;
-use App\Models\RawMaterial;
 use App\Models\Sale;
 use App\Models\SaleItem;
+use App\Models\DiningTable;
+use App\Services\MidtransService;
+use App\Services\SaleInventoryService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
-use Illuminate\Support\Facades\Auth;
-use App\Models\DiningTable;
+
 class SaleController extends Controller
 {
     public function index()
@@ -21,7 +21,6 @@ class SaleController extends Controller
             ->with('items.product')
             ->where('user_id', auth()->id())
             ->whereDate('created_at', now()->toDateString())
-            // untuk testing di kemudian hari ini kode nya  ->whereDate('created_at', now()->addDay()->toDateString())
             ->latest()
             ->paginate(10);
 
@@ -36,7 +35,6 @@ class SaleController extends Controller
             ->orderBy('name')
             ->get();
 
-        // Tambahkan atribut runtime untuk UI kasir
         $products->each(function (Product $p) {
             $p->max_portions = (int) $p->maxServingsFromStock();
             $p->is_sellable = $p->max_portions > 0;
@@ -61,17 +59,16 @@ class SaleController extends Controller
         return view('dashboard.kasir.sales.create', compact('products', 'productsJson', 'tables'));
     }
 
-
-
-
-    public function store(Request $request)
-    {
+    public function store(
+        Request $request,
+        MidtransService $midtrans,
+        SaleInventoryService $inventory
+    ) {
         $data = $request->validate([
             'order_type' => ['required', 'in:dine_in,takeaway'],
             'dining_table_id' => ['nullable', 'exists:dining_tables,id'],
-
             'paid_amount' => ['required', 'integer', 'min:0'],
-            'payment_method' => ['required', 'in:cash,qris'],
+            'payment_method' => ['required', 'in:cash,qris,bca_va,bni_va,bri_va,permata_va'],
             'items' => ['required', 'array', 'min:1'],
             'items.*.product_id' => ['required', 'exists:products,id'],
             'items.*.qty' => ['required', 'integer', 'min:1'],
@@ -79,12 +76,12 @@ class SaleController extends Controller
         ]);
 
         if (($data['order_type'] ?? null) === 'dine_in' && empty($data['dining_table_id'])) {
-            return back()->withErrors(['sale' => 'Kalau Dine In, wajib pilih meja.'])->withInput();
+            return $this->errorResponse($request, 'Kalau Dine In, wajib pilih meja.');
         }
 
-        $userId = \Illuminate\Support\Facades\Auth::id();
+        $userId = auth()->id();
+        $isCash = $data['payment_method'] === 'cash';
 
-        // Helper: random huruf A-Z saja (bukan angka)
         $randomLetters = function (int $len): string {
             $alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
             $out = '';
@@ -95,95 +92,38 @@ class SaleController extends Controller
         };
 
         try {
-            $sale = \Illuminate\Support\Facades\DB::transaction(function () use ($data, $userId, $randomLetters) {
+            $sale = DB::transaction(function () use ($data, $userId, $isCash, $randomLetters, $inventory) {
+                [$products, $needs, $subtotal] = $inventory->prepareFromItems($data['items']);
+                $tax = (int) round($subtotal * 0.11);
+                $grandTotal = $subtotal + $tax;
 
-                // Ambil produk + resep
-                $productIds = collect($data['items'])->pluck('product_id')->unique()->values();
-                $products = \App\Models\Product::with('recipes.rawMaterial')
-                    ->whereIn('id', $productIds)
-                    ->lockForUpdate()
-                    ->get()
-                    ->keyBy('id');
+                $paid = $isCash ? (int) $data['paid_amount'] : $grandTotal;
 
-                // 1) Hitung total & kebutuhan bahan (aggregate)
-                $total = 0;
-                $needs = []; // raw_material_id => qty_needed
-
-                foreach ($data['items'] as $it) {
-                    $p = $products[$it['product_id']] ?? null;
-                    if (!$p || !$p->is_active) {
-                        throw new \RuntimeException('Produk tidak ditemukan / tidak aktif.');
-                    }
-                    if ($p->recipes->count() === 0) {
-                        throw new \RuntimeException("Produk '{$p->name}' belum punya resep, tidak bisa dijual (STRICT).");
-                    }
-
-                    $qty = (int) $it['qty'];
-                    $subtotal = (int) $p->price * $qty;
-                    $total += $subtotal;
-
-                    foreach ($p->recipes as $r) {
-                        $rid = (int) $r->raw_material_id;
-                        $need = (float) $r->qty * $qty;
-                        $needs[$rid] = ($needs[$rid] ?? 0) + $need;
-                    }
-                }
-
-                $paid = (int) $data['paid_amount'];
-                $tax = (int) round($total * 0.11);
-                $grandTotal = $total + $tax;
-
-                // Kalau QRIS: boleh “bablas” (anggap paid cukup)
-                if ($data['payment_method'] === 'qris') {
-                    $paid = $grandTotal;
-                }
-
-                if ($paid < $grandTotal) {
+                if ($isCash && $paid < $grandTotal) {
                     throw new \RuntimeException(
                         "Uang bayar kurang. Total (incl. pajak) Rp " . number_format($grandTotal, 0, ',', '.') . "."
                     );
                 }
 
-                // 2) Lock bahan baku yang dibutuhkan & validasi stok
-                $rawIds = collect(array_keys($needs))->values();
-                $materials = \App\Models\RawMaterial::whereIn('id', $rawIds)->lockForUpdate()->get()->keyBy('id');
+                $materials = $inventory->lockAndValidateMaterials($needs);
 
-                $insufficient = [];
-                foreach ($needs as $rid => $qtyNeed) {
-                    $m = $materials[$rid] ?? null;
-                    $stock = (float) ($m?->stock_on_hand ?? 0);
-                    if ($stock + 1e-9 < (float) $qtyNeed) {
-                        $insufficient[] = [
-                            'name' => $m?->name ?? "Material#$rid",
-                            'unit' => $m?->unit ?? '',
-                            'need' => $qtyNeed,
-                            'stock' => $stock,
-                        ];
-                    }
-                }
-                if (count($insufficient)) {
-                    $msg = "Stok bahan kurang:\n";
-                    foreach ($insufficient as $x) {
-                        $msg .= "- {$x['name']} ({$x['unit']}): butuh {$x['need']}, stok {$x['stock']}\n";
-                    }
-                    throw new \RuntimeException($msg);
-                }
-
-                // 3) Create Sale (langsung masuk antrian kitchen)
-                $sale = \App\Models\Sale::create([
+                $sale = Sale::create([
                     'invoice_no' => 'TEMP',
                     'user_id' => $userId,
                     'total_amount' => $grandTotal,
-                    'paid_amount' => $paid,
+                    'paid_amount' => $isCash ? $paid : 0,
                     'payment_method' => $data['payment_method'],
+                    'payment_status' => $isCash ? 'paid' : 'pending',
                     'order_type' => $data['order_type'],
-                    'dining_table_id' => $data['order_type'] === 'dine_in' ? ($data['dining_table_id'] ?? null) : null,
-                    'change_amount' => $paid - $grandTotal,
-                    'status' => 'completed',
+                    'dining_table_id' => $data['order_type'] === 'dine_in'
+                        ? ($data['dining_table_id'] ?? null)
+                        : null,
+                    'change_amount' => $isCash ? ($paid - $grandTotal) : 0,
+                    'status' => $isCash ? 'completed' : 'pending',
                     'kitchen_status' => 'new',
+                    'paid_at' => $isCash ? now() : null,
                 ]);
 
-                // ===== INVOICE RANDOM HURUF, ANTI DUPLICATE, PANJANG DINAMIS =====
                 $datePart = now()->format('Ymd');
                 $length = 3;
                 $maxAttempts = 50;
@@ -196,63 +136,106 @@ class SaleController extends Controller
                         $invoice = "INV-{$datePart}-{$suffix}";
                         $attempt++;
                     } while (
-                        \App\Models\Sale::where('invoice_no', $invoice)->exists()
+                        Sale::where('invoice_no', $invoice)->exists()
                         && $attempt < $maxAttempts
                     );
 
-                    if (\App\Models\Sale::where('invoice_no', $invoice)->exists()) {
+                    if (Sale::where('invoice_no', $invoice)->exists()) {
                         $length++;
                         continue;
                     }
 
-                    $sale->update(['invoice_no' => $invoice]);
+                    $sale->update([
+                        'invoice_no' => $invoice,
+                        'midtrans_order_id' => $invoice,
+                    ]);
                     break;
                 }
-                // ================================================================
 
-                // 4) Sale items
                 foreach ($data['items'] as $it) {
                     $p = $products[$it['product_id']];
                     $qty = (int) $it['qty'];
-                    $subtotal = (int) $p->price * $qty;
 
-                    \App\Models\SaleItem::create([
+                    SaleItem::create([
                         'sale_id' => $sale->id,
                         'product_id' => $p->id,
                         'qty' => $qty,
                         'price' => (int) $p->price,
-                        'subtotal' => $subtotal,
-                        'note' => isset($it['note']) && trim((string) $it['note']) !== '' ? trim((string) $it['note']) : null,
+                        'subtotal' => (int) $p->price * $qty,
+                        'note' => filled($it['note'] ?? null) ? trim((string) $it['note']) : null,
                     ]);
                 }
 
-                // 5) Deduct stock + inventory movement (sale)
-                foreach ($needs as $rid => $qtyNeed) {
-                    $m = $materials[$rid];
+                $inventory->reserve($needs, $materials, $sale, $userId);
 
-                    $m->update([
-                        'stock_on_hand' => (float) $m->stock_on_hand - (float) $qtyNeed,
-                    ]);
-
-                    \App\Models\InventoryMovement::create([
-                        'raw_material_id' => $m->id,
-                        'type' => 'sale',
-                        'qty_in' => 0,
-                        'qty_out' => $qtyNeed,
-                        'reference_type' => \App\Models\Sale::class,
-                        'reference_id' => $sale->id,
-                        'created_by' => $userId,
-                        'note' => 'Sale: ' . $sale->invoice_no,
-                    ]);
-                }
-
-                return $sale;
+                return $sale->fresh(['items.product']);
             });
 
-        } catch (\Throwable $e) {
-            return back()->withErrors(['sale' => $e->getMessage()])->withInput();
-        }
+            if ($isCash) {
+                return $request->expectsJson()
+                    ? response()->json([
+                        'ok' => true,
+                        'redirect' => route('kasir.sales.index'),
+                        'message' => 'Transaksi berhasil: ' . $sale->invoice_no,
+                    ])
+                    : redirect()->route('kasir.sales.index')
+                        ->with('success', 'Transaksi berhasil: ' . $sale->invoice_no);
+            }
 
-        return redirect()->route('kasir.sales.index')->with('success', 'Transaksi berhasil: ' . $sale->invoice_no);
+            try {
+                $charge = $midtrans->charge($sale);
+
+                $sale->update([
+                    'midtrans_transaction_id' => $charge['transaction_id'] ?? null,
+                    'midtrans_transaction_status' => $charge['transaction_status'] ?? null,
+                    'midtrans_payment_type' => $charge['payment_type'] ?? null,
+                    'midtrans_response' => $charge,
+                    'payment_expires_at' => $charge['expiry_time'] ?? null,
+                ]);
+
+                return response()->json([
+                    'ok' => true,
+                    'sale_id' => $sale->id,
+                    'invoice_no' => $sale->invoice_no,
+                    'payment_status' => $sale->payment_status,
+                    'payment' => $midtrans->extractInstruction($charge),
+                ]);
+            } catch (\Throwable $e) {
+                DB::transaction(function () use ($sale, $inventory, $userId) {
+                    $sale->refresh();
+
+                    $inventory->release($sale, $userId);
+
+                    $sale->update([
+                        'payment_status' => 'failed',
+                        'status' => 'cancelled',
+                    ]);
+                });
+
+                throw $e;
+            }
+        } catch (\Throwable $e) {
+            return $this->errorResponse($request, $e->getMessage());
+        }
+    }
+
+    public function paymentStatus(Sale $sale)
+    {
+        abort_unless($sale->user_id === auth()->id(), 403);
+
+        return response()->json([
+            'sale_id' => $sale->id,
+            'invoice_no' => $sale->invoice_no,
+            'status' => $sale->status,
+            'payment_status' => $sale->payment_status,
+            'paid_at' => optional($sale->paid_at)->toDateTimeString(),
+        ]);
+    }
+
+    protected function errorResponse(Request $request, string $message)
+    {
+        return $request->expectsJson()
+            ? response()->json(['ok' => false, 'message' => $message], 422)
+            : back()->withErrors(['sale' => $message])->withInput();
     }
 }
