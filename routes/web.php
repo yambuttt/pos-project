@@ -35,7 +35,12 @@ Route::post('/order/checkout', [PublicMenuController::class, 'checkout'])
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.submit');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
-
+Route::get('/payments/midtrans/notification', function () {
+    return response()->json([
+        'ok' => true,
+        'message' => 'Midtrans notification endpoint is alive',
+    ]);
+});
 Route::post('/payments/midtrans/notification', [MidtransWebhookController::class, 'handle'])
     ->name('payments.midtrans.notification')
     ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class]);
