@@ -304,4 +304,76 @@ class PublicMenuController extends Controller
             ], 422);
         }
     }
+
+
+    public function landingTrial()
+    {
+        $featuredProducts = Product::query()
+            ->where('is_active', 1)
+            ->inRandomOrder()
+            ->limit(6)
+            ->get();
+
+        $galleryItems = [
+            [
+                'title' => 'Interior',
+                'image' => asset('images/landing/gallery-1.jpg'),
+                'size' => 'large',
+            ],
+            [
+                'title' => 'Beverage',
+                'image' => asset('images/landing/gallery-2.jpg'),
+                'size' => 'large',
+            ],
+            [
+                'title' => 'Ambiance',
+                'image' => asset('images/landing/gallery-3.jpg'),
+                'size' => 'large',
+            ],
+            [
+                'title' => 'Dessert',
+                'image' => asset('images/landing/gallery-4.jpg'),
+                'size' => 'medium',
+            ],
+            [
+                'title' => 'Dining Area',
+                'image' => asset('images/landing/gallery-5.jpg'),
+                'size' => 'medium',
+            ],
+            [
+                'title' => 'Premium Room',
+                'image' => asset('images/landing/gallery-6.jpg'),
+                'size' => 'medium',
+            ],
+        ];
+
+        $testimonials = [
+            [
+                'name' => 'Siti Nurhaliza',
+                'role' => 'Food Blogger',
+                'initial' => 'SN',
+                'text' => 'Ayo Renne memberikan pengalaman kuliner yang luar biasa. Setiap hidangan disajikan dengan penuh perhatian dan cita rasa yang autentik.',
+            ],
+            [
+                'name' => 'Budi Santoso',
+                'role' => 'Local Resident',
+                'initial' => 'BS',
+                'text' => 'Sudah beberapa kali makan di sini dan selalu puas. Menu favoritku adalah hidangan premium-nya. Pelayanannya ramah dan tempatnya bersih.',
+            ],
+            [
+                'name' => 'Amanda Wijaya',
+                'role' => 'Travel Enthusiast',
+                'initial' => 'AW',
+                'text' => 'Perfect place untuk family gathering. Suasananya cozy, menunya beragam, dan yang paling penting rasanya enak semua.',
+            ],
+            [
+                'name' => 'Rizki Pratama',
+                'role' => 'Business Owner',
+                'initial' => 'RP',
+                'text' => 'Tempat favorit untuk meeting informal dengan klien. Ambience-nya profesional tapi tetap hangat. Sangat recommended.',
+            ],
+        ];
+
+        return view('landing-trial', compact('featuredProducts', 'galleryItems', 'testimonials'));
+    }
 }

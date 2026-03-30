@@ -24,7 +24,7 @@ use App\Http\Controllers\Pegawai\AttendanceController;
 use App\Http\Controllers\Payment\MidtransWebhookController;
 
 
-
+Route::get('/landingtrial', [PublicMenuController::class, 'landingTrial'])->name('public.landingtrial');
 Route::get('/', [PublicMenuController::class, 'index']);
 Route::get('/t/{token}', [PublicMenuController::class, 'byTableToken'])
     ->name('public.table.token');
