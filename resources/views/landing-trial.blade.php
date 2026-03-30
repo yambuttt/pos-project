@@ -508,13 +508,34 @@
                         </div>
 
                         <div class="flex items-center justify-center gap-4 pt-2 xl:justify-start">
-                            @foreach(['instagram', 'facebook', 'send'] as $icon)
-                                <a href="#"
-                                    class="inline-flex h-12 w-12 items-center justify-center rounded-xl border border-yellow-500/16 bg-[#171717] text-white/70 transition hover:border-yellow-500/35 hover:text-yellow-500">
-                                    <span class="text-sm font-semibold">{{ strtoupper(substr($icon, 0, 1)) }}</span>
-                                </a>
-                            @endforeach
-                        </div>
+    <a href="#"
+       class="inline-flex h-12 w-12 items-center justify-center rounded-xl border border-yellow-500/16 bg-[#171717] text-white/70 transition hover:border-yellow-500/35 hover:text-yellow-500"
+       aria-label="Instagram">
+        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <rect x="3" y="3" width="18" height="18" rx="5" stroke="currentColor" stroke-width="1.8"/>
+            <circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="1.8"/>
+            <circle cx="17.2" cy="6.8" r="1.1" fill="currentColor"/>
+        </svg>
+    </a>
+
+    <a href="#"
+       class="inline-flex h-12 w-12 items-center justify-center rounded-xl border border-yellow-500/16 bg-[#171717] text-white/70 transition hover:border-yellow-500/35 hover:text-yellow-500"
+       aria-label="Facebook">
+        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M14 8h2V4h-2.5C10.46 4 9 5.79 9 8.6V11H7v4h2v5h4v-5h2.5l.5-4H13V9c0-.6.28-1 1-1Z"
+                fill="currentColor"/>
+        </svg>
+    </a>
+
+    <a href="#"
+       class="inline-flex h-12 w-12 items-center justify-center rounded-xl border border-yellow-500/16 bg-[#171717] text-white/70 transition hover:border-yellow-500/35 hover:text-yellow-500"
+       aria-label="Telegram">
+        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M21 4L3 11.53l5.7 2.07L18 7l-7.02 7.12v5.38l3.24-3.12 4.35 3.2c.8.44 1.38.21 1.58-.74L23 5.53C23.27 4.35 22.53 3.82 21 4Z"
+                stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
+        </svg>
+    </a>
+</div>
                     </div>
 
                     <div class="rounded-2xl border border-yellow-500/16 bg-[#171717] p-7 sm:p-8">
@@ -570,13 +591,34 @@
                 </p>
 
                 <div class="mt-6 flex gap-3">
-                    @foreach(['I', 'F', 'T'] as $label)
-                        <a href="#"
-                            class="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-yellow-500/16 bg-[#171717] text-white/70 transition hover:border-yellow-500/35 hover:text-yellow-500">
-                            {{ $label }}
-                        </a>
-                    @endforeach
-                </div>
+    <a href="#"
+       class="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-yellow-500/16 bg-[#171717] text-white/70 transition hover:border-yellow-500/35 hover:text-yellow-500"
+       aria-label="Instagram">
+        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <rect x="3" y="3" width="18" height="18" rx="5" stroke="currentColor" stroke-width="1.8"/>
+            <circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="1.8"/>
+            <circle cx="17.2" cy="6.8" r="1.1" fill="currentColor"/>
+        </svg>
+    </a>
+
+    <a href="#"
+       class="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-yellow-500/16 bg-[#171717] text-white/70 transition hover:border-yellow-500/35 hover:text-yellow-500"
+       aria-label="Facebook">
+        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M14 8h2V4h-2.5C10.46 4 9 5.79 9 8.6V11H7v4h2v5h4v-5h2.5l.5-4H13V9c0-.6.28-1 1-1Z"
+                fill="currentColor"/>
+        </svg>
+    </a>
+
+    <a href="#"
+       class="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-yellow-500/16 bg-[#171717] text-white/70 transition hover:border-yellow-500/35 hover:text-yellow-500"
+       aria-label="Telegram">
+        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M21 4L3 11.53l5.7 2.07L18 7l-7.02 7.12v5.38l3.24-3.12 4.35 3.2c.8.44 1.38.21 1.58-.74L23 5.53C23.27 4.35 22.53 3.82 21 4Z"
+                stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
+        </svg>
+    </a>
+</div>
             </div>
 
             <div>
