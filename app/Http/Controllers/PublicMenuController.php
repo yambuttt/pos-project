@@ -45,7 +45,7 @@ class PublicMenuController extends Controller
             ->firstOrFail();
 
         // PENTING: arahin ke halaman utama menu, BUKAN overview
-        return redirect('/?table=' . $table->qr_token);
+        return redirect('/menu?table=' . $table->qr_token);
     }
 
     public function overview(Request $request)

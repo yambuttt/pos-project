@@ -25,7 +25,8 @@ use App\Http\Controllers\Payment\MidtransWebhookController;
 
 
 Route::get('/landingtrial', [PublicMenuController::class, 'landingTrial'])->name('public.landingtrial');
-Route::get('/', [PublicMenuController::class, 'index']);
+Route::get('/', [PublicMenuController::class, 'landingTrial'])->name('public.home');
+Route::get('/menu', [PublicMenuController::class, 'index'])->name('public.menu');
 Route::get('/t/{token}', [PublicMenuController::class, 'byTableToken'])
     ->name('public.table.token');
 Route::get('/order/overview', [PublicMenuController::class, 'overview'])->name('public.order.overview');

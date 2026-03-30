@@ -158,7 +158,7 @@
                     </div>
 
                     <div class="mt-8 flex flex-wrap gap-4">
-                        <a href="{{ url('/') }}"
+                        <a href="{{ route('public.menu') }}"
                             class="inline-flex items-center gap-3 rounded-xl bg-yellow-500 px-7 py-4 text-base font-semibold text-black transition hover:bg-yellow-400">
                             Lihat Menu
                             <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none">
@@ -339,7 +339,7 @@
                                     {{ $product->description ?: 'Hidangan spesial dengan penyajian premium khas Ayo Renne.' }}
                                 </p>
 
-                                <a href="{{ url('/') }}"
+                                <a href="{{ route('public.menu') }}"
                                     class="mt-5 inline-flex w-full items-center justify-center rounded-lg border border-yellow-500/35 px-4 py-3 text-sm font-semibold text-yellow-500 transition hover:bg-yellow-500 hover:text-black">
                                     Pesan Sekarang
                                 </a>
@@ -349,7 +349,7 @@
                 </div>
 
                 <div class="mt-10 text-center">
-                    <a href="{{ url('/') }}"
+                    <a href="{{ route('public.menu') }}"
                         class="inline-flex items-center justify-center rounded-xl border border-yellow-500/40 px-6 py-3 text-sm font-semibold text-white transition hover:bg-yellow-500 hover:text-black">
                         Lihat Menu Lengkap
                     </a>
