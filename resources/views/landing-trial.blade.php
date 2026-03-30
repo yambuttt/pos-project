@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="id" class="scroll-smooth overflow-x-hidden">
 
 <head>
     <meta charset="UTF-8">
@@ -42,10 +42,24 @@
                 linear-gradient(180deg, rgba(0, 0, 0, .28) 0%, rgba(0, 0, 0, .55) 100%);
         }
 
-        .section-wrap {
-            width: min(1120px, calc(100% - 32px));
-            margin-inline: auto;
-        }
+.section-wrap {
+    width: 100%;
+    max-width: 1120px;
+    margin-inline: auto;
+    padding-inline: 16px;
+}
+
+@media (min-width: 640px) {
+    .section-wrap {
+        padding-inline: 24px;
+    }
+}
+
+@media (min-width: 1024px) {
+    .section-wrap {
+        padding-inline: 32px;
+    }
+}
 
         .menu-card-image::after {
             content: "";
@@ -53,15 +67,32 @@
             inset: 0;
             background: linear-gradient(to top, rgba(0, 0, 0, .70), rgba(0, 0, 0, .06));
         }
+        *,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+img,
+iframe,
+video,
+canvas,
+svg {
+    max-width: 100%;
+}
+
+body {
+    overflow-x: hidden;
+}
     </style>
 </head>
 
-<body class="text-white antialiased">
+<body class="overflow-x-hidden bg-[#050505] text-white antialiased">
     <header class="sticky top-0 z-50 border-b border-yellow-500/10 bg-black/90 backdrop-blur-xl">
-        <div class="section-wrap flex items-center justify-between gap-6 py-4">
+        <div class="section-wrap flex items-center justify-between gap-3 py-3 sm:gap-6 sm:py-4">
             <a href="#hero" class="flex items-center gap-3">
                 <img src="{{ asset('images/landing/logo-ayo-renne.png') }}" alt="Ayo Renne Logo"
-                    class="h-12 w-auto object-contain sm:h-14">
+                    class="h-10 w-auto object-contain sm:h-14">
             </a>
 
             <nav class="hidden items-center gap-8 text-sm font-medium text-white/90 lg:flex">
@@ -74,7 +105,7 @@
 
             <div class="flex items-center gap-3">
                 <a href="#kontak"
-                    class="inline-flex items-center gap-2 rounded-xl bg-yellow-500 px-4 py-3 text-sm font-semibold text-black transition hover:bg-yellow-400 sm:px-5">
+                    class="inline-flex items-center gap-2 rounded-xl bg-yellow-500 px-3 py-2.5 text-sm font-semibold text-black transition hover:bg-yellow-400 sm:px-5 sm:py-3">
                     <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                         <path
                             d="M22 16.92v3a2 2 0 0 1-2.18 2 19.87 19.87 0 0 1-8.63-3.07A19.5 19.5 0 0 1 5.15 12.8 19.87 19.87 0 0 1 2.08 4.09 2 2 0 0 1 4.06 2h3a2 2 0 0 1 2 1.72c.12.9.33 1.78.63 2.62a2 2 0 0 1-.45 2.11L8 9.91a16 16 0 0 0 6.09 6.09l1.46-1.24a2 2 0 0 1 2.11-.45c.84.3 1.72.51 2.62.63A2 2 0 0 1 22 16.92Z"
@@ -84,7 +115,7 @@
                 </a>
 
                 <button type="button" id="mobileMenuBtn"
-                    class="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-yellow-500/20 bg-white/5 text-white lg:hidden"
+                    class="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-yellow-500/20 bg-white/5 text-white lg:hidden"
                     aria-label="Toggle menu">
                     <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none">
                         <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2"
@@ -127,12 +158,12 @@
                         Probolinggo
                     </div>
 
-                    <h1 class="font-display text-5xl font-bold leading-[1.02] text-white sm:text-6xl lg:text-7xl">
+                    <h1 class="font-display text-[46px] font-bold leading-[1.04] text-white sm:text-6xl lg:text-7xl">
                         Ayo Renne
                         <span class="mt-2 block text-yellow-500">Cafe &amp; Resto</span>
                     </h1>
 
-                    <p class="mt-6 max-w-2xl text-lg leading-9 text-white/80 sm:text-[1.35rem]">
+                    <p class="mt-5 max-w-xl text-[18px] leading-[1.85] text-white/80 sm:text-[20px] sm:leading-[1.9]">
                         Ayo Renne adalah destinasi kuliner premium di Probolinggo yang menghadirkan pengalaman bersantap
                         istimewa. Dengan perpaduan sempurna antara cita rasa autentik Indonesia dan sentuhan modern,
                         kami menciptakan momen tak terlupakan untuk setiap tamu.
@@ -186,17 +217,17 @@
                     <div class="mt-3 h-[3px] w-16 rounded-full bg-yellow-500"></div>
                 </div>
 
-                <h2 class="font-display text-[52px] font-bold leading-[1.08] text-white xl:text-[60px]">
+                <h2 class="font-display text-[42px] font-bold leading-[1.08] text-white sm:text-[48px] xl:text-[60px]">
                     Cita Rasa Autentik dengan
                     <br>
                     Sentuhan Modern
                 </h2>
 
-                <p class="mt-8 max-w-[680px] text-[19px] leading-[1.9] text-white/78">
+                <p class="mt-8 max-w-[680px] text-[17px] leading-[1.9] text-white/78 sm:text-[19px]">
                     Ayo Renne adalah destinasi kuliner premium di Probolinggo yang menghadirkan pengalaman bersantap istimewa. Dengan perpaduan sempurna antara cita rasa otentik Indonesia dan sentuhan modern, kami menciptakan momen tak terlupakan untuk setiap tamu.
                 </p>
 
-                <p class="mt-6 max-w-[680px] text-[18px] leading-[1.9] text-white/62">
+                <p class="mt-6 max-w-[680px] text-[16px] leading-[1.9] text-white/62 sm:text-[18px]">
                     Berlokasi strategis di Probolinggo, kami menghadirkan suasana yang nyaman dan elegan untuk berbagai acara Anda. Dari pertemuan keluarga hingga acara bisnis, Ayo Renne adalah pilihan sempurna.
                 </p>
 
@@ -254,7 +285,7 @@
 
             <!-- RIGHT -->
             <div class="mx-auto w-full max-w-[520px] lg:mx-0 lg:max-w-none">
-                <div class="grid grid-cols-2 gap-4 md:gap-5">
+                <div class="grid grid-cols-2 gap-3 sm:gap-4 md:gap-5">
                     <div class="overflow-hidden rounded-2xl">
                         <img src="{{ asset('images/landing/about-1.jpg') }}" alt="" class="h-[300px] w-full object-cover">
                     </div>
@@ -634,7 +665,7 @@
 
             <div>
                 <h4 class="text-2xl font-semibold text-white">Kontak</h4>
-                <div class="mt-6 space-y-4 text-lg leading-8 text-white/62">
+                <div class="mt-6 space-y-4 break-words text-lg leading-8 text-white/62">
                     <div>Jl. Raya Probolinggo No. 123,<br>Probolinggo, Jawa Timur 67219</div>
                     <div>+62 335 421 888</div>
                     <div>info@ayorenne.com</div>
