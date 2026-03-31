@@ -519,8 +519,17 @@ class PublicMenuController extends Controller
                 return $sale;
             });
 
-            $charge = $midtrans->charge($sale->fresh());
-            $instruction = $midtrans->storeChargeResponse($sale->fresh(), $charge);
+            try {
+                $charge = $midtrans->charge($sale->fresh());
+                $instruction = $midtrans->storeChargeResponse($sale->fresh(), $charge);
+            } catch (\Throwable $e) {
+                \Log::error('Midtrans charge failed', [
+                    'invoice_no' => $sale->invoice_no,
+                    'message' => $e->getMessage(),
+                ]);
+
+                throw $e;
+            }
 
             return response()->json([
                 'ok' => true,
