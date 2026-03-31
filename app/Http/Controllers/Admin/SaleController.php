@@ -24,6 +24,10 @@ class SaleController extends Controller
 
         // base query (biar konsisten dipakai untuk list/summary/chart)
         $base = Sale::query()
+            ->where(function ($qq) {
+                $qq->where('payment_status', 'paid')
+                    ->orWhere('status', 'completed');
+            })
             ->when($from, fn($qq) => $qq->whereDate('sales.created_at', '>=', $from))
             ->when($to, fn($qq) => $qq->whereDate('sales.created_at', '<=', $to))
             ->when($cashierId, fn($qq) => $qq->where($cashierColumn, $cashierId))
