@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="id" class="overflow-x-hidden">
+
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -13,8 +14,8 @@
 
         body {
             background:
-                radial-gradient(circle at top left, rgba(234,179,8,.08), transparent 24%),
-                radial-gradient(circle at bottom right, rgba(234,179,8,.06), transparent 22%),
+                radial-gradient(circle at top left, rgba(234, 179, 8, .08), transparent 24%),
+                radial-gradient(circle at bottom right, rgba(234, 179, 8, .06), transparent 22%),
                 linear-gradient(180deg, #030303 0%, #0a0a0a 100%);
         }
 
@@ -28,7 +29,7 @@
         }
 
         .gold-soft {
-            background: linear-gradient(135deg, rgba(234,179,8,.10), rgba(255,255,255,.02));
+            background: linear-gradient(135deg, rgba(234, 179, 8, .10), rgba(255, 255, 255, .02));
         }
 
         .status-pending {
@@ -44,10 +45,15 @@
         }
     </style>
 </head>
+
 <body class="min-h-screen text-white">
     <div class="relative min-h-screen overflow-hidden">
-        <div class="pointer-events-none absolute -left-24 top-0 h-[360px] w-[360px] rounded-full bg-yellow-500/10 blur-[120px]"></div>
-        <div class="pointer-events-none absolute bottom-0 right-0 h-[420px] w-[420px] rounded-full bg-yellow-400/8 blur-[140px]"></div>
+        <div
+            class="pointer-events-none absolute -left-24 top-0 h-[360px] w-[360px] rounded-full bg-yellow-500/10 blur-[120px]">
+        </div>
+        <div
+            class="pointer-events-none absolute bottom-0 right-0 h-[420px] w-[420px] rounded-full bg-yellow-400/8 blur-[140px]">
+        </div>
 
         <div class="mx-auto max-w-6xl px-4 pb-16 pt-8 sm:px-6 lg:px-8">
             <div class="mb-6 flex flex-wrap items-start justify-between gap-4">
@@ -75,17 +81,17 @@
                                 <div class="mt-2 text-2xl font-semibold text-white">{{ $sale->invoice_no }}</div>
                                 <div class="mt-3 flex flex-wrap items-center gap-3 text-sm">
                                     <span class="text-white/55">Status Pembayaran:</span>
-                                    <span id="paymentStatus"
-                                        class="font-semibold
+                                    <span id="paymentStatus" class="font-semibold
                                             @if(($sale->payment_status ?? '') === 'paid') status-paid
-                                            @elseif(in_array(($sale->payment_status ?? ''), ['expired','failed','cancelled'])) status-failed
+                                            @elseif(in_array(($sale->payment_status ?? ''), ['expired', 'failed', 'cancelled'])) status-failed
                                             @else status-pending @endif">
                                         {{ strtoupper($sale->payment_status ?? 'pending') }}
                                     </span>
                                 </div>
                             </div>
 
-                            <div class="rounded-2xl border border-yellow-500/12 bg-white/[0.03] px-4 py-3 text-sm text-white/80">
+                            <div
+                                class="rounded-2xl border border-yellow-500/12 bg-white/[0.03] px-4 py-3 text-sm text-white/80">
                                 <div>Pesanan: {{ strtoupper($sale->order_type) }}</div>
                                 <div class="mt-1">Metode: {{ strtoupper($sale->payment_method) }}</div>
                                 @if($sale->diningTable)
@@ -97,7 +103,9 @@
                         <div class="mt-5 grid gap-4 sm:grid-cols-3">
                             <div class="rounded-2xl border border-yellow-500/10 bg-white/[0.03] px-4 py-4">
                                 <div class="text-xs uppercase tracking-[0.18em] text-white/45">Total</div>
-                                <div class="mt-2 text-xl font-semibold text-white">Rp {{ number_format($sale->total_amount, 0, ',', '.') }}</div>
+                                <div class="mt-2 text-xl font-semibold text-white">Rp
+                                    {{ number_format($sale->total_amount, 0, ',', '.') }}
+                                </div>
                             </div>
 
                             <div class="rounded-2xl border border-yellow-500/10 bg-white/[0.03] px-4 py-4">
@@ -107,7 +115,8 @@
                                 </div>
                             </div>
 
-                            <div class="rounded-2xl border border-yellow-500/10 bg-white/[0.03] px-4 py-4">
+                            <div id="countdownCard"
+                                class="{{ ($sale->payment_status ?? 'pending') === 'paid' ? 'hidden ' : '' }}rounded-2xl border border-yellow-500/10 bg-white/[0.03] px-4 py-4">
                                 <div class="text-xs uppercase tracking-[0.18em] text-white/45">Sisa Waktu</div>
                                 <div id="countdown" class="mt-2 text-xl font-semibold text-yellow-400">--:--</div>
                             </div>
@@ -122,7 +131,8 @@
                                 <div class="rounded-2xl border border-yellow-500/10 bg-white/[0.03] px-4 py-4">
                                     <div class="flex items-start justify-between gap-3">
                                         <div class="min-w-0">
-                                            <div class="text-sm font-semibold text-white">{{ $item->product->name ?? '-' }}</div>
+                                            <div class="text-sm font-semibold text-white">{{ $item->product->name ?? '-' }}
+                                            </div>
                                             <div class="mt-1 text-xs text-white/55">
                                                 Rp {{ number_format($item->price, 0, ',', '.') }} × {{ $item->qty }}
                                             </div>
@@ -152,13 +162,12 @@
                         <div id="qrWrapper" class="mt-5 rounded-[24px] border border-yellow-500/10 gold-soft p-5">
                             @if(!empty($payment['qr_url']))
                                 <div class="flex justify-center">
-                                    <img id="qrImage"
-                                        src="{{ $payment['qr_url'] }}"
-                                        alt="QRIS"
+                                    <img id="qrImage" src="{{ $payment['qr_url'] }}" alt="QRIS"
                                         class="h-auto w-full max-w-[320px] rounded-[24px] bg-white p-3 shadow-xl">
                                 </div>
                             @else
-                                <div class="rounded-2xl border border-white/10 bg-black/20 px-6 py-10 text-center text-sm text-white/55">
+                                <div
+                                    class="rounded-2xl border border-white/10 bg-black/20 px-6 py-10 text-center text-sm text-white/55">
                                     QR belum tersedia.
                                 </div>
                             @endif
@@ -190,7 +199,8 @@
 
                             <div class="flex items-center justify-between">
                                 <span class="text-white/60">Subtotal</span>
-                                <span class="font-semibold text-white">Rp {{ number_format($subtotal, 0, ',', '.') }}</span>
+                                <span class="font-semibold text-white">Rp
+                                    {{ number_format($subtotal, 0, ',', '.') }}</span>
                             </div>
 
                             <div class="flex items-center justify-between">
@@ -201,13 +211,15 @@
                             @if(($sale->delivery_fee ?? 0) > 0)
                                 <div class="flex items-center justify-between">
                                     <span class="text-white/60">Ongkir</span>
-                                    <span class="font-semibold text-white">Rp {{ number_format($sale->delivery_fee, 0, ',', '.') }}</span>
+                                    <span class="font-semibold text-white">Rp
+                                        {{ number_format($sale->delivery_fee, 0, ',', '.') }}</span>
                                 </div>
                             @endif
 
                             <div class="border-t border-yellow-500/10 pt-3 flex items-center justify-between">
                                 <span class="text-white/70">Total</span>
-                                <span class="text-lg font-semibold text-yellow-500">Rp {{ number_format($sale->total_amount, 0, ',', '.') }}</span>
+                                <span class="text-lg font-semibold text-yellow-500">Rp
+                                    {{ number_format($sale->total_amount, 0, ',', '.') }}</span>
                             </div>
                         </div>
                     </div>
@@ -234,6 +246,7 @@
             const pendingHelp = document.getElementById('pendingHelp');
             const paidNotice = document.getElementById('paidNotice');
             const expiredNotice = document.getElementById('expiredNotice');
+            const countdownCard = document.getElementById('countdownCard');
 
             if (!paymentStatusEl) return;
 
@@ -245,18 +258,21 @@
                 pendingHelp?.classList.add('hidden');
                 paidNotice?.classList.remove('hidden');
                 expiredNotice?.classList.add('hidden');
+                countdownCard?.classList.add('hidden');
             } else if (['expired', 'failed', 'cancelled'].includes(status)) {
                 paymentStatusEl.classList.add('status-failed');
                 qrImage?.classList.add('hidden');
                 pendingHelp?.classList.add('hidden');
                 paidNotice?.classList.add('hidden');
                 expiredNotice?.classList.remove('hidden');
+                countdownCard?.classList.add('hidden');
             } else {
                 paymentStatusEl.classList.add('status-pending');
                 qrImage?.classList.remove('hidden');
                 pendingHelp?.classList.remove('hidden');
                 paidNotice?.classList.add('hidden');
                 expiredNotice?.classList.add('hidden');
+                countdownCard?.classList.remove('hidden');
             }
         }
 
@@ -320,11 +336,13 @@
 
                 if (json.payment_status === 'paid') {
                     clearInterval(window.__invoicePoller);
+                    clearInterval(window.__invoiceCountdown);
                     return;
                 }
 
                 if (['expired', 'failed', 'cancelled'].includes(json.payment_status)) {
                     clearInterval(window.__invoicePoller);
+                    clearInterval(window.__invoiceCountdown);
                     return;
                 }
             } catch (e) {
@@ -339,4 +357,5 @@
         pollStatus();
     </script>
 </body>
+
 </html>
