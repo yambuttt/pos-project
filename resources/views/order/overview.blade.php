@@ -129,6 +129,24 @@
                 @endif
             </div>
 
+            <div class="sm:col-span-2">
+                <label class="text-xs text-white/60">Metode Pembayaran</label>
+
+                <div class="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                    <label
+                        class="flex cursor-pointer items-center gap-3 rounded-xl border border-white/15 bg-black/20 px-4 py-3 text-sm text-white/90">
+                        <input type="radio" name="paymentMethod" value="qris" checked class="accent-yellow-400">
+                        <span>QRIS</span>
+                    </label>
+
+                    <label
+                        class="flex cursor-not-allowed items-center gap-3 rounded-xl border border-white/10 bg-black/10 px-4 py-3 text-sm text-white/40">
+                        <input type="radio" name="paymentMethod" value="cash" disabled class="accent-yellow-400">
+                        <span>Tunai di Kasir (segera hadir)</span>
+                    </label>
+                </div>
+            </div>
+
             <button
                 class="mt-4 w-full rounded-xl bg-yellow-400/95 px-4 py-3 text-sm font-semibold text-black shadow-lg shadow-yellow-400/10 hover:bg-yellow-300"
                 type="button" onclick="checkoutDb()">
@@ -201,8 +219,8 @@
             const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
             return R * c;
         }
-        function haversinemeter (lat1,lat2,lat3,lng2){
-            const R =6371e3;
+        function haversinemeter(lat1, lat2, lat3, lng2) {
+            const R = 6371e3;
         }
 
         function rupiah(n) {
@@ -486,7 +504,6 @@
             const cart = loadOverview();
             const entries = Object.entries(cart);
 
-            // ✅ supaya scope aman dipakai sampai payload fetch
             let phone = null;
             let addr = null;
             let diningTableId = null;
@@ -495,21 +512,41 @@
                 phone = (document.getElementById('deliveryPhone')?.value || '').trim();
                 addr = (document.getElementById('deliveryAddress')?.value || '').trim();
 
-                if (!phone) { alert('No HP wajib diisi.'); return; }
-                if (!addr) { alert('Alamat wajib diisi.'); return; }
+                if (!phone) {
+                    alert('No HP wajib diisi.');
+                    return;
+                }
+
+                if (!addr) {
+                    alert('Alamat wajib diisi.');
+                    return;
+                }
+
                 if (deliveryLat == null || deliveryLng == null) {
                     alert('Silakan tentukan lokasi (Gunakan Lokasi Saya atau Pin di Map).');
                     return;
                 }
             } else {
                 diningTableId = (document.getElementById('diningTableId')?.value || '').trim();
-                if (!diningTableId) { alert('Meja wajib dipilih.'); return; }
+                if (!diningTableId) {
+                    alert('Meja wajib dipilih.');
+                    return;
+                }
             }
 
-            if (entries.length === 0) { alert('Keranjang masih kosong.'); return; }
+            if (entries.length === 0) {
+                alert('Keranjang masih kosong.');
+                return;
+            }
 
             const name = (document.getElementById('custName')?.value || '').trim();
-            if (!name) { alert('Nama wajib diisi.'); return; }
+            if (!name) {
+                alert('Nama wajib diisi.');
+                return;
+            }
+
+            const selectedPaymentMethod =
+                document.querySelector('input[name="paymentMethod"]:checked')?.value || 'qris';
 
             const items = entries.map(([id, it]) => ({
                 product_id: Number(id),
@@ -517,7 +554,10 @@
                 note: (it.note || '').trim() || null,
             })).filter(x => x.qty > 0);
 
-            if (items.length === 0) { alert('Keranjang masih kosong.'); return; }
+            if (items.length === 0) {
+                alert('Keranjang masih kosong.');
+                return;
+            }
 
             const res = await fetch("{{ route('public.order.checkout') }}", {
                 method: 'POST',
@@ -531,6 +571,7 @@
                     dining_table_id: IS_DELIVERY ? null : Number(diningTableId),
                     items,
                     order_type: IS_DELIVERY ? 'delivery' : 'dine_in',
+                    payment_method: selectedPaymentMethod,
 
                     delivery_phone: IS_DELIVERY ? phone : null,
                     delivery_address: IS_DELIVERY ? addr : null,
@@ -550,6 +591,12 @@
 
             clearAll();
             localStorage.removeItem('ayo_renne_table_token_v1');
+
+            if (json.redirect_url) {
+                window.location.href = json.redirect_url;
+                return;
+            }
+
             alert('Order tersimpan! Invoice: ' + (json.invoice_no || '-'));
             window.location.href = '/';
         }

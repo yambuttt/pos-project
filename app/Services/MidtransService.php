@@ -137,4 +137,19 @@ class MidtransService
 
         return hash_equals($expected, (string) ($payload['signature_key'] ?? ''));
     }
+
+    public function storeChargeResponse(Sale $sale, array $response): array
+    {
+        $instruction = $this->extractInstruction($response);
+
+        $sale->update([
+            'midtrans_transaction_id' => $response['transaction_id'] ?? $sale->midtrans_transaction_id,
+            'midtrans_transaction_status' => $response['transaction_status'] ?? $sale->midtrans_transaction_status,
+            'midtrans_payment_type' => $response['payment_type'] ?? $sale->midtrans_payment_type,
+            'midtrans_response' => $response,
+            'payment_expires_at' => $instruction['expires_at'] ?? $sale->payment_expires_at,
+        ]);
+
+        return $instruction;
+    }
 }

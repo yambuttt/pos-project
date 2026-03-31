@@ -32,6 +32,11 @@ Route::get('/t/{token}', [PublicMenuController::class, 'byTableToken'])
 Route::get('/order/overview', [PublicMenuController::class, 'overview'])->name('public.order.overview');
 Route::post('/order/checkout', [PublicMenuController::class, 'checkout'])
     ->name('public.order.checkout');
+Route::get('/order/invoice/{invoice}', [PublicMenuController::class, 'invoice'])
+    ->name('public.order.invoice');
+
+Route::get('/order/invoice/{invoice}/status', [PublicMenuController::class, 'invoiceStatus'])
+    ->name('public.order.invoice.status');
 // LOGIN
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.submit');
@@ -120,7 +125,7 @@ Route::prefix('kasir')->name('kasir.')->middleware(['auth', 'role:kasir'])->grou
     Route::get('/ready-orders', [KasirDashboardController::class, 'readyOrders'])->name('ready.orders');
     Route::post('/ready-orders/{sale}/deliver', [KasirDashboardController::class, 'deliver'])->name('ready.deliver');
     Route::get('/sales/{sale}/payment-status', [SaleController::class, 'paymentStatus'])
-    ->name('sales.payment-status');
+        ->name('sales.payment-status');
 });
 
 

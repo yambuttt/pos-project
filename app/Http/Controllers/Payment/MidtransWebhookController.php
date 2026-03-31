@@ -44,6 +44,8 @@ class MidtransWebhookController extends Controller
             ]);
 
             if (in_array($transactionStatus, ['capture', 'settlement'], true)) {
+                $inventory->commitPaid($sale, null);
+
                 $sale->update([
                     'payment_status' => 'paid',
                     'status' => 'completed',

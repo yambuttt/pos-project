@@ -59,14 +59,18 @@ class SaleInventoryService
 
         foreach ($needs as $rid => $qtyNeed) {
             $m = $materials[$rid] ?? null;
-            $stock = (float) ($m?->stock_on_hand ?? 0);
+            $stockOnHand = (float) ($m?->stock_on_hand ?? 0);
+            $reservedStock = (float) ($m?->reserved_stock ?? 0);
+            $available = max(0, $stockOnHand - $reservedStock);
 
-            if ($stock + 1e-9 < (float) $qtyNeed) {
+            if ($available + 1e-9 < (float) $qtyNeed) {
                 $insufficient[] = [
                     'name' => $m?->name ?? "Material#$rid",
                     'unit' => $m?->unit ?? '',
                     'need' => $qtyNeed,
-                    'stock' => $stock,
+                    'stock' => $stockOnHand,
+                    'reserved' => $reservedStock,
+                    'available' => $available,
                 ];
             }
         }
@@ -74,7 +78,7 @@ class SaleInventoryService
         if ($insufficient) {
             $msg = "Stok bahan kurang:\n";
             foreach ($insufficient as $x) {
-                $msg .= "- {$x['name']} ({$x['unit']}): butuh {$x['need']}, stok {$x['stock']}\n";
+                $msg .= "- {$x['name']} ({$x['unit']}): butuh {$x['need']}, tersedia {$x['available']} (stok {$x['stock']}, reserve {$x['reserved']})\n";
             }
             throw new \RuntimeException($msg);
         }
@@ -88,18 +92,7 @@ class SaleInventoryService
             $m = $materials[$rid];
 
             $m->update([
-                'stock_on_hand' => (float) $m->stock_on_hand - (float) $qtyNeed,
-            ]);
-
-            InventoryMovement::create([
-                'raw_material_id' => $m->id,
-                'type' => 'sale',
-                'qty_in' => 0,
-                'qty_out' => $qtyNeed,
-                'reference_type' => Sale::class,
-                'reference_id' => $sale->id,
-                'created_by' => $userId,
-                'note' => 'Sale reserve: ' . $sale->invoice_no,
+                'reserved_stock' => (float) $m->reserved_stock + (float) $qtyNeed,
             ]);
         }
     }
@@ -112,13 +105,13 @@ class SaleInventoryService
 
         $sale->loadMissing('items.product.recipes');
 
-        $needs = [];
+        $needs = $this->rebuildNeedsFromSale($sale);
 
-        foreach ($sale->items as $item) {
-            foreach ($item->product->recipes as $recipe) {
-                $rid = (int) $recipe->raw_material_id;
-                $needs[$rid] = ($needs[$rid] ?? 0) + ((float) $recipe->qty * (int) $item->qty);
-            }
+        if (empty($needs)) {
+            $sale->update([
+                'stock_released_at' => now(),
+            ]);
+            return;
         }
 
         $rawIds = collect(array_keys($needs))->values();
@@ -129,26 +122,97 @@ class SaleInventoryService
             ->keyBy('id');
 
         foreach ($needs as $rid => $qtyNeed) {
-            $m = $materials[$rid];
+            $m = $materials[$rid] ?? null;
+            if (!$m) {
+                continue;
+            }
+
+            $nextReserved = max(0, (float) $m->reserved_stock - (float) $qtyNeed);
 
             $m->update([
-                'stock_on_hand' => (float) $m->stock_on_hand + (float) $qtyNeed,
-            ]);
-
-            InventoryMovement::create([
-                'raw_material_id' => $m->id,
-                'type' => 'payment_release',
-                'qty_in' => $qtyNeed,
-                'qty_out' => 0,
-                'reference_type' => Sale::class,
-                'reference_id' => $sale->id,
-                'created_by' => $userId,
-                'note' => 'Release pending payment: ' . $sale->invoice_no,
+                'reserved_stock' => $nextReserved,
             ]);
         }
 
         $sale->update([
             'stock_released_at' => now(),
         ]);
+    }
+
+    public function commitPaid(Sale $sale, ?int $userId = null): void
+    {
+        if ($sale->stock_released_at) {
+            return;
+        }
+
+        $sale->loadMissing('items.product.recipes');
+
+        $needs = $this->rebuildNeedsFromSale($sale);
+
+        if (empty($needs)) {
+            $sale->update([
+                'stock_released_at' => now(),
+            ]);
+            return;
+        }
+
+        $rawIds = collect(array_keys($needs))->values();
+
+        $materials = RawMaterial::whereIn('id', $rawIds)
+            ->lockForUpdate()
+            ->get()
+            ->keyBy('id');
+
+        foreach ($needs as $rid => $qtyNeed) {
+            $m = $materials[$rid] ?? null;
+            if (!$m) {
+                continue;
+            }
+
+            $stockOnHand = (float) $m->stock_on_hand;
+            $reservedStock = (float) $m->reserved_stock;
+
+            if ($reservedStock + 1e-9 < (float) $qtyNeed) {
+                throw new \RuntimeException("Reserved stock untuk '{$m->name}' tidak cukup saat commit payment.");
+            }
+
+            if ($stockOnHand + 1e-9 < (float) $qtyNeed) {
+                throw new \RuntimeException("Stock on hand untuk '{$m->name}' tidak cukup saat commit payment.");
+            }
+
+            $m->update([
+                'stock_on_hand' => $stockOnHand - (float) $qtyNeed,
+                'reserved_stock' => max(0, $reservedStock - (float) $qtyNeed),
+            ]);
+
+            InventoryMovement::create([
+                'raw_material_id' => $m->id,
+                'type' => 'sale',
+                'qty_in' => 0,
+                'qty_out' => $qtyNeed,
+                'reference_type' => Sale::class,
+                'reference_id' => $sale->id,
+                'created_by' => $userId,
+                'note' => 'Sale paid: ' . $sale->invoice_no,
+            ]);
+        }
+
+        $sale->update([
+            'stock_released_at' => now(),
+        ]);
+    }
+
+    protected function rebuildNeedsFromSale(Sale $sale): array
+    {
+        $needs = [];
+
+        foreach ($sale->items as $item) {
+            foreach ($item->product->recipes as $recipe) {
+                $rid = (int) $recipe->raw_material_id;
+                $needs[$rid] = ($needs[$rid] ?? 0) + ((float) $recipe->qty * (int) $item->qty);
+            }
+        }
+
+        return $needs;
     }
 }
