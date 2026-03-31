@@ -1,7 +1,14 @@
 @extends('layouts.admin')
-@section('title','Resep Produk')
+@section('title', 'Resep Produk')
 
 @section('body')
+  <style>
+    select,
+    option {
+      background-color: #111111;
+      color: #ffffff;
+    }
+  </style>
   <div class="flex items-center justify-between gap-3">
     <div class="flex items-center gap-3">
       <button id="openMobileSidebar" type="button"
@@ -14,9 +21,11 @@
 
     <div class="flex gap-2">
       <a href="{{ route('admin.products.index') }}"
-        class="rounded-xl border border-white/20 bg-white/10 px-4 py-2 text-sm font-semibold backdrop-blur-xl hover:bg-white/15">← Kembali</a>
+        class="rounded-xl border border-white/20 bg-white/10 px-4 py-2 text-sm font-semibold backdrop-blur-xl hover:bg-white/15">←
+        Kembali</a>
       <a href="{{ route('admin.products.edit', $product->id) }}"
-        class="rounded-xl border border-white/20 bg-white/10 px-4 py-2 text-sm font-semibold backdrop-blur-xl hover:bg-white/15">Edit Produk</a>
+        class="rounded-xl border border-white/20 bg-white/10 px-4 py-2 text-sm font-semibold backdrop-blur-xl hover:bg-white/15">Edit
+        Produk</a>
     </div>
   </div>
 
@@ -62,16 +71,17 @@
                 <tr class="hover:bg-white/5">
                   <td class="px-4 py-3 font-semibold">{{ $r->rawMaterial?->name }}</td>
                   <td class="px-4 py-3 text-white/70">{{ $r->rawMaterial?->unit }}</td>
-                  <td class="px-4 py-3 font-semibold">{{ number_format((float)$r->qty, 3, '.', '') }}</td>
+                  <td class="px-4 py-3 font-semibold">{{ number_format((float) $r->qty, 3, '.', '') }}</td>
                   <td class="px-4 py-3 text-white/80">
-                    {{ number_format((float)($r->rawMaterial?->stock_on_hand ?? 0), 3, '.', '') }}
+                    {{ number_format((float) ($r->rawMaterial?->stock_on_hand ?? 0), 3, '.', '') }}
                   </td>
                   <td class="px-4 py-3">
                     <div class="flex justify-end">
                       <form method="POST" action="{{ route('admin.products.recipes.destroy', [$product->id, $r->id]) }}"
                         onsubmit="return confirm('Hapus item resep ini?')">
                         @csrf @method('DELETE')
-                        <button class="rounded-xl border border-red-200/30 bg-red-500/10 px-3 py-2 text-xs hover:bg-red-500/15">
+                        <button
+                          class="rounded-xl border border-red-200/30 bg-red-500/10 px-3 py-2 text-xs hover:bg-red-500/15">
                           Hapus
                         </button>
                       </form>
@@ -105,10 +115,12 @@
         <div>
           <label class="text-sm text-white/80">Bahan</label>
           <select name="raw_material_id"
-            class="mt-2 w-full rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm outline-none focus:border-white/40">
-            <option value="">Pilih bahan...</option>
+            class="mt-2 w-full rounded-xl border border-yellow-500/16 bg-[#111111] px-4 py-3 text-sm text-white outline-none focus:border-yellow-500/35">
+            <option value="" class="bg-[#111111] text-white">Pilih bahan...</option>
             @foreach($materials as $m)
-              <option value="{{ $m->id }}">{{ $m->name }} ({{ $m->unit }})</option>
+              <option value="{{ $m->id }}" class="bg-[#111111] text-white">
+                {{ $m->name }} ({{ $m->unit }})
+              </option>
             @endforeach
           </select>
         </div>
