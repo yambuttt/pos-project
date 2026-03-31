@@ -558,6 +558,21 @@ class PublicMenuController extends Controller
             ? $midtrans->extractInstruction($sale->midtrans_response)
             : null;
 
+        if (
+            $sale->payment_status === 'pending' &&
+            $sale->payment_expires_at &&
+            $sale->payment_expires_at->isPast()
+        ) {
+            app(\App\Services\SaleInventoryService::class)->release($sale, null);
+
+            $sale->update([
+                'payment_status' => 'expired',
+                'status' => 'expired',
+            ]);
+
+            $sale->refresh();
+        }
+
         return response()->json([
             'ok' => true,
             'invoice_no' => $sale->invoice_no,

@@ -278,6 +278,8 @@
 
         function startCountdown(expiresAtValue) {
             const countdownEl = document.getElementById('countdown');
+            const paymentStatusEl = document.getElementById('paymentStatus');
+
             if (!countdownEl) return;
 
             const expiresAt = parseDateSafe(expiresAtValue);
@@ -292,6 +294,15 @@
 
                 if (diff <= 0) {
                     countdownEl.textContent = '00:00';
+
+                    const currentStatus = (paymentStatusEl?.textContent || '').trim().toLowerCase();
+                    if (currentStatus === 'pending') {
+                        paymentStatusEl.textContent = 'EXPIRED';
+                        setStatusAppearance('expired');
+                    }
+
+                    clearInterval(window.__invoiceCountdown);
+                    clearInterval(window.__invoicePoller);
                     return;
                 }
 
