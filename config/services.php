@@ -36,7 +36,7 @@ return [
     ],
 
     'midtrans' => [
-    'is_production' => (bool) env('MIDTRANS_IS_PRODUCTION', false),
+    'is_production' => filter_var(env('MIDTRANS_IS_PRODUCTION', false), FILTER_VALIDATE_BOOL),
     'server_key' => env('MIDTRANS_SERVER_KEY'),
     'client_key' => env('MIDTRANS_CLIENT_KEY'),
     'merchant_id' => env('MIDTRANS_MERCHANT_ID'),
