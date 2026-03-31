@@ -2,6 +2,13 @@
 @section('title','Edit Produk')
 
 @section('body')
+<style>
+  select,
+  option {
+    background-color: #111111;
+    color: #ffffff;
+  }
+</style>
   <div class="flex items-center justify-between gap-3">
     <div class="flex items-center gap-3">
       <button id="openMobileSidebar" type="button"
@@ -33,11 +40,16 @@
           class="mt-2 w-full rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm outline-none focus:border-white/40">
       </div>
 
-      <div>
-        <label class="text-sm text-white/80">Kategori</label>
-        <input name="category" value="{{ old('category', $product->category) }}" placeholder="Coffee / Non Coffee / Food"
-          class="mt-2 w-full rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm outline-none placeholder:text-white/40 focus:border-white/40">
-      </div>
+     <div>
+  <label class="text-sm text-white/80">Kategori</label>
+  <select name="category"
+    class="mt-2 w-full rounded-xl border border-yellow-500/16 bg-[#111111] px-4 py-3 text-sm text-white outline-none focus:border-yellow-500/35">
+    <option value="" class="bg-[#111111] text-white">Pilih kategori...</option>
+    <option value="Makanan" {{ old('category', $product->category) === 'Makanan' ? 'selected' : '' }} class="bg-[#111111] text-white">Makanan</option>
+    <option value="Minuman" {{ old('category', $product->category) === 'Minuman' ? 'selected' : '' }} class="bg-[#111111] text-white">Minuman</option>
+    <option value="Snacks" {{ old('category', $product->category) === 'Snacks' ? 'selected' : '' }} class="bg-[#111111] text-white">Snacks</option>
+  </select>
+</div>
 
       <div>
         <label class="text-sm text-white/80">SKU (opsional)</label>
@@ -81,7 +93,7 @@
     </div>
 
     <button
-      class="mt-5 w-full rounded-xl bg-blue-600/85 px-5 py-3 text-sm font-semibold shadow-lg shadow-blue-900/25 hover:bg-blue-500/85">
+      class="mt-5 w-full rounded-xl bg-yellow-500 px-5 py-3 text-sm font-semibold text-black hover:bg-yellow-400">
       Simpan Perubahan
     </button>
   </form>
