@@ -1,59 +1,97 @@
 <!DOCTYPE html>
-<html lang="id">
-
+<html lang="id" class="overflow-x-hidden">
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@yield('title', 'Admin Dashboard')</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+
+    <style>
+        html {
+            scroll-behavior: smooth;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            overflow-x: hidden;
+            background:
+                radial-gradient(circle at top left, rgba(234,179,8,.08), transparent 26%),
+                radial-gradient(circle at bottom right, rgba(234,179,8,.06), transparent 24%),
+                linear-gradient(180deg, #030303 0%, #090909 100%);
+        }
+
+        .admin-shell {
+            background:
+                linear-gradient(180deg, rgba(255,255,255,.01), rgba(255,255,255,.00));
+        }
+
+        .panel-dark {
+            background: rgba(16, 16, 16, 0.86);
+            backdrop-filter: blur(12px);
+        }
+
+        .panel-soft {
+            background: rgba(255,255,255,.03);
+            backdrop-filter: blur(10px);
+        }
+
+        .gold-border {
+            border-color: rgba(234, 179, 8, 0.16);
+        }
+
+        .gold-border-strong {
+            border-color: rgba(234, 179, 8, 0.30);
+        }
+
+        .gold-text {
+            color: rgb(234 179 8);
+        }
+
+        .sidebar-scroll::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .sidebar-scroll::-webkit-scrollbar-thumb {
+            background: rgba(234,179,8,.18);
+            border-radius: 999px;
+        }
+    </style>
 </head>
 
 <body class="min-h-screen text-white">
-    <!-- Background -->
     <div class="relative min-h-screen overflow-hidden">
-        <div class="absolute inset-0 bg-gradient-to-br from-sky-500 via-indigo-500 to-fuchsia-500"></div>
-        <div class="absolute -top-28 -left-28 h-[480px] w-[480px] rounded-full bg-cyan-300/35 blur-[140px]"></div>
-        <div class="absolute -bottom-40 -right-32 h-[580px] w-[580px] rounded-full bg-pink-300/35 blur-[160px]"></div>
-        <div class="absolute top-24 right-24 h-[360px] w-[360px] rounded-full bg-violet-300/30 blur-[130px]"></div>
-        <div class="absolute inset-0 bg-black/15"></div>
+        <!-- ambient -->
+        <div class="pointer-events-none absolute -left-24 top-0 h-[380px] w-[380px] rounded-full bg-yellow-500/10 blur-[120px]"></div>
+        <div class="pointer-events-none absolute bottom-0 right-0 h-[440px] w-[440px] rounded-full bg-yellow-400/8 blur-[140px]"></div>
 
-        <div class="relative min-h-screen">
+        <div class="relative min-h-screen admin-shell">
             <div class="flex min-h-screen w-full">
+                @php
+                    $isDashboard = request()->routeIs('admin.dashboard');
+                    $isProducts = request()->routeIs('admin.products.*');
+                    $isSales = request()->routeIs('admin.sales.*');
+                    $isUsers = request()->routeIs('admin.cashiers.*');
+                    $isRawMaterials = request()->routeIs('admin.raw_materials.*');
+                    $isPurchases = request()->routeIs('admin.purchases.*');
+                    $isWastes = request()->routeIs('admin.wastes.*');
+                    $isOpnames = request()->routeIs('admin.opnames.*');
+                    $isInvMovements = request()->routeIs('admin.inventory-movements.*');
+                    $isTables = request()->routeIs('admin.tables.*');
+                    $isInventory = $isRawMaterials || $isPurchases || $isWastes || $isOpnames || $isInvMovements || $isTables;
+                @endphp
 
-                {{-- =========================
-                DESKTOP SIDEBAR (lg+)
-                - default: collapsed (icon only)
-                - hover: open
-                - pin: keep open
-                ========================= --}}
+                <!-- DESKTOP SIDEBAR -->
                 <aside id="adminSidebarDesktop"
-                    class="relative m-4 hidden h-[calc(100vh-2rem)] shrink-0 rounded-[26px] border border-white/20 bg-white/10 backdrop-blur-2xl lg:block transition-all duration-200 ease-out w-16">
-
-                    @php
-                        $isDashboard = request()->routeIs('admin.dashboard');
-                        $isProducts = request()->routeIs('admin.products.*'); // nanti
-                        $isSales = request()->routeIs('admin.sales.*'); // nanti
-                        $isUsers = request()->routeIs('admin.cashiers.*');
-
-                        $isRawMaterials = request()->routeIs('admin.raw_materials.*');
-                        $isPurchases = request()->routeIs('admin.purchases.*');
-                        $isWastes = request()->routeIs('admin.wastes.*');
-                        $isOpnames = request()->routeIs('admin.opnames.*');
-
-                        // Inventory Movement (sementara pakai URL supaya tidak error walau route belum ada)
-                        $isInvMovements = request()->routeIs('admin.inventory-movements.*');
-                        $isTables = request()->routeIs('admin.tables.*');
-
-                        $isInventory = $isRawMaterials || $isPurchases || $isWastes || $isOpnames || $isInvMovements || $isTables;
-                    @endphp
+                    class="panel-dark gold-border sidebar-scroll relative m-4 hidden h-[calc(100vh-2rem)] shrink-0 overflow-y-auto rounded-[28px] border shadow-[0_20px_60px_rgba(0,0,0,.35)] transition-all duration-200 ease-out lg:block w-16">
 
                     <div class="flex h-full flex-col p-3">
-                        {{-- Top button (Pin) --}}
                         <div class="flex items-center justify-center">
                             <button id="sidebarPinBtn" type="button"
-                                class="flex h-10 w-10 items-center justify-center rounded-xl border border-white/20 bg-white/10 hover:bg-white/15"
+                                class="panel-soft gold-border flex h-10 w-10 items-center justify-center rounded-xl border hover:border-yellow-500/35"
                                 title="Pin sidebar" aria-label="Pin sidebar" data-pinned="0">
-                                {{-- icon: pin/gear (akan diganti via JS ketika pinned) --}}
                                 <svg id="pinIconGear" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white/90"
                                     fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
                                     <path stroke-linecap="round" stroke-linejoin="round"
@@ -69,50 +107,51 @@
                             </button>
                         </div>
 
-                        {{-- Menu --}}
-                        <div class="mt-4 space-y-2">
+                        <div class="mt-4 flex items-center gap-3 px-2">
+                            <img src="{{ asset('images/landing/logo-ayo-renne.png') }}"
+                                alt="Ayo Renne"
+                                class="sidebar-label hidden h-12 w-auto object-contain">
+                        </div>
 
-                            {{-- Dashboard --}}
+                        <div class="mt-5 space-y-2">
                             <a href="{{ route('admin.dashboard') }}"
-                                class="relative flex items-center gap-3 rounded-xl px-3 py-2 transition
-                                {{ $isDashboard ? 'bg-white/20 text-white shadow-lg' : 'border border-white/10 bg-white/5 hover:bg-white/10 text-white/90' }}">
+                                class="relative flex items-center gap-3 rounded-xl px-3 py-3 transition
+                                {{ $isDashboard ? 'bg-yellow-500/12 text-white border border-yellow-500/30' : 'border gold-border bg-white/[0.02] hover:bg-white/[0.05] text-white/88' }}">
                                 @if ($isDashboard)
-                                    <span
-                                        class="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r bg-white"></span>
+                                    <span class="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r bg-yellow-500"></span>
                                 @endif
-
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white/90" fill="none"
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-500" fill="none"
                                     viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
                                     <path stroke-linecap="round" stroke-linejoin="round"
                                         d="M3 10.5L12 3l9 7.5v9a1.5 1.5 0 01-1.5 1.5h-15A1.5 1.5 0 013 19.5v-9z" />
                                 </svg>
-
                                 <span class="sidebar-label hidden text-sm font-medium">Dashboard</span>
                             </a>
 
-                            {{-- Produk (dummy dulu) --}}
                             <a href="{{ route('admin.products.index') }}"
-                                class="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-3 py-2 hover:bg-white/10">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white/90" fill="none"
+                                class="relative flex items-center gap-3 rounded-xl px-3 py-3 transition
+                                {{ $isProducts ? 'bg-yellow-500/12 text-white border border-yellow-500/30' : 'border gold-border bg-white/[0.02] hover:bg-white/[0.05] text-white/88' }}">
+                                @if ($isProducts)
+                                    <span class="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r bg-yellow-500"></span>
+                                @endif
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-500" fill="none"
                                     viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
                                     <path stroke-linecap="round" stroke-linejoin="round"
                                         d="M3 7.5L12 3l9 4.5-9 4.5L3 7.5z" />
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M3 7.5v9L12 21l9-4.5v-9" />
                                 </svg>
-                                <span class="sidebar-label hidden text-sm font-medium text-white/90">Produk</span>
+                                <span class="sidebar-label hidden text-sm font-medium">Produk</span>
                             </a>
 
-                            {{-- INVENTORY (submenu) --}}
                             <div class="mt-2">
                                 <button type="button" id="invToggleDesktop"
-                                    class="relative w-full flex items-center gap-3 rounded-xl px-3 py-2 transition-all duration-200
-                                    {{ $isInventory ? 'bg-white/20 shadow-lg' : 'border border-white/10 bg-white/5 hover:bg-white/10' }}">
+                                    class="relative flex w-full items-center gap-3 rounded-xl px-3 py-3 transition
+                                    {{ $isInventory ? 'bg-yellow-500/12 border border-yellow-500/30' : 'border gold-border bg-white/[0.02] hover:bg-white/[0.05]' }}">
                                     @if ($isInventory)
-                                        <span
-                                            class="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r bg-white"></span>
+                                        <span class="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r bg-yellow-500"></span>
                                     @endif
 
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white/90" fill="none"
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-500" fill="none"
                                         viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
                                         <path stroke-linecap="round" stroke-linejoin="round"
                                             d="M3 7.5L12 3l9 4.5-9 4.5L3 7.5z" />
@@ -120,8 +159,7 @@
                                             d="M3 7.5v9L12 21l9-4.5v-9" />
                                     </svg>
 
-                                    <span
-                                        class="sidebar-label hidden text-sm font-medium text-white/90 flex-1 text-left">Inventory</span>
+                                    <span class="sidebar-label hidden flex-1 text-left text-sm font-medium text-white/90">Inventory</span>
 
                                     <svg id="invChevronDesktop" xmlns="http://www.w3.org/2000/svg"
                                         class="sidebar-label hidden h-4 w-4 text-white/70 transition" fill="none"
@@ -131,126 +169,101 @@
                                 </button>
 
                                 <div id="invMenuDesktop" class="mt-2 space-y-2 pl-2 {{ $isInventory ? '' : 'hidden' }}">
-
                                     <a href="{{ route('admin.raw_materials.index') }}"
-                                        class="relative flex items-center gap-3 rounded-xl px-3 py-2 transition-all duration-200
-                                        {{ $isRawMaterials ? 'bg-white/20 shadow-lg' : 'border border-white/10 bg-white/5 hover:bg-white/10' }}">
+                                        class="relative flex items-center gap-3 rounded-xl px-3 py-2.5 transition
+                                        {{ $isRawMaterials ? 'bg-yellow-500/10 border border-yellow-500/25' : 'border gold-border bg-white/[0.02] hover:bg-white/[0.05]' }}">
                                         @if ($isRawMaterials)
-                                            <span
-                                                class="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r bg-white"></span>
+                                            <span class="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r bg-yellow-500"></span>
                                         @endif
-                                        <span class="sidebar-label hidden text-sm font-medium text-white/90">Bahan
-                                            Baku</span>
-                                        <span class="ml-auto sidebar-label hidden text-xs text-white/60">RM</span>
+                                        <span class="sidebar-label hidden text-sm font-medium text-white/90">Bahan Baku</span>
                                     </a>
 
                                     <a href="{{ route('admin.purchases.index') }}"
-                                        class="relative flex items-center gap-3 rounded-xl px-3 py-2 transition-all duration-200
-                                        {{ $isPurchases ? 'bg-white/20 shadow-lg' : 'border border-white/10 bg-white/5 hover:bg-white/10' }}">
+                                        class="relative flex items-center gap-3 rounded-xl px-3 py-2.5 transition
+                                        {{ $isPurchases ? 'bg-yellow-500/10 border border-yellow-500/25' : 'border gold-border bg-white/[0.02] hover:bg-white/[0.05]' }}">
                                         @if ($isPurchases)
-                                            <span
-                                                class="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r bg-white"></span>
+                                            <span class="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r bg-yellow-500"></span>
                                         @endif
-                                        <span
-                                            class="sidebar-label hidden text-sm font-medium text-white/90">Purchases</span>
-                                        <span class="ml-auto sidebar-label hidden text-xs text-white/60">IN</span>
+                                        <span class="sidebar-label hidden text-sm font-medium text-white/90">Purchases</span>
                                     </a>
 
                                     <a href="{{ route('admin.wastes.index') }}"
-                                        class="relative flex items-center gap-3 rounded-xl px-3 py-2 transition-all duration-200
-                                        {{ $isWastes ? 'bg-white/20 shadow-lg' : 'border border-white/10 bg-white/5 hover:bg-white/10' }}">
+                                        class="relative flex items-center gap-3 rounded-xl px-3 py-2.5 transition
+                                        {{ $isWastes ? 'bg-yellow-500/10 border border-yellow-500/25' : 'border gold-border bg-white/[0.02] hover:bg-white/[0.05]' }}">
                                         @if ($isWastes)
-                                            <span
-                                                class="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r bg-white"></span>
+                                            <span class="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r bg-yellow-500"></span>
                                         @endif
-                                        <span
-                                            class="sidebar-label hidden text-sm font-medium text-white/90">Waste</span>
-                                        <span class="ml-auto sidebar-label hidden text-xs text-white/60">OUT</span>
+                                        <span class="sidebar-label hidden text-sm font-medium text-white/90">Waste</span>
                                     </a>
 
                                     <a href="{{ route('admin.opnames.index') }}"
-                                        class="relative flex items-center gap-3 rounded-xl px-3 py-2 transition-all duration-200
-                                        {{ $isOpnames ? 'bg-white/20 shadow-lg' : 'border border-white/10 bg-white/5 hover:bg-white/10' }}">
+                                        class="relative flex items-center gap-3 rounded-xl px-3 py-2.5 transition
+                                        {{ $isOpnames ? 'bg-yellow-500/10 border border-yellow-500/25' : 'border gold-border bg-white/[0.02] hover:bg-white/[0.05]' }}">
                                         @if ($isOpnames)
-                                            <span
-                                                class="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r bg-white"></span>
+                                            <span class="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r bg-yellow-500"></span>
                                         @endif
-                                        <span class="sidebar-label hidden text-sm font-medium text-white/90">Stock
-                                            Opname</span>
-                                        <span class="ml-auto sidebar-label hidden text-xs text-white/60">ADJ</span>
+                                        <span class="sidebar-label hidden text-sm font-medium text-white/90">Stock Opname</span>
                                     </a>
 
-                                    {{-- Inventory Movements (baru) --}}
                                     <a href="{{ route('admin.inventory-movements.index') }}"
-                                        class="relative flex items-center gap-3 rounded-xl px-3 py-2 transition-all duration-200
-                                        {{ $isInvMovements ? 'bg-white/20 shadow-lg' : 'border border-white/10 bg-white/5 hover:bg-white/10' }}">
+                                        class="relative flex items-center gap-3 rounded-xl px-3 py-2.5 transition
+                                        {{ $isInvMovements ? 'bg-yellow-500/10 border border-yellow-500/25' : 'border gold-border bg-white/[0.02] hover:bg-white/[0.05]' }}">
                                         @if ($isInvMovements)
-                                            <span
-                                                class="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r bg-white"></span>
+                                            <span class="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r bg-yellow-500"></span>
                                         @endif
-                                        <span class="sidebar-label hidden text-sm font-medium text-white/90">Inventory
-                                            Movement</span>
-                                        <span class="ml-auto sidebar-label hidden text-xs text-white/60">LOG</span>
+                                        <span class="sidebar-label hidden text-sm font-medium text-white/90">Inventory Movement</span>
                                     </a>
-
                                 </div>
                             </div>
 
-                            {{-- Transaksi (dummy dulu) --}}
                             <a href="{{ route('admin.sales.index') }}"
-                                class="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-3 py-2 hover:bg-white/10">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white/90" fill="none"
+                                class="relative flex items-center gap-3 rounded-xl px-3 py-3 transition
+                                {{ $isSales ? 'bg-yellow-500/12 text-white border border-yellow-500/30' : 'border gold-border bg-white/[0.02] hover:bg-white/[0.05] text-white/88' }}">
+                                @if ($isSales)
+                                    <span class="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r bg-yellow-500"></span>
+                                @endif
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-500" fill="none"
                                     viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
                                     <path stroke-linecap="round" stroke-linejoin="round"
                                         d="M7.5 3h9a1.5 1.5 0 011.5 1.5v15a1.5 1.5 0 01-1.5 1.5h-9A1.5 1.5 0 016 19.5v-15A1.5 1.5 0 017.5 3z" />
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M9 7.5h6M9 11h6M9 14.5h3" />
                                 </svg>
-                                <span class="sidebar-label hidden text-sm font-medium text-white/90">Transaksi</span>
+                                <span class="sidebar-label hidden text-sm font-medium">Transaksi</span>
                             </a>
 
-                            {{-- User --}}
-                            @php $isUserActive = request()->routeIs('admin.cashiers.*'); @endphp
                             <a href="{{ route('admin.cashiers.index') }}"
-                                class="relative flex items-center gap-3 rounded-xl px-3 py-2 transition-all duration-200
-                                {{ $isUserActive ? 'bg-white/20 text-white shadow-lg' : 'border border-white/10 bg-white/5 hover:bg-white/10 text-white/90' }}">
-                                @if ($isUserActive)
-                                    <span
-                                        class="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r bg-white"></span>
+                                class="relative flex items-center gap-3 rounded-xl px-3 py-3 transition
+                                {{ $isUsers ? 'bg-yellow-500/12 text-white border border-yellow-500/30' : 'border gold-border bg-white/[0.02] hover:bg-white/[0.05] text-white/88' }}">
+                                @if ($isUsers)
+                                    <span class="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r bg-yellow-500"></span>
                                 @endif
-
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white/90" fill="none"
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-500" fill="none"
                                     viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
                                     <path stroke-linecap="round" stroke-linejoin="round"
                                         d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" />
                                     <path stroke-linecap="round" stroke-linejoin="round"
                                         d="M4.5 20.25a8.25 8.25 0 0115 0" />
                                 </svg>
-
                                 <span class="sidebar-label hidden text-sm font-medium">User</span>
                             </a>
 
-                            {{-- Meja --}}
                             <a href="{{ route('admin.tables.index') }}"
-                                class="relative flex items-center gap-3 rounded-xl px-3 py-2 transition-all duration-200
-   {{ $isTables ? 'bg-white/20 text-white shadow-lg' : 'border border-white/10 bg-white/5 hover:bg-white/10 text-white/90' }}">
+                                class="relative flex items-center gap-3 rounded-xl px-3 py-3 transition
+                                {{ $isTables ? 'bg-yellow-500/12 text-white border border-yellow-500/30' : 'border gold-border bg-white/[0.02] hover:bg-white/[0.05] text-white/88' }}">
                                 @if ($isTables)
-                                    <span
-                                        class="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r bg-white"></span>
+                                    <span class="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r bg-yellow-500"></span>
                                 @endif
-
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white/90" fill="none"
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-500" fill="none"
                                     viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
                                     <path stroke-linecap="round" stroke-linejoin="round"
                                         d="M4.5 10.5h15M6 20.25V6.75A2.25 2.25 0 018.25 4.5h7.5A2.25 2.25 0 0118 6.75v13.5M7.5 20.25v-6h9v6" />
                                 </svg>
-
                                 <span class="sidebar-label hidden text-sm font-medium text-white/90">Meja</span>
                             </a>
 
-                            {{-- Laporan (dummy dulu) --}}
                             <a href="#"
-                                class="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-3 py-2 hover:bg-white/10">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white/90" fill="none"
+                                class="flex items-center gap-3 rounded-xl border gold-border bg-white/[0.02] px-3 py-3 text-white/88 hover:bg-white/[0.05]">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-500" fill="none"
                                     viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M3 3v18h18" />
                                     <path stroke-linecap="round" stroke-linejoin="round"
@@ -260,22 +273,21 @@
                             </a>
                         </div>
 
-                        {{-- Bottom --}}
                         <div class="mt-auto space-y-3">
-                            <div class="rounded-2xl border border-white/15 bg-white/10 p-3">
-                                <div class="sidebar-label hidden text-[11px] text-white/70">Role</div>
-                                <div class="sidebar-label hidden mt-1 text-sm font-semibold">
+                            <div class="rounded-2xl border gold-border bg-white/[0.03] p-3">
+                                <div class="sidebar-label hidden text-[11px] text-white/55">Role</div>
+                                <div class="sidebar-label hidden mt-1 text-sm font-semibold text-white">
                                     {{ auth()->user()->role }}
                                 </div>
-                                <div class="sidebar-label hidden mt-2 text-[11px] text-white/70">
-                                    Dummy menu dulu.
+                                <div class="sidebar-label hidden mt-2 text-[11px] text-white/45">
+                                    Panel operasional internal.
                                 </div>
                             </div>
 
                             <form method="POST" action="{{ route('logout') }}">
                                 @csrf
                                 <button
-                                    class="flex w-full items-center justify-center gap-3 rounded-xl bg-blue-600/85 px-3 py-2 text-sm font-semibold hover:bg-blue-500/85">
+                                    class="flex w-full items-center justify-center gap-3 rounded-xl bg-yellow-500 px-3 py-3 text-sm font-semibold text-black hover:bg-yellow-400">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none"
                                         viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
                                         <path stroke-linecap="round" stroke-linejoin="round"
@@ -290,145 +302,111 @@
                     </div>
                 </aside>
 
-                {{-- =========================
-                MOBILE/TABLET SIDEBAR (drawer) <lg=========================--}} <div id="sidebarOverlay"
-                    class="fixed inset-0 z-40 hidden bg-black/40 lg:hidden">
-            </div>
+                <!-- MOBILE/TABLET SIDEBAR -->
+                <div id="sidebarOverlay" class="fixed inset-0 z-40 hidden bg-black/60 lg:hidden"></div>
 
-            <aside id="adminSidebarMobile"
-                class="fixed left-0 top-0 z-50 hidden h-full w-[280px] border-r border-white/20 bg-white/10 p-4 backdrop-blur-2xl lg:hidden">
-
-                @php
-                    $isDashboard = request()->routeIs('admin.dashboard');
-                    $isUsers = request()->routeIs('admin.cashiers.*');
-
-                    $isRawMaterials = request()->routeIs('admin.raw_materials.*');
-                    $isPurchases = request()->routeIs('admin.purchases.*');
-                    $isWastes = request()->routeIs('admin.wastes.*');
-                    $isOpnames = request()->routeIs('admin.opnames.*');
-                    $isInvMovements = request()->routeIs('admin.inventory-movements.*');
-                    $isTables = request()->routeIs('admin.tables.*');
-
-                    $isInventory = $isRawMaterials || $isPurchases || $isWastes || $isOpnames || $isInvMovements || $isTables;
-                @endphp
-
-                <div class="flex items-center justify-between">
-                    <div class="rounded-2xl border border-white/20 bg-white/10 px-4 py-2">
-                        <div class="text-xs text-white/70">Admin Panel</div>
-                        <div class="text-sm font-semibold">POS Dashboard</div>
-                    </div>
-
-                    <button id="closeMobileSidebar"
-                        class="rounded-xl border border-white/20 bg-white/10 px-3 py-2 hover:bg-white/15">
-                        ✕
-                    </button>
-                </div>
-
-                <div class="mt-5 space-y-2 text-sm">
-                    <a href="{{ route('admin.dashboard') }}"
-                        class="relative flex items-center gap-3 rounded-xl px-3 py-2 transition-all duration-200
-                            {{ $isDashboard ? 'bg-white/20 shadow-lg' : 'border border-white/10 bg-white/5 hover:bg-white/10' }}">
-                        @if ($isDashboard)
-                            <span class="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r bg-white"></span>
-                        @endif
-                        <span class="text-sm font-medium">Dashboard</span>
-                    </a>
-
-                    <a href="#"
-                        class="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-3 py-2 hover:bg-white/10">
-                        Produk
-                    </a>
-
-                    {{-- Inventory group --}}
-                    <div class="rounded-xl border border-white/10 bg-white/5 p-2">
-                        <div class="flex items-center justify-between px-2 py-2">
-                            <div class="text-sm font-semibold text-white/90">Inventory</div>
-                            <span class="text-xs text-white/60">{{ $isInventory ? 'Active' : '' }}</span>
+                <aside id="adminSidebarMobile"
+                    class="panel-dark gold-border fixed left-0 top-0 z-50 hidden h-full w-[290px] border-r p-4 lg:hidden">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <img src="{{ asset('images/landing/logo-ayo-renne.png') }}"
+                                alt="Ayo Renne"
+                                class="h-12 w-auto object-contain">
+                            <div>
+                                <div class="text-xs uppercase tracking-[0.22em] text-yellow-500">Admin Panel</div>
+                                <div class="text-sm font-semibold text-white">Ayo Renne</div>
+                            </div>
                         </div>
 
-                        <a href="{{ route('admin.raw_materials.index') }}"
-                            class="relative mt-1 block rounded-xl px-3 py-2 {{ $isRawMaterials ? 'bg-white/20' : 'hover:bg-white/10' }}">
-                            Bahan Baku
+                        <button id="closeMobileSidebar"
+                            class="rounded-xl border gold-border bg-white/[0.04] px-3 py-2 hover:bg-white/[0.08]">
+                            ✕
+                        </button>
+                    </div>
+
+                    <div class="mt-5 space-y-2 text-sm">
+                        <a href="{{ route('admin.dashboard') }}"
+                            class="block rounded-xl px-3 py-3 {{ $isDashboard ? 'bg-yellow-500/12 border border-yellow-500/30' : 'border gold-border bg-white/[0.02]' }}">
+                            Dashboard
                         </a>
 
-                        <a href="{{ route('admin.purchases.index') }}"
-                            class="relative mt-1 block rounded-xl px-3 py-2 {{ $isPurchases ? 'bg-white/20' : 'hover:bg-white/10' }}">
-                            Purchases
+                        <a href="{{ route('admin.products.index') }}"
+                            class="block rounded-xl px-3 py-3 {{ $isProducts ? 'bg-yellow-500/12 border border-yellow-500/30' : 'border gold-border bg-white/[0.02]' }}">
+                            Produk
                         </a>
 
-                        <a href="{{ route('admin.wastes.index') }}"
-                            class="relative mt-1 block rounded-xl px-3 py-2 {{ $isWastes ? 'bg-white/20' : 'hover:bg-white/10' }}">
-                            Waste
+                        <div class="rounded-xl border gold-border bg-white/[0.02] p-2">
+                            <div class="px-2 py-2 text-sm font-semibold text-white/90">Inventory</div>
+
+                            <a href="{{ route('admin.raw_materials.index') }}"
+                                class="mt-1 block rounded-xl px-3 py-2 {{ $isRawMaterials ? 'bg-yellow-500/12' : 'hover:bg-white/[0.05]' }}">
+                                Bahan Baku
+                            </a>
+
+                            <a href="{{ route('admin.purchases.index') }}"
+                                class="mt-1 block rounded-xl px-3 py-2 {{ $isPurchases ? 'bg-yellow-500/12' : 'hover:bg-white/[0.05]' }}">
+                                Purchases
+                            </a>
+
+                            <a href="{{ route('admin.wastes.index') }}"
+                                class="mt-1 block rounded-xl px-3 py-2 {{ $isWastes ? 'bg-yellow-500/12' : 'hover:bg-white/[0.05]' }}">
+                                Waste
+                            </a>
+
+                            <a href="{{ route('admin.opnames.index') }}"
+                                class="mt-1 block rounded-xl px-3 py-2 {{ $isOpnames ? 'bg-yellow-500/12' : 'hover:bg-white/[0.05]' }}">
+                                Stock Opname
+                            </a>
+
+                            <a href="{{ route('admin.inventory-movements.index') }}"
+                                class="mt-1 block rounded-xl px-3 py-2 {{ $isInvMovements ? 'bg-yellow-500/12' : 'hover:bg-white/[0.05]' }}">
+                                Inventory Movement
+                            </a>
+                        </div>
+
+                        <a href="{{ route('admin.sales.index') }}"
+                            class="block rounded-xl px-3 py-3 {{ $isSales ? 'bg-yellow-500/12 border border-yellow-500/30' : 'border gold-border bg-white/[0.02]' }}">
+                            Transaksi
                         </a>
 
-                        <a href="{{ route('admin.opnames.index') }}"
-                            class="relative mt-1 block rounded-xl px-3 py-2 {{ $isOpnames ? 'bg-white/20' : 'hover:bg-white/10' }}">
-                            Stock Opname
+                        <a href="{{ route('admin.cashiers.index') }}"
+                            class="block rounded-xl px-3 py-3 {{ $isUsers ? 'bg-yellow-500/12 border border-yellow-500/30' : 'border gold-border bg-white/[0.02]' }}">
+                            User
                         </a>
 
-                        <a href="{{ url('/admin/inventory-movements') }}"
-                            class="relative mt-1 block rounded-xl px-3 py-2 {{ $isInvMovements ? 'bg-white/20' : 'hover:bg-white/10' }}">
-                            Inventory Movement
+                        <a href="{{ route('admin.tables.index') }}"
+                            class="block rounded-xl px-3 py-3 {{ $isTables ? 'bg-yellow-500/12 border border-yellow-500/30' : 'border gold-border bg-white/[0.02]' }}">
+                            Meja
                         </a>
                     </div>
 
-                    <a href="#"
-                        class="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-3 py-2 hover:bg-white/10">
-                        Transaksi
-                    </a>
+                    <div class="mt-6 rounded-2xl border gold-border bg-white/[0.03] p-4">
+                        <div class="text-xs text-white/55">Login as</div>
+                        <div class="mt-1 text-sm font-semibold">{{ auth()->user()->name ?? 'Admin' }}</div>
+                        <div class="text-xs text-white/55">{{ auth()->user()->email }}</div>
+                    </div>
 
-                    <a href="{{ route('admin.cashiers.index') }}"
-                        class="relative flex items-center gap-3 rounded-xl px-3 py-2 transition-all duration-200
-                            {{ $isUsers ? 'bg-white/20 shadow-lg' : 'border border-white/10 bg-white/5 hover:bg-white/10' }}">
-                        @if ($isUsers)
-                            <span class="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r bg-white"></span>
-                        @endif
-                        <span class="text-sm font-medium">User</span>
-                    </a>
+                    <div class="mt-auto pt-5">
+                        <form method="POST" action="{{ route('logout') }}">
+                            @csrf
+                            <button
+                                class="w-full rounded-xl bg-yellow-500 px-4 py-3 text-sm font-semibold text-black hover:bg-yellow-400">
+                                Logout
+                            </button>
+                        </form>
+                    </div>
+                </aside>
 
-                    <a href="{{ route('admin.tables.index') }}" class="relative flex items-center gap-3 rounded-xl px-3 py-2 transition-all duration-200
-   {{ $isTables ? 'bg-white/20 shadow-lg' : 'border border-white/10 bg-white/5 hover:bg-white/10' }}">
-                        @if ($isTables)
-                            <span class="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r bg-white"></span>
-                        @endif
-                        <span class="text-sm font-medium">Meja</span>
-                    </a>
-
-                    <a href="#"
-                        class="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-3 py-2 hover:bg-white/10">
-                        Laporan
-                    </a>
-                </div>
-
-                <div class="mt-6 rounded-2xl border border-white/15 bg-white/10 p-4">
-                    <div class="text-xs text-white/70">Login as</div>
-                    <div class="mt-1 text-sm font-semibold">{{ auth()->user()->name ?? 'Admin' }}</div>
-                    <div class="text-xs text-white/70">{{ auth()->user()->email }}</div>
-                </div>
-
-                <div class="mt-auto pt-5">
-                    <form method="POST" action="{{ route('logout') }}">
-                        @csrf
-                        <button
-                            class="w-full rounded-xl bg-blue-600/85 px-4 py-3 text-sm font-semibold hover:bg-blue-500/85">
-                            Logout
-                        </button>
-                    </form>
-                </div>
-            </aside>
-
-            <!-- MAIN -->
-            <main id="adminMain" class="flex-1 p-4 lg:p-6">
-                @yield('body')
-            </main>
-
+                <!-- MAIN -->
+                <main id="adminMain" class="flex-1 p-4 lg:p-6">
+                    @yield('body')
+                </main>
+            </div>
         </div>
-    </div>
     </div>
 
     <script>
         (function () {
-            // ===== DESKTOP COLLAPSE / HOVER =====
             const sidebarD = document.getElementById('adminSidebarDesktop');
             const main = document.getElementById('adminMain');
             const pinBtn = document.getElementById('sidebarPinBtn');
@@ -440,13 +418,13 @@
 
                 function openSidebar() {
                     sidebarD.classList.remove('w-16');
-                    sidebarD.classList.add('w-64');
+                    sidebarD.classList.add('w-72');
                     sidebarD.querySelectorAll('.sidebar-label').forEach(el => el.classList.remove('hidden'));
                 }
 
                 function closeSidebar() {
                     sidebarD.classList.add('w-16');
-                    sidebarD.classList.remove('w-64');
+                    sidebarD.classList.remove('w-72');
                     sidebarD.querySelectorAll('.sidebar-label').forEach(el => el.classList.add('hidden'));
                 }
 
@@ -460,7 +438,6 @@
                     pinBtn.title = pinned ? 'Unpin sidebar' : 'Pin sidebar';
                 }
 
-                // default collapsed
                 closeSidebar();
                 setPinnedState(false);
 
@@ -481,8 +458,7 @@
                 });
             }
 
-            // ===== MOBILE DRAWER =====
-            const openBtn = document.getElementById('openMobileSidebar'); // tombolnya ada di tiap page (header)
+            const openBtn = document.getElementById('openMobileSidebar');
             const closeBtn = document.getElementById('closeMobileSidebar');
             const overlay = document.getElementById('sidebarOverlay');
             const sidebarM = document.getElementById('adminSidebarMobile');
@@ -511,7 +487,6 @@
                 if (e.key === 'Escape') closeMobile();
             });
 
-            // ===== INVENTORY SUBMENU (DESKTOP) =====
             const invToggle = document.getElementById('invToggleDesktop');
             const invMenu = document.getElementById('invMenuDesktop');
             const invChevron = document.getElementById('invChevronDesktop');
@@ -530,5 +505,4 @@
         })();
     </script>
 </body>
-
 </html>
