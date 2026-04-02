@@ -120,6 +120,8 @@ Route::prefix('kasir')->name('kasir.')->middleware(['auth', 'role:kasir'])->grou
     Route::get('/sales', [SaleController::class, 'index'])->name('sales.index');
     Route::get('/sales/create', [SaleController::class, 'create'])->name('sales.create');
     Route::post('/sales', [SaleController::class, 'store'])->name('sales.store');
+    Route::get('/sales/{sale}', [SaleController::class, 'show'])->name('sales.show');
+    Route::get('/sales/{sale}/print', [SaleController::class, 'print'])->name('sales.print');
 
     Route::get('/ready', [KasirDashboardController::class, 'readyIndex'])->name('ready.index');
     Route::get('/ready-orders', [KasirDashboardController::class, 'readyOrders'])->name('ready.orders');

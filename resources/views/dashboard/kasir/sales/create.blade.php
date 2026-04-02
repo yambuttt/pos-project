@@ -174,7 +174,7 @@
         class="mt-4 w-full rounded-xl bg-blue-600/85 px-5 py-3 text-sm font-semibold hover:bg-blue-500/85 disabled:opacity-40 disabled:cursor-not-allowed">
         Bayar
     </button>
-    <div id="paymentResult" class="mt-4 hidden rounded-2xl border border-white/10 bg-white/5 p-4">
+    <!-- <div id="paymentResult" class="mt-4 hidden rounded-2xl border border-white/10 bg-white/5 p-4">
     <div class="text-sm font-semibold">Instruksi Pembayaran</div>
     <div class="mt-2 text-xs text-white/60" id="paymentResultMeta"></div>
 
@@ -189,7 +189,7 @@
         <div id="paymentVaNumber"
             class="mt-2 rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-lg font-semibold tracking-wider"></div>
         <div id="paymentVaBank" class="mt-2 text-xs text-white/60"></div>
-    </div>
+    </div> -->
 
     <div id="paymentStatusText" class="mt-4 text-sm text-emerald-300"></div>
 </div>
@@ -501,56 +501,7 @@ if (isMidtransMethod(method)) {
     return ['qris', 'bca_va', 'bni_va', 'bri_va', 'permata_va'].includes(method);
 }
 
-function renderPaymentResult(resp) {
-    const payment = resp.payment || {};
 
-    paymentResult.classList.remove('hidden');
-    paymentQrisWrap.classList.add('hidden');
-    paymentVaWrap.classList.add('hidden');
-    paymentStatusText.textContent = 'Menunggu pembayaran...';
-
-    paymentResultMeta.textContent =
-        `Invoice: ${resp.invoice_no || '-'} • Expired: ${payment.expires_at || '-'}`;
-
-    if (payment.payment_type === 'qris' && payment.qr_url) {
-        paymentQrisWrap.classList.remove('hidden');
-        paymentQrImage.src = payment.qr_url;
-    }
-
-    if (payment.va_number) {
-        paymentVaWrap.classList.remove('hidden');
-        paymentVaNumber.textContent = payment.va_number;
-        paymentVaBank.textContent = `Bank: ${(payment.bank || '-').toUpperCase()}`;
-    }
-
-    startPollingPaymentStatus(resp.sale_id);
-}
-
-function startPollingPaymentStatus(saleId) {
-    if (paymentPoller) clearInterval(paymentPoller);
-
-    paymentPoller = setInterval(async () => {
-        try {
-            const res = await fetch(`/kasir/sales/${saleId}/payment-status`, {
-                headers: { 'Accept': 'application/json' }
-            });
-            const data = await res.json();
-
-            if (data.payment_status === 'paid') {
-                paymentStatusText.textContent = 'Pembayaran berhasil. Mengalihkan ke riwayat transaksi...';
-                clearInterval(paymentPoller);
-                setTimeout(() => {
-                    window.location.href = "{{ route('kasir.sales.index') }}";
-                }, 1500);
-            }
-
-            if (['expired', 'failed'].includes(data.payment_status)) {
-                paymentStatusText.textContent = 'Pembayaran gagal atau expired.';
-                clearInterval(paymentPoller);
-            }
-        } catch (e) {}
-    }, 5000);
-}
 
 saleForm.addEventListener('submit', async (e) => {
     const method = paymentMethod?.value || 'cash';
@@ -580,8 +531,7 @@ saleForm.addEventListener('submit', async (e) => {
             throw new Error(data.message || 'Gagal membuat transaksi pembayaran.');
         }
 
-        renderPaymentResult(data);
-        payBtn.textContent = 'Menunggu Pembayaran';
+        window.location.href = data.redirect_url;
     } catch (err) {
         alert(err.message || 'Terjadi kesalahan saat membuat pembayaran.');
         payBtn.disabled = false;
@@ -705,9 +655,9 @@ async function confirmPendingCashOrder() {
         pendingCashPaidAmount.value = '';
         pendingCashChange.textContent = fmtRp(0);
 
-        setTimeout(() => {
-            window.location.href = "{{ route('kasir.sales.index') }}";
-        }, 1200);
+setTimeout(() => {
+    window.location.href = data.redirect_url;
+}, 800);
     } catch (err) {
         pendingCashMessage.textContent = err.message || 'Gagal konfirmasi pembayaran.';
     }

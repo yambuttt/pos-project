@@ -175,10 +175,10 @@ class SaleController extends Controller
                 return $request->expectsJson()
                     ? response()->json([
                         'ok' => true,
-                        'redirect' => route('kasir.sales.index'),
+                        'redirect_url' => route('kasir.sales.show', $sale),
                         'message' => 'Transaksi berhasil: ' . $sale->invoice_no,
                     ])
-                    : redirect()->route('kasir.sales.index')
+                    : redirect()->route('kasir.sales.show', $sale)
                         ->with('success', 'Transaksi berhasil: ' . $sale->invoice_no);
             }
 
@@ -198,6 +198,7 @@ class SaleController extends Controller
                     'sale_id' => $sale->id,
                     'invoice_no' => $sale->invoice_no,
                     'payment_status' => $sale->payment_status,
+                    'redirect_url' => route('kasir.sales.show', $sale),
                     'payment' => $midtrans->extractInstruction($charge),
                 ]);
             } catch (\Throwable $e) {
@@ -322,6 +323,7 @@ class SaleController extends Controller
             return response()->json([
                 'ok' => true,
                 'message' => 'Pembayaran berhasil dikonfirmasi.',
+                'redirect_url' => route('kasir.sales.show', $result),
                 'sale' => [
                     'id' => $result->id,
                     'invoice_no' => $result->invoice_no,
@@ -344,5 +346,43 @@ class SaleController extends Controller
         return $request->expectsJson()
             ? response()->json(['ok' => false, 'message' => $message], 422)
             : back()->withErrors(['sale' => $message])->withInput();
+    }
+
+    public function show(Sale $sale, MidtransService $midtrans)
+    {
+        abort_unless($sale->user_id === auth()->id(), 403);
+
+        $sale->load(['items.product', 'diningTable']);
+
+        $payment = $sale->midtrans_response
+            ? $midtrans->extractInstruction($sale->midtrans_response)
+            : null;
+
+        if (
+            $sale->payment_status === 'pending' &&
+            $sale->payment_expires_at &&
+            $sale->payment_expires_at->isPast()
+        ) {
+            app(\App\Services\SaleInventoryService::class)->release($sale, auth()->id());
+
+            $sale->update([
+                'payment_status' => 'expired',
+                'status' => 'expired',
+            ]);
+
+            $sale->refresh();
+        }
+
+        return view('dashboard.kasir.sales.show', compact('sale', 'payment'));
+    }
+
+    public function print(Sale $sale)
+    {
+        abort_unless($sale->user_id === auth()->id(), 403);
+        abort_unless($sale->payment_status === 'paid', 403);
+
+        $sale->load(['items.product', 'diningTable']);
+
+        return view('dashboard.kasir.sales.print', compact('sale'));
     }
 }
