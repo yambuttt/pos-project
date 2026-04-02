@@ -385,4 +385,14 @@ class SaleController extends Controller
 
         return view('dashboard.kasir.sales.print', compact('sale'));
     }
+
+    public function printThermal(Sale $sale)
+{
+    abort_unless($sale->user_id === auth()->id(), 403);
+    abort_unless($sale->payment_status === 'paid', 403);
+
+    $sale->load(['items.product', 'diningTable', 'user']);
+
+    return view('dashboard.kasir.sales.print-thermal', compact('sale'));
+}
 }
