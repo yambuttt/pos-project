@@ -1,3 +1,6 @@
+@php
+    $isCash = ($sale->payment_method ?? null) === 'cash';
+@endphp
 <!DOCTYPE html>
 <html lang="id" class="overflow-x-hidden">
 
@@ -61,7 +64,7 @@
                     <div class="text-xs uppercase tracking-[0.24em] text-yellow-500">Ayo Renne</div>
                     <h1 class="mt-3 text-3xl font-bold tracking-tight text-white sm:text-4xl">Invoice Pembayaran</h1>
                     <p class="mt-2 text-sm leading-7 text-white/65 sm:text-base">
-                        Selesaikan pembayaran QRIS agar pesanan diproses ke kitchen.
+                        {{ $isCash ? 'Tunjukkan kode bayar ini ke kasir untuk menyelesaikan pembayaran.' : 'Selesaikan pembayaran QRIS agar pesanan diproses ke kitchen.' }}
                     </p>
                 </div>
 
@@ -107,19 +110,20 @@
                                     {{ number_format($sale->total_amount, 0, ',', '.') }}
                                 </div>
                             </div>
-
-                            <div class="rounded-2xl border border-yellow-500/10 bg-white/[0.03] px-4 py-4">
-                                <div class="text-xs uppercase tracking-[0.18em] text-white/45">Berlaku Sampai</div>
-                                <div id="expiresAt" class="mt-2 text-base font-semibold text-white">
-                                    {{ $payment['expires_at'] ?? optional($sale->payment_expires_at)?->format('Y-m-d H:i:s') ?? '-' }}
+                            @if(!$isCash)
+                                <div class="rounded-2xl border border-yellow-500/10 bg-white/[0.03] px-4 py-4">
+                                    <div class="text-xs uppercase tracking-[0.18em] text-white/45">Berlaku Sampai</div>
+                                    <div id="expiresAt" class="mt-2 text-base font-semibold text-white">
+                                        {{ $payment['expires_at'] ?? optional($sale->payment_expires_at)?->format('Y-m-d H:i:s') ?? '-' }}
+                                    </div>
                                 </div>
-                            </div>
 
-                            <div id="countdownCard"
-                                class="{{ ($sale->payment_status ?? 'pending') === 'paid' ? 'hidden ' : '' }}rounded-2xl border border-yellow-500/10 bg-white/[0.03] px-4 py-4">
-                                <div class="text-xs uppercase tracking-[0.18em] text-white/45">Sisa Waktu</div>
-                                <div id="countdown" class="mt-2 text-xl font-semibold text-yellow-400">--:--</div>
-                            </div>
+                                <div id="countdownCard"
+                                    class="{{ ($sale->payment_status ?? 'pending') === 'paid' ? 'hidden ' : '' }}rounded-2xl border border-yellow-500/10 bg-white/[0.03] px-4 py-4">
+                                    <div class="text-xs uppercase tracking-[0.18em] text-white/45">Sisa Waktu</div>
+                                    <div id="countdown" class="mt-2 text-xl font-semibold text-yellow-400">--:--</div>
+                                </div>
+                            @endif
                         </div>
                     </div>
 
@@ -159,27 +163,51 @@
                             Scan QRIS di bawah ini untuk menyelesaikan pembayaran.
                         </div>
 
-                        <div id="qrWrapper" class="mt-5 rounded-[24px] border border-yellow-500/10 gold-soft p-5">
-                            @if(!empty($payment['qr_url']))
-                                <div class="flex justify-center">
-                                    <img id="qrImage" src="{{ $payment['qr_url'] }}" alt="QRIS"
-                                        class="h-auto w-full max-w-[320px] rounded-[24px] bg-white p-3 shadow-xl">
+                        @if($isCash)
+                            <div class="mt-5 rounded-[24px] border border-yellow-500/10 gold-soft p-5">
+                                <div class="text-center">
+                                    <div class="text-xs uppercase tracking-[0.18em] text-white/45">Kode Bayar</div>
+                                    <div class="mt-3 text-3xl font-bold tracking-wide text-yellow-400">
+                                        {{ $sale->invoice_no }}
+                                    </div>
+                                    <div class="mt-3 text-sm text-white/60">
+                                        Tunjukkan kode ini ke kasir atau scan barcode di bawah.
+                                    </div>
                                 </div>
-                            @else
-                                <div
-                                    class="rounded-2xl border border-white/10 bg-black/20 px-6 py-10 text-center text-sm text-white/55">
-                                    QR belum tersedia.
-                                </div>
-                            @endif
 
-                            <div id="pendingHelp" class="mt-4 text-center text-sm text-white/60">
-                                Menunggu pembayaran dari aplikasi QRIS.
+                                <div class="mt-6 flex justify-center">
+                                    <img src="https://barcodeapi.org/api/128/{{ urlencode($sale->invoice_no) }}"
+                                        alt="Barcode {{ $sale->invoice_no }}"
+                                        class="h-auto w-full max-w-[420px] rounded-xl bg-white p-3">
+                                </div>
+
+                                <div class="mt-4 text-center text-sm text-white/60">
+                                    Kasir dapat scan barcode ini atau input manual kode bayar.
+                                </div>
                             </div>
-                        </div>
+                        @else
+                            <div id="qrWrapper" class="mt-5 rounded-[24px] border border-yellow-500/10 gold-soft p-5">
+                                @if(!empty($payment['qr_url']))
+                                    <div class="flex justify-center">
+                                        <img id="qrImage" src="{{ $payment['qr_url'] }}" alt="QRIS"
+                                            class="h-auto w-full max-w-[320px] rounded-[24px] bg-white p-3 shadow-xl">
+                                    </div>
+                                @else
+                                    <div
+                                        class="rounded-2xl border border-white/10 bg-black/20 px-6 py-10 text-center text-sm text-white/55">
+                                        QR belum tersedia.
+                                    </div>
+                                @endif
+
+                                <div id="pendingHelp" class="mt-4 text-center text-sm text-white/60">
+                                    Menunggu pembayaran dari aplikasi QRIS.
+                                </div>
+                            </div>
+                        @endif
 
                         <div id="paidNotice"
                             class="mt-4 hidden rounded-2xl border border-green-400/20 bg-green-500/10 px-4 py-4 text-center text-sm font-semibold text-green-200">
-                            Pembayaran berhasil. Pesanan sedang diproses oleh kitchen.
+                            {{ $isCash ? 'Pembayaran tunai sudah dikonfirmasi kasir. Pesanan sedang diproses oleh kitchen.' : 'Pembayaran berhasil. Pesanan sedang diproses oleh kitchen.' }}
                         </div>
 
                         <div id="expiredNotice"
@@ -231,6 +259,7 @@
     <script>
         const statusUrl = @json(route('public.order.invoice.status', ['invoice' => $sale->invoice_no]));
         const initialExpiresAt = @json($payment['expires_at'] ?? optional($sale->payment_expires_at)?->toDateTimeString());
+        const isCash = @json($isCash);
 
         function parseDateSafe(value) {
             if (!value) return null;
@@ -241,7 +270,6 @@
 
         function setStatusAppearance(status) {
             const paymentStatusEl = document.getElementById('paymentStatus');
-            const qrWrapper = document.getElementById('qrWrapper');
             const qrImage = document.getElementById('qrImage');
             const pendingHelp = document.getElementById('pendingHelp');
             const paidNotice = document.getElementById('paidNotice');
@@ -268,14 +296,19 @@
                 countdownCard?.classList.add('hidden');
             } else {
                 paymentStatusEl.classList.add('status-pending');
-                qrImage?.classList.remove('hidden');
-                pendingHelp?.classList.remove('hidden');
+
+                if (!isCash) {
+                    qrImage?.classList.remove('hidden');
+                    pendingHelp?.classList.remove('hidden');
+                    countdownCard?.classList.remove('hidden');
+                } else {
+                    countdownCard?.classList.add('hidden');
+                }
+
                 paidNotice?.classList.add('hidden');
                 expiredNotice?.classList.add('hidden');
-                countdownCard?.classList.remove('hidden');
             }
         }
-
         function startCountdown(expiresAtValue) {
             const countdownEl = document.getElementById('countdown');
             const paymentStatusEl = document.getElementById('paymentStatus');
@@ -362,7 +395,10 @@
         }
 
         setStatusAppearance(@json($sale->payment_status ?? 'pending'));
-        startCountdown(initialExpiresAt);
+
+        if (!isCash) {
+            startCountdown(initialExpiresAt);
+        }
 
         window.__invoicePoller = setInterval(pollStatus, 5000);
         pollStatus();

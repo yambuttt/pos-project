@@ -140,9 +140,9 @@
                     </label>
 
                     <label
-                        class="flex cursor-not-allowed items-center gap-3 rounded-xl border border-white/10 bg-black/10 px-4 py-3 text-sm text-white/40">
-                        <input type="radio" name="paymentMethod" value="cash" disabled class="accent-yellow-400">
-                        <span>Tunai di Kasir (segera hadir)</span>
+                        class="flex cursor-pointer items-center gap-3 rounded-xl border border-white/15 bg-black/20 px-4 py-3 text-sm text-white/90">
+                        <input type="radio" name="paymentMethod" value="cash" class="accent-yellow-400">
+                        <span>Tunai di Kasir</span>
                     </label>
                 </div>
             </div>

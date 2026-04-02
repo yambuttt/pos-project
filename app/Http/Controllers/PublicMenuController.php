@@ -388,7 +388,7 @@ class PublicMenuController extends Controller
         $data = $request->validate([
             'customer_name' => ['required', 'string', 'max:80'],
             'order_type' => ['required', Rule::in(['dine_in', 'delivery'])],
-            'payment_method' => ['required', Rule::in(['qris'])],
+            'payment_method' => ['required', Rule::in(['qris', 'cash'])],
 
             'dining_table_id' => [
                 Rule::requiredIf(fn() => $request->input('order_type') === 'dine_in'),
@@ -518,6 +518,18 @@ class PublicMenuController extends Controller
 
                 return $sale;
             });
+
+            if ($sale->payment_method === 'cash') {
+                return response()->json([
+                    'ok' => true,
+                    'invoice_no' => $sale->invoice_no,
+                    'sale_id' => $sale->id,
+                    'redirect_url' => route('public.order.invoice', ['invoice' => $sale->invoice_no]),
+                    'payment' => [
+                        'type' => 'cash',
+                    ],
+                ]);
+            }
 
             try {
                 $charge = $midtrans->charge($sale->fresh());
