@@ -232,6 +232,113 @@ class SaleController extends Controller
         ]);
     }
 
+    public function findPendingCashOrder(Request $request)
+    {
+        $data = $request->validate([
+            'invoice_no' => ['required', 'string', 'max:50'],
+        ]);
+
+        $sale = Sale::with(['items.product', 'diningTable'])
+            ->where('invoice_no', trim($data['invoice_no']))
+            ->where('payment_method', 'cash')
+            ->where('payment_status', 'pending')
+            ->first();
+
+        if (!$sale) {
+            return response()->json([
+                'ok' => false,
+                'message' => 'Pesanan pending cash dengan kode bayar tersebut tidak ditemukan.',
+            ], 404);
+        }
+
+        return response()->json([
+            'ok' => true,
+            'sale' => [
+                'id' => $sale->id,
+                'invoice_no' => $sale->invoice_no,
+                'order_type' => $sale->order_type,
+                'payment_method' => $sale->payment_method,
+                'payment_status' => $sale->payment_status,
+                'total_amount' => (int) $sale->total_amount,
+                'dining_table' => $sale->diningTable?->name,
+                'items' => $sale->items->map(function ($item) {
+                    return [
+                        'product_name' => $item->product->name ?? '-',
+                        'qty' => (int) $item->qty,
+                        'price' => (int) $item->price,
+                        'subtotal' => (int) $item->subtotal,
+                        'note' => $item->note,
+                    ];
+                })->values(),
+            ],
+        ]);
+    }
+
+    public function confirmPendingCashOrder(
+        Request $request,
+        SaleInventoryService $inventory
+    ) {
+        $data = $request->validate([
+            'invoice_no' => ['required', 'string', 'max:50'],
+            'paid_amount' => ['required', 'integer', 'min:0'],
+        ]);
+
+        try {
+            $result = DB::transaction(function () use ($data, $inventory) {
+                $sale = Sale::with(['items.product', 'diningTable'])
+                    ->lockForUpdate()
+                    ->where('invoice_no', trim($data['invoice_no']))
+                    ->where('payment_method', 'cash')
+                    ->where('payment_status', 'pending')
+                    ->first();
+
+                if (!$sale) {
+                    throw new \RuntimeException('Pesanan pending cash tidak ditemukan atau sudah dibayar.');
+                }
+
+                $paidAmount = (int) $data['paid_amount'];
+                $totalAmount = (int) $sale->total_amount;
+
+                if ($paidAmount < $totalAmount) {
+                    throw new \RuntimeException(
+                        'Uang bayar kurang. Total Rp ' . number_format($totalAmount, 0, ',', '.') . '.'
+                    );
+                }
+
+                $inventory->commitPaid($sale, auth()->id());
+
+                $sale->update([
+                    'payment_status' => 'paid',
+                    'status' => 'completed',
+                    'paid_amount' => $paidAmount,
+                    'change_amount' => $paidAmount - $totalAmount,
+                    'paid_at' => now(),
+                    'kitchen_status' => 'new',
+                ]);
+
+                return $sale->fresh(['items.product', 'diningTable']);
+            });
+
+            return response()->json([
+                'ok' => true,
+                'message' => 'Pembayaran berhasil dikonfirmasi.',
+                'sale' => [
+                    'id' => $result->id,
+                    'invoice_no' => $result->invoice_no,
+                    'payment_status' => $result->payment_status,
+                    'status' => $result->status,
+                    'paid_amount' => (int) $result->paid_amount,
+                    'change_amount' => (int) $result->change_amount,
+                ],
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'ok' => false,
+                'message' => $e->getMessage(),
+            ], 422);
+        }
+    }
+
     protected function errorResponse(Request $request, string $message)
     {
         return $request->expectsJson()

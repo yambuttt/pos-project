@@ -126,6 +126,11 @@ Route::prefix('kasir')->name('kasir.')->middleware(['auth', 'role:kasir'])->grou
     Route::post('/ready-orders/{sale}/deliver', [KasirDashboardController::class, 'deliver'])->name('ready.deliver');
     Route::get('/sales/{sale}/payment-status', [SaleController::class, 'paymentStatus'])
         ->name('sales.payment-status');
+    Route::post('/sales/find-pending-cash', [SaleController::class, 'findPendingCashOrder'])
+        ->name('sales.find-pending-cash');
+
+    Route::post('/sales/confirm-pending-cash', [SaleController::class, 'confirmPendingCashOrder'])
+        ->name('sales.confirm-pending-cash');
 });
 
 

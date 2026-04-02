@@ -193,6 +193,60 @@
 
     <div id="paymentStatusText" class="mt-4 text-sm text-emerald-300"></div>
 </div>
+<div class="mt-4 rounded-2xl border border-yellow-500/10 bg-white/5 p-4">
+    <div class="text-sm font-semibold text-white">Bayar Pesanan QR Meja</div>
+    <div class="mt-1 text-xs text-white/60">
+        Input atau scan kode bayar customer untuk memproses pembayaran tunai di kasir.
+    </div>
+
+    <div class="mt-4 flex flex-col gap-3 sm:flex-row">
+        <input id="pendingCashInvoiceNo" type="text"
+            class="w-full rounded-xl border border-yellow-500/16 bg-white/5 px-4 py-3 text-sm outline-none placeholder:text-white/30 focus:border-yellow-500/30"
+            placeholder="Contoh: INV-20260408-ABC">
+        <button type="button" id="findPendingCashBtn"
+            class="rounded-xl bg-yellow-500 px-4 py-3 text-sm font-semibold text-black hover:bg-yellow-400">
+            Cari Pesanan
+        </button>
+    </div>
+
+    <div id="pendingCashMessage" class="mt-3 text-sm text-white/60"></div>
+
+    <div id="pendingCashResult" class="mt-4 hidden rounded-2xl border border-yellow-500/10 bg-black/20 p-4">
+        <div class="flex items-start justify-between gap-3">
+            <div>
+                <div class="text-xs text-white/50">Kode Bayar</div>
+                <div id="pendingCashInvoiceLabel" class="mt-1 text-lg font-semibold text-yellow-400">-</div>
+            </div>
+            <div class="text-right text-xs text-white/60">
+                <div>Order: <span id="pendingCashOrderType">-</span></div>
+                <div>Meja: <span id="pendingCashTable">-</span></div>
+            </div>
+        </div>
+
+        <div id="pendingCashItems" class="mt-4 space-y-2"></div>
+
+        <div class="mt-4 flex items-center justify-between border-t border-white/10 pt-4">
+            <span class="text-sm text-white/70">Total</span>
+            <span id="pendingCashTotal" class="text-base font-semibold text-white">Rp 0</span>
+        </div>
+
+        <div class="mt-4">
+            <label class="text-xs text-white/70">Uang Diterima</label>
+            <input id="pendingCashPaidAmount" type="number" min="0"
+                class="mt-2 w-full rounded-xl border border-yellow-500/16 bg-white/5 px-4 py-3 text-sm outline-none focus:border-yellow-500/30"
+                placeholder="Masukkan uang bayar customer">
+        </div>
+
+        <div class="mt-2 text-xs text-white/60">
+            Kembalian: <b id="pendingCashChange">Rp 0</b>
+        </div>
+
+        <button type="button" id="confirmPendingCashBtn"
+            class="mt-4 w-full rounded-xl bg-yellow-500 px-5 py-3 text-sm font-semibold text-black hover:bg-yellow-400">
+            Konfirmasi Pembayaran
+        </button>
+    </div>
+</div>
 
     <div class="mt-2 text-[11px] text-white/50">
         STRICT mode aktif: kalau bahan kurang → transaksi ditolak.
@@ -227,6 +281,20 @@ let paymentPoller = null;
             const changeText = document.getElementById('changeText');
             const payBtn = document.getElementById('payBtn');
             const clearCart = document.getElementById('clearCart');
+            const pendingCashInvoiceNo = document.getElementById('pendingCashInvoiceNo');
+const findPendingCashBtn = document.getElementById('findPendingCashBtn');
+const pendingCashMessage = document.getElementById('pendingCashMessage');
+const pendingCashResult = document.getElementById('pendingCashResult');
+const pendingCashInvoiceLabel = document.getElementById('pendingCashInvoiceLabel');
+const pendingCashOrderType = document.getElementById('pendingCashOrderType');
+const pendingCashTable = document.getElementById('pendingCashTable');
+const pendingCashItems = document.getElementById('pendingCashItems');
+const pendingCashTotal = document.getElementById('pendingCashTotal');
+const pendingCashPaidAmount = document.getElementById('pendingCashPaidAmount');
+const pendingCashChange = document.getElementById('pendingCashChange');
+const confirmPendingCashBtn = document.getElementById('confirmPendingCashBtn');
+
+let currentPendingCashSale = null;
 
             // cartMap: productId -> {id,name,price,qty,max}
             const cartMap = new Map();
@@ -520,6 +588,140 @@ saleForm.addEventListener('submit', async (e) => {
         payBtn.textContent = 'Bayar';
     }
 });
+
+function renderPendingCashSale(sale) {
+    currentPendingCashSale = sale;
+    pendingCashResult.classList.remove('hidden');
+
+    pendingCashInvoiceLabel.textContent = sale.invoice_no || '-';
+    pendingCashOrderType.textContent = sale.order_type || '-';
+    pendingCashTable.textContent = sale.dining_table || '-';
+    pendingCashTotal.textContent = fmtRp(sale.total_amount || 0);
+
+    pendingCashItems.innerHTML = '';
+
+    (sale.items || []).forEach(item => {
+        const row = document.createElement('div');
+        row.className = 'rounded-xl border border-white/10 bg-white/5 p-3';
+
+        row.innerHTML = `
+            <div class="flex items-start justify-between gap-3">
+                <div>
+                    <div class="text-sm font-semibold text-white">${item.product_name || '-'}</div>
+                    <div class="mt-1 text-xs text-white/60">${fmtRp(item.price)} × ${item.qty}</div>
+                    ${item.note ? `<div class="mt-1 text-xs text-white/50">Catatan: ${item.note}</div>` : ''}
+                </div>
+                <div class="text-sm font-semibold text-yellow-400">${fmtRp(item.subtotal)}</div>
+            </div>
+        `;
+
+        pendingCashItems.appendChild(row);
+    });
+
+    pendingCashPaidAmount.value = sale.total_amount || 0;
+    updatePendingCashChange();
+}
+
+function updatePendingCashChange() {
+    if (!currentPendingCashSale) return;
+
+    const paid = Number(pendingCashPaidAmount.value || 0);
+    const total = Number(currentPendingCashSale.total_amount || 0);
+    const change = Math.max(0, paid - total);
+
+    pendingCashChange.textContent = fmtRp(change);
+}
+
+async function findPendingCashOrder() {
+    const invoiceNo = (pendingCashInvoiceNo.value || '').trim();
+
+    if (!invoiceNo) {
+        pendingCashMessage.textContent = 'Masukkan kode bayar terlebih dahulu.';
+        pendingCashResult.classList.add('hidden');
+        return;
+    }
+
+    pendingCashMessage.textContent = 'Mencari pesanan...';
+    pendingCashResult.classList.add('hidden');
+
+    try {
+        const res = await fetch("{{ route('kasir.sales.find-pending-cash') }}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': "{{ csrf_token() }}",
+                'Accept': 'application/json',
+            },
+            body: JSON.stringify({
+                invoice_no: invoiceNo,
+            }),
+        });
+
+        const data = await res.json().catch(() => ({}));
+
+        if (!res.ok || !data.ok) {
+            throw new Error(data.message || 'Pesanan tidak ditemukan.');
+        }
+
+        pendingCashMessage.textContent = 'Pesanan ditemukan.';
+        renderPendingCashSale(data.sale);
+    } catch (err) {
+        pendingCashMessage.textContent = err.message || 'Pesanan tidak ditemukan.';
+        pendingCashResult.classList.add('hidden');
+        currentPendingCashSale = null;
+    }
+}
+
+async function confirmPendingCashOrder() {
+    if (!currentPendingCashSale) {
+        pendingCashMessage.textContent = 'Cari pesanan dulu.';
+        return;
+    }
+
+    try {
+        const res = await fetch("{{ route('kasir.sales.confirm-pending-cash') }}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': "{{ csrf_token() }}",
+                'Accept': 'application/json',
+            },
+            body: JSON.stringify({
+                invoice_no: currentPendingCashSale.invoice_no,
+                paid_amount: Number(pendingCashPaidAmount.value || 0),
+            }),
+        });
+
+        const data = await res.json().catch(() => ({}));
+
+        if (!res.ok || !data.ok) {
+            throw new Error(data.message || 'Gagal konfirmasi pembayaran.');
+        }
+
+        pendingCashMessage.textContent = data.message || 'Pembayaran berhasil.';
+        pendingCashResult.classList.add('hidden');
+        currentPendingCashSale = null;
+        pendingCashInvoiceNo.value = '';
+        pendingCashPaidAmount.value = '';
+        pendingCashChange.textContent = fmtRp(0);
+
+        setTimeout(() => {
+            window.location.href = "{{ route('kasir.sales.index') }}";
+        }, 1200);
+    } catch (err) {
+        pendingCashMessage.textContent = err.message || 'Gagal konfirmasi pembayaran.';
+    }
+}
+
+findPendingCashBtn?.addEventListener('click', findPendingCashOrder);
+pendingCashInvoiceNo?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        findPendingCashOrder();
+    }
+});
+pendingCashPaidAmount?.addEventListener('input', updatePendingCashChange);
+confirmPendingCashBtn?.addEventListener('click', confirmPendingCashOrder);
 
             renderCart();
         })();
