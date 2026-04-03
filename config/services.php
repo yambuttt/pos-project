@@ -36,12 +36,22 @@ return [
     ],
 
     'midtrans' => [
-    'is_production' => filter_var(env('MIDTRANS_IS_PRODUCTION', false), FILTER_VALIDATE_BOOL),
-    'server_key' => env('MIDTRANS_SERVER_KEY'),
-    'client_key' => env('MIDTRANS_CLIENT_KEY'),
-    'merchant_id' => env('MIDTRANS_MERCHANT_ID'),
-    'expiry_minutes' => (int) env('MIDTRANS_EXPIRY_MINUTES', 15),
-    'qris_acquirer' => env('MIDTRANS_QRIS_ACQUIRER', 'gopay'),
-],
+        'is_production' => filter_var(env('MIDTRANS_IS_PRODUCTION', false), FILTER_VALIDATE_BOOL),
+        'server_key' => env('MIDTRANS_SERVER_KEY'),
+        'client_key' => env('MIDTRANS_CLIENT_KEY'),
+        'merchant_id' => env('MIDTRANS_MERCHANT_ID'),
+        'expiry_minutes' => (int) env('MIDTRANS_EXPIRY_MINUTES', 15),
+        'qris_acquirer' => env('MIDTRANS_QRIS_ACQUIRER', 'gopay'),
+    ],
+
+    'fonnte' => [
+        'enabled' => filter_var(env('FONNTE_ENABLED', false), FILTER_VALIDATE_BOOL),
+        'token' => env('FONNTE_TOKEN'),
+        'base_url' => env('FONNTE_BASE_URL', 'https://api.fonnte.com'),
+        'country_code' => env('FONNTE_COUNTRY_CODE', '62'),
+        'default_delay' => (int) env('FONNTE_DEFAULT_DELAY', 0),
+        'default_typing' => filter_var(env('FONNTE_DEFAULT_TYPING', false), FILTER_VALIDATE_BOOL),
+        'default_group_target' => env('FONNTE_DEFAULT_GROUP_TARGET'),
+    ],
 
 ];

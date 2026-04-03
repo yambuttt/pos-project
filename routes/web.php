@@ -61,6 +61,12 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/admin/raw-materials', [RawMaterialController::class, 'index'])->name('admin.raw_materials.index');
     Route::get('/admin/raw-materials/create', [RawMaterialController::class, 'create'])->name('admin.raw_materials.create');
     Route::post('/admin/raw-materials', [RawMaterialController::class, 'store'])->name('admin.raw_materials.store');
+    Route::get('/admin/raw-materials', [RawMaterialController::class, 'index'])->name('admin.raw_materials.index');
+    Route::get('/admin/raw-materials/create', [RawMaterialController::class, 'create'])->name('admin.raw_materials.create');
+    Route::post('/admin/raw-materials', [RawMaterialController::class, 'store'])->name('admin.raw_materials.store');
+    Route::get('/admin/raw-materials/{rawMaterial}/edit', [RawMaterialController::class, 'edit'])->name('admin.raw_materials.edit');
+    Route::put('/admin/raw-materials/{rawMaterial}', [RawMaterialController::class, 'update'])->name('admin.raw_materials.update');
+    Route::delete('/admin/raw-materials/{rawMaterial}', [RawMaterialController::class, 'destroy'])->name('admin.raw_materials.destroy');
 
     Route::get('/admin/purchases', [PurchaseController::class, 'index'])->name('admin.purchases.index');
     Route::get('/admin/purchases/create', [PurchaseController::class, 'create'])->name('admin.purchases.create');
@@ -123,7 +129,7 @@ Route::prefix('kasir')->name('kasir.')->middleware(['auth', 'role:kasir'])->grou
     Route::get('/sales/{sale}', [SaleController::class, 'show'])->name('sales.show');
     Route::get('/sales/{sale}/print', [SaleController::class, 'print'])->name('sales.print');
     Route::get('/sales/{sale}/print-thermal', [SaleController::class, 'printThermal'])
-    ->name('sales.print-thermal');
+        ->name('sales.print-thermal');
 
     Route::get('/ready', [KasirDashboardController::class, 'readyIndex'])->name('ready.index');
     Route::get('/ready-orders', [KasirDashboardController::class, 'readyOrders'])->name('ready.orders');
