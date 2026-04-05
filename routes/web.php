@@ -27,6 +27,8 @@ use App\Http\Controllers\Admin\EmployeeDeviceController;
 use App\Http\Controllers\Pegawai\AttendanceV2Controller;
 use App\Http\Controllers\Admin\AttendanceHistoryController;
 use App\Http\Controllers\Admin\AttendancePhotoController;
+use App\Http\Controllers\Pegawai\AttendanceHistoryController as PegawaiAttendanceHistoryController;
+use App\Http\Controllers\Pegawai\AttendancePhotoController as PegawaiAttendancePhotoController;
 
 
 Route::get('/landingtrial', [PublicMenuController::class, 'landingTrial'])->name('public.landingtrial');
@@ -187,4 +189,9 @@ Route::prefix('pegawai')->name('pegawai.')->middleware(['auth', 'role:pegawai'])
 
     // submit check-in/out (AJAX)
     Route::post('/absensi/submit', [AttendanceV2Controller::class, 'submit'])->name('attendance.submit');
+    Route::get('/absensi/history', [PegawaiAttendanceHistoryController::class, 'index'])
+    ->name('attendance.history');
+
+Route::get('/absensi/photo/{attendance}/{type}', [PegawaiAttendancePhotoController::class, 'show'])
+    ->name('attendance.photo');
 });

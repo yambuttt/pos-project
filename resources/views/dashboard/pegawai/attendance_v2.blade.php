@@ -56,6 +56,42 @@
             <div id="scanStatus" class="mt-3 text-sm text-white/80">Status: menunggu verifikasi.</div>
         </div>
     </div>
+    <div id="camModal" class="fixed inset-0 z-50 hidden bg-black/80">
+        <div class="flex h-full w-full flex-col">
+            <!-- Header -->
+            <div class="flex items-center justify-between border-b border-white/10 bg-black/40 px-4 py-3 backdrop-blur-xl">
+                <div>
+                    <div id="camTitle" class="text-sm font-semibold text-white">Kamera</div>
+                    <div id="camSubtitle" class="text-xs text-white/60">...</div>
+                </div>
+                <button id="camCloseBtn"
+                    class="rounded-xl border border-white/15 bg-white/[0.06] px-3 py-2 text-xs text-white/80 hover:bg-white/[0.10]">
+                    Tutup
+                </button>
+            </div>
+
+            <!-- Body -->
+            <div class="flex-1 overflow-auto p-4">
+                <div class="mx-auto w-full max-w-xl">
+                    <!-- QR reader container (kamera belakang) -->
+                    <div id="qrWrap" class="hidden overflow-hidden rounded-2xl border border-white/10 bg-black/40">
+                        <div id="qrReader" class="w-full"></div>
+                    </div>
+
+                    <!-- Selfie camera (kamera depan) -->
+                    <div id="selfieWrap" class="hidden overflow-hidden rounded-2xl border border-white/10 bg-black/40">
+                        <video id="selfieVideo" autoplay playsinline class="w-full aspect-video object-cover"></video>
+                        <canvas id="selfieCanvas" class="hidden"></canvas>
+                    </div>
+
+                    <!-- Status overlay -->
+                    <div class="mt-3 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3">
+                        <div id="camStatus" class="text-sm text-white/85">Menyiapkan kamera…</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script src="https://unpkg.com/html5-qrcode"></script>
     <script src="https://unpkg.com/html5-qrcode"></script>
@@ -88,6 +124,46 @@
 
         function setGate(msg) { gateStatus.textContent = "Status: " + msg; }
         function setScan(msg) { scanStatus.textContent = "Status: " + msg; }
+        // ----- CAMERA MODAL ELEMENTS -----
+        const camModal = document.getElementById('camModal');
+        const camTitle = document.getElementById('camTitle');
+        const camSubtitle = document.getElementById('camSubtitle');
+        const camStatus = document.getElementById('camStatus');
+        const camCloseBtn = document.getElementById('camCloseBtn');
+
+        const qrWrap = document.getElementById('qrWrap');
+        const selfieWrap = document.getElementById('selfieWrap');
+
+        function openCamModal(title, subtitle) {
+            camTitle.textContent = title || 'Kamera';
+            camSubtitle.textContent = subtitle || '';
+            camStatus.textContent = 'Menyiapkan kamera…';
+
+            camModal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeCamModal() {
+            camModal.classList.add('hidden');
+            document.body.style.overflow = '';
+
+            // stop semua kamera supaya tidak nyangkut
+            stopQrScanner();
+            stopSelfie();
+
+            // reset tampilan
+            qrWrap.classList.add('hidden');
+            selfieWrap.classList.add('hidden');
+            camStatus.textContent = '';
+        }
+
+        camCloseBtn.addEventListener('click', closeCamModal);
+        camModal.addEventListener('click', (e) => { if (e.target === camModal) closeCamModal(); });
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !camModal.classList.contains('hidden')) closeCamModal(); });
+
+        function setCamStatus(msg) {
+            camStatus.textContent = msg;
+        }
 
         function setButtonsAfterGate() {
             // default
