@@ -83,7 +83,9 @@
                     $isPurchases = request()->routeIs('admin.purchases.*');
                     $isAttendanceQr = request()->routeIs('admin.attendance.qr*');
                     $isAttendanceDevices = request()->routeIs('admin.attendance.devices*');
-                    $isUserGroup = $isUsers || $isAttendanceQr || $isAttendanceDevices;
+                    $isAttendanceHistory = request()->routeIs('admin.attendance.history*');
+                    $isUserGroup = $isUsers || $isAttendanceQr || $isAttendanceDevices || $isAttendanceHistory;
+
                     $isWastes = request()->routeIs('admin.wastes.*');
                     $isOpnames = request()->routeIs('admin.opnames.*');
                     $isInvMovements = request()->routeIs('admin.inventory-movements.*');
@@ -315,6 +317,16 @@
                                         <span class="sidebar-label hidden text-sm font-medium text-white/90">Device
                                             Absensi</span>
                                     </a>
+                                    <a href="{{ route('admin.attendance.history') }}"
+                                        class="relative flex items-center gap-3 rounded-xl px-3 py-2.5 transition
+  {{ $isAttendanceHistory ? 'bg-yellow-500/10 border border-yellow-500/25' : 'border gold-border bg-white/[0.02] hover:bg-white/[0.05]' }}">
+                                        @if ($isAttendanceHistory)
+                                            <span
+                                                class="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r bg-yellow-500"></span>
+                                        @endif
+                                        <span class="sidebar-label hidden text-sm font-medium text-white/90">History
+                                            Absensi</span>
+                                    </a>
                                 </div>
                             </div>
 
@@ -458,6 +470,10 @@
                             <a href="{{ route('admin.attendance.devices') }}"
                                 class="mt-1 block rounded-xl px-3 py-2 {{ $isAttendanceDevices ? 'bg-yellow-500/12' : 'hover:bg-white/[0.05]' }}">
                                 Device Absensi
+                            </a>
+                            <a href="{{ route('admin.attendance.history') }}"
+                                class="mt-1 block rounded-xl px-3 py-2 {{ $isAttendanceHistory ? 'bg-yellow-500/12' : 'hover:bg-white/[0.05]' }}">
+                                History Absensi
                             </a>
                         </div>
 

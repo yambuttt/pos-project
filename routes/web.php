@@ -25,6 +25,7 @@ use App\Http\Controllers\Payment\MidtransWebhookController;
 use App\Http\Controllers\Admin\AttendanceQrController;
 use App\Http\Controllers\Admin\EmployeeDeviceController;
 use App\Http\Controllers\Pegawai\AttendanceV2Controller;
+use App\Http\Controllers\Admin\AttendanceHistoryController;
 
 
 Route::get('/landingtrial', [PublicMenuController::class, 'landingTrial'])->name('public.landingtrial');
@@ -128,6 +129,8 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::post('/admin/attendance/devices/{device}/approve', [EmployeeDeviceController::class, 'approve'])->name('admin.attendance.devices.approve');
     Route::post('/admin/attendance/devices/{device}/revoke', [EmployeeDeviceController::class, 'revoke'])->name('admin.attendance.devices.revoke');
     Route::post('/admin/attendance/users/{user}/reset-devices', [EmployeeDeviceController::class, 'resetUserDevices'])->name('admin.attendance.users.reset_devices');
+    Route::get('/admin/attendance/history', [AttendanceHistoryController::class, 'index'])
+    ->name('admin.attendance.history');
 
 });
 

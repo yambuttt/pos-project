@@ -32,4 +32,9 @@ class Attendance extends Model
         'check_out_at' => 'datetime',
         'match_distance' => 'decimal:4',
     ];
+
+    public function user()
+    {
+        return $this->belongsTo(\App\Models\User::class);
+    }
 }
