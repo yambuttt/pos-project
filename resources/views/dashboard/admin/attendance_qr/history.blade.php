@@ -98,17 +98,17 @@
                                 </td>
 
                                 <td class="py-3 pr-4">
-                                    @if($url)
-                                        <button
-  type="button"
-  onclick="openPhoto('{{ route('admin.attendance.photo', ['attendance' => $a->id, 'type' => 'in']) }}')"
-  class="text-yellow-400 hover:underline text-xs"
->
-  Lihat Foto
-</button>
-                                    @else
-                                        <span class="text-xs text-white/50">-</span>
-                                    @endif
+                                    @if($a->check_in_photo_path && $a->check_in_attendance_id)
+  <button
+    type="button"
+    onclick="openPhoto('{{ route('admin.attendance.photo', ['attendance' => $a->check_in_attendance_id, 'type' => 'in']) }}')"
+    class="text-yellow-400 hover:underline text-xs"
+  >
+    Lihat Foto
+  </button>
+@else
+  <span class="text-xs text-white/50">-</span>
+@endif
                                 </td>
                             </tr>
                         @empty
@@ -172,17 +172,17 @@
                                 </td>
 
                                 <td class="py-3 pr-4">
-                                    @if($url)
-                                        <button
-  type="button"
-  onclick="openPhoto('{{ route('admin.attendance.photo', ['attendance' => $a->id, 'type' => 'in']) }}')"
-  class="text-yellow-400 hover:underline text-xs"
->
-  Lihat Foto
-</button>
-                                    @else
-                                        <span class="text-xs text-white/50">-</span>
-                                    @endif
+                                    @if($a->check_out_photo_path && $a->check_out_attendance_id)
+  <button
+    type="button"
+    onclick="openPhoto('{{ route('admin.attendance.photo', ['attendance' => $a->check_out_attendance_id, 'type' => 'out']) }}')"
+    class="text-yellow-400 hover:underline text-xs"
+  >
+    Lihat Foto
+  </button>
+@else
+  <span class="text-xs text-white/50">-</span>
+@endif
                                 </td>
                             </tr>
                         @empty
