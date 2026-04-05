@@ -22,15 +22,20 @@ class AttendancePhotoController extends Controller
             abort(404);
         }
 
-        // Path tersimpan seperti: "public/attendances/15/2026-04-05/checkin_....jpg"
-        // Kita ubah jadi relative untuk disk "public": "attendances/15/2026-04-05/....jpg"
-        $relative = str_starts_with($path, 'public/') ? substr($path, 7) : $path;
+        /**
+         * PENTING:
+         * Di project kamu, disk "local" root = storage/app/private :contentReference[oaicite:1]{index=1}
+         * Selfie tersimpan sebagai: "public/attendances/15/2026-04-05/xxx.jpg"
+         * Jadi file fisiknya ada di: storage/app/private/public/attendances/...
+         */
+        $disk = Storage::disk('local');
 
-        if (!Storage::disk('public')->exists($relative)) {
+        // JANGAN di-strip "public/" karena memang foldernya ada di private/public/...
+        if (!$disk->exists($path)) {
             abort(404);
         }
 
-        // Serve file via Laravel (bukan akses langsung /storage)
-        return Storage::disk('public')->response($relative);
+        // Stream via Laravel (tidak tergantung symlink /storage)
+        return $disk->response($path);
     }
 }
