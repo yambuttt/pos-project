@@ -267,7 +267,6 @@
 
         // ---------- QR FLOW ----------
         async function startQrScanner(mode) {
-            // mode = 'in' atau 'out'
             if (busy) return;
             if (!gateOk) { setScan("verifikasi device & lokasi dulu."); return; }
 
@@ -275,18 +274,26 @@
             currentMode = mode;
             scannedToken = null;
 
-            try {
-                setScan(`mode ${mode === 'in' ? 'CHECK-IN' : 'CHECK-OUT'}: arahkan kamera ke QR admin...`);
+            // buka modal dan tampilkan mode QR
+            openCamModal(
+                mode === 'in' ? 'Scan QR Check-in' : 'Scan QR Check-out',
+                'Arahkan kamera belakang ke QR dari admin'
+            );
 
-                // pastikan kamera selfie mati kalau sebelumnya hidup
+            qrWrap.classList.remove('hidden');
+            selfieWrap.classList.add('hidden');
+
+            try {
+                setCamStatus('Membuka kamera QR…');
+
+                // pastikan kamera selfie mati
                 stopSelfie();
 
-                // start QR reader
-                if (reader) {
-                    await stopQrScanner();
-                }
+                // stop reader lama kalau ada
+                await stopQrScanner();
 
                 reader = new Html5Qrcode("qrReader");
+
                 await reader.start(
                     { facingMode: "environment" },
                     { fps: 10, qrbox: 240 },
@@ -294,19 +301,20 @@
                         scannedToken = (decodedText || "").trim();
                         if (!scannedToken) return;
 
-                        // stop QR segera agar tidak double trigger
+                        // stop QR camera segera agar tidak double trigger
                         await stopQrScanner();
 
-                        setScan("QR valid ✅ mempersiapkan selfie...");
+                        setCamStatus("QR valid ✅ Menyiapkan selfie…");
 
-                        // lanjut selfie auto + countdown
+                        // langsung pindah ke selfie + countdown + submit
                         await startSelfieAndCountdownThenSubmit();
                     },
                     () => { }
                 );
 
+                setCamStatus('Silakan scan QR…');
             } catch (e) {
-                setScan("kamera QR gagal dibuka. izinkan kamera.");
+                setCamStatus('Gagal membuka kamera QR. Pastikan izin kamera diberikan.');
                 busy = false;
             }
         }
@@ -356,56 +364,60 @@
             return new Promise(resolve => canvas.toBlob(resolve, "image/jpeg", 0.9));
         }
 
-        async function countdown(seconds) {
-            for (let i = seconds; i >= 1; i--) {
-                setScan(`selfie otomatis dalam ${i}...`);
-                await new Promise(r => setTimeout(r, 1000));
-            }
-        }
+async function countdown(seconds){
+  for(let i=seconds; i>=1; i--){
+    setCamStatus(`Selfie otomatis dalam ${i}…`);
+    await new Promise(r => setTimeout(r, 1000));
+  }
+}
 
         async function startSelfieAndCountdownThenSubmit() {
             try {
-                // validasi data wajib sebelum lanjut
                 if (!deviceHash || !geo || !scannedToken || !currentMode) {
-                    setScan("data belum lengkap. ulangi proses.");
+                    setCamStatus("Data belum lengkap. Ulangi proses.");
                     busy = false;
                     return;
                 }
 
-                setScan("membuka kamera selfie...");
+                // tampilkan mode selfie
+                camTitle.textContent = currentMode === 'in' ? 'Selfie Check-in' : 'Selfie Check-out';
+                camSubtitle.textContent = 'Ambil selfie dari kamera depan (bukan galeri)';
+                qrWrap.classList.add('hidden');
+                selfieWrap.classList.remove('hidden');
+
+                setCamStatus("Membuka kamera selfie…");
                 await startSelfieCamera();
 
-                await countdown(3);
+                await countdown(3); // kamu bisa ubah 3 -> 5 kalau mau
 
-                setScan("mengambil foto...");
+                setCamStatus("Mengambil foto…");
                 const blob = await captureSelfieBlob();
                 if (!blob) {
-                    setScan("gagal ambil foto.");
+                    setCamStatus("Gagal ambil foto.");
                     stopSelfie();
                     busy = false;
                     return;
                 }
 
-                setScan("mengirim absensi...");
+                setCamStatus("Mengirim absensi…");
                 const ok = await submitAttendance(currentMode, scannedToken, blob);
 
                 stopSelfie();
 
                 if (ok) {
-                    setScan(`berhasil ✅ ${currentMode === 'in' ? 'CHECK-IN' : 'CHECK-OUT'}`);
-                    setTimeout(() => window.location.reload(), 900);
+                    setCamStatus(`Berhasil ✅ ${currentMode === 'in' ? 'CHECK-IN' : 'CHECK-OUT'}`);
+                    setTimeout(() => window.location.reload(), 800);
                 } else {
-                    // submitAttendance sudah set message error
+                    // submitAttendance sudah set pesan error via setScan/setCamStatus
                     busy = false;
                 }
 
             } catch (e) {
-                setScan("error: " + (e?.message || "unknown"));
+                setCamStatus("Error: " + (e?.message || "unknown"));
                 stopSelfie();
                 busy = false;
             }
         }
-
         // ---------- SUBMIT ----------
         async function submitAttendance(mode, qrToken, selfieBlob) {
             try {
@@ -427,6 +439,7 @@
 
                 if (!res.ok) {
                     setScan(json.message || "gagal.");
+                     setCamStatus(json.message || "gagal.");
                     return false;
                 }
 
