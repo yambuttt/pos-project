@@ -112,10 +112,26 @@ class ProductController extends Controller
 
     public function destroy(Product $product)
     {
+        // Kalau produk sudah pernah dipakai di transaksi, jangan delete (biar histori aman).
+        $hasSales = \App\Models\SaleItem::where('product_id', $product->id)->exists();
+
+        if ($hasSales) {
+            // cukup arsipkan / nonaktifkan
+            $product->update([
+                'is_active' => false,
+                'updated_by' => auth()->id(),
+            ]);
+
+            return back()->with('success', 'Produk tidak bisa dihapus karena sudah pernah terjual. Produk di-nonaktifkan (archived).');
+        }
+
+        // Kalau belum pernah dipakai transaksi, baru boleh delete beneran.
         if ($product->image_path) {
             Storage::disk('public')->delete($product->image_path);
         }
+
         $product->delete();
+
         return back()->with('success', 'Produk dihapus.');
     }
 
