@@ -133,11 +133,19 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::post('/admin/attendance/devices/{device}/revoke', [EmployeeDeviceController::class, 'revoke'])->name('admin.attendance.devices.revoke');
     Route::post('/admin/attendance/users/{user}/reset-devices', [EmployeeDeviceController::class, 'resetUserDevices'])->name('admin.attendance.users.reset_devices');
     Route::get('/admin/attendance/history', [AttendanceHistoryController::class, 'index'])
-    ->name('admin.attendance.history');
+        ->name('admin.attendance.history');
     Route::get('/admin/attendance/photo/{attendance}/{type}', [AttendancePhotoController::class, 'show'])
-    ->name('admin.attendance.photo');
+        ->name('admin.attendance.photo');
     Route::get('/admin/attendance/qr/token', [\App\Http\Controllers\Admin\AttendanceQrController::class, 'token'])
-    ->name('admin.attendance.qr.token');
+        ->name('admin.attendance.qr.token');
+    Route::get('/admin/users/{user}/edit', [CashierController::class, 'edit'])->name('admin.cashiers.edit');
+    Route::put('/admin/users/{user}', [CashierController::class, 'update'])->name('admin.cashiers.update');
+    Route::delete('/admin/users/{user}', [CashierController::class, 'destroy'])->name('admin.cashiers.destroy');
+
+    // Shortcut "Akun Saya" -> edit user yang sedang login
+    Route::get('/admin/account', function () {
+        return redirect()->route('admin.cashiers.edit', auth()->user());
+    })->name('admin.account');
 
 });
 
@@ -192,8 +200,8 @@ Route::prefix('pegawai')->name('pegawai.')->middleware(['auth', 'role:pegawai'])
     // submit check-in/out (AJAX)
     Route::post('/absensi/submit', [AttendanceV2Controller::class, 'submit'])->name('attendance.submit');
     Route::get('/absensi/history', [PegawaiAttendanceHistoryController::class, 'index'])
-    ->name('attendance.history');
+        ->name('attendance.history');
 
-Route::get('/absensi/photo/{attendance}/{type}', [PegawaiAttendancePhotoController::class, 'show'])
-    ->name('attendance.photo');
+    Route::get('/absensi/photo/{attendance}/{type}', [PegawaiAttendancePhotoController::class, 'show'])
+        ->name('attendance.photo');
 });
