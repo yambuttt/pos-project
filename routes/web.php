@@ -136,6 +136,8 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     ->name('admin.attendance.history');
     Route::get('/admin/attendance/photo/{attendance}/{type}', [AttendancePhotoController::class, 'show'])
     ->name('admin.attendance.photo');
+    Route::get('/admin/attendance/qr/token', [\App\Http\Controllers\Admin\AttendanceQrController::class, 'token'])
+    ->name('admin.attendance.qr.token');
 
 });
 

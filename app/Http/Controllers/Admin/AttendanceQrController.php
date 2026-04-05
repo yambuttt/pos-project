@@ -34,4 +34,32 @@ class AttendanceQrController extends Controller
 
         return redirect()->route('admin.attendance.qr')->with('ok', "QR {$data['mode']} dibuat (berlaku {$ttl} detik).");
     }
+
+    public function token(\Illuminate\Http\Request $request)
+    {
+        $data = $request->validate([
+            'mode' => ['required', 'in:in,out'],
+        ]);
+
+        $ttl = (int) config('attendance.qr_ttl_seconds', 15);  // set 10-20 detik
+        $slot = (int) floor(time() / $ttl);                    // time slot berubah tiap ttl detik
+
+        $payload = [
+            'm' => $data['mode'],
+            's' => $slot,
+            'v' => 1, // versioning kalau nanti format berubah
+        ];
+
+        $json = json_encode($payload);
+        $sig = hash_hmac('sha256', $json, config('app.key'));
+
+        // token final (ringkas)
+        $token = rtrim(strtr(base64_encode($json), '+/', '-_'), '=') . '.' . $sig;
+
+        return response()->json([
+            'token' => $token,
+            'expires_in' => $ttl - (time() % $ttl),
+            'slot' => $slot,
+        ]);
+    }
 }
