@@ -53,14 +53,17 @@ class AttendanceHistoryController extends Controller
         $in = \Carbon\Carbon::parse($checkInAt);
         $out = \Carbon\Carbon::parse($checkOutAt);
 
-        // kalau data aneh (checkout lebih kecil dari checkin), anggap null
         if ($out->lt($in))
             return null;
 
-        $minutes = $in->diffInMinutes($out);
-        $hours = intdiv($minutes, 60);
-        $mins = $minutes % 60;
+        $seconds = $in->diffInSeconds($out);
 
-        return str_pad((string) $hours, 2, '0', STR_PAD_LEFT) . ':' . str_pad((string) $mins, 2, '0', STR_PAD_LEFT);
+        $hours = intdiv($seconds, 3600);
+        $minutes = intdiv($seconds % 3600, 60);
+        $secs = $seconds % 60;
+
+        return str_pad((string) $hours, 2, '0', STR_PAD_LEFT) . ':' .
+            str_pad((string) $minutes, 2, '0', STR_PAD_LEFT) . ':' .
+            str_pad((string) $secs, 2, '0', STR_PAD_LEFT);
     }
 }
