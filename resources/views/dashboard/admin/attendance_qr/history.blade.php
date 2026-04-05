@@ -79,7 +79,7 @@
                                 </td>
                                 <td class="py-3 pr-4">
                                     @php $dur = $workDuration($a->check_in_at, $a->check_out_at); @endphp
-                                    <div class="font-semibold">{{ $dur ?? '--' }}</div>
+                                   {{ $a->work_duration ?? '--' }}
                                     @if(!$dur)
                                         <div class="text-xs text-white/50">belum checkout</div>
                                     @endif
@@ -156,7 +156,7 @@
                                 </td>
                                 <td class="py-3 pr-4">
                                     @php $dur = $workDuration($a->check_in_at, $a->check_out_at); @endphp
-                                    <div class="font-semibold">{{ $dur ?? '--' }}</div>
+                                    {{ $a->work_duration ?? '--' }}
                                 </td>
 
                                 <td class="py-3 pr-4">
