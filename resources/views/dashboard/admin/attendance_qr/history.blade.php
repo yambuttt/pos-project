@@ -99,8 +99,13 @@
 
                                 <td class="py-3 pr-4">
                                     @if($url)
-                                        <a href="{{ $url }}" target="_blank" class="text-yellow-400 hover:underline text-xs">Lihat
-                                            Foto</a>
+                                        <button
+  type="button"
+  onclick="openPhoto('{{ route('admin.attendance.photo', ['attendance' => $a->id, 'type' => 'in']) }}')"
+  class="text-yellow-400 hover:underline text-xs"
+>
+  Lihat Foto
+</button>
                                     @else
                                         <span class="text-xs text-white/50">-</span>
                                     @endif
@@ -168,8 +173,13 @@
 
                                 <td class="py-3 pr-4">
                                     @if($url)
-                                        <a href="{{ $url }}" target="_blank" class="text-yellow-400 hover:underline text-xs">Lihat
-                                            Foto</a>
+                                        <button
+  type="button"
+  onclick="openPhoto('{{ route('admin.attendance.photo', ['attendance' => $a->id, 'type' => 'in']) }}')"
+  class="text-yellow-400 hover:underline text-xs"
+>
+  Lihat Foto
+</button>
                                     @else
                                         <span class="text-xs text-white/50">-</span>
                                     @endif
@@ -186,4 +196,44 @@
         </div>
 
     </div>
+    <div id="photoModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/70 p-4">
+        <div class="w-full max-w-3xl overflow-hidden rounded-2xl border border-white/10 bg-[#0f0f0f]">
+            <div class="flex items-center justify-between border-b border-white/10 px-4 py-3">
+                <div class="text-sm font-semibold text-white">Foto Absensi</div>
+                <button id="closePhotoModal"
+                    class="rounded-lg border border-white/15 bg-white/[0.06] px-3 py-1.5 text-xs text-white/80 hover:bg-white/[0.10]">
+                    Tutup
+                </button>
+            </div>
+            <div class="p-4">
+                <img id="photoModalImg" src="" alt="Foto Absensi" class="mx-auto max-h-[75vh] w-auto rounded-xl" />
+            </div>
+        </div>
+    </div>
+
+    <script>
+  const modal = document.getElementById('photoModal');
+  const img = document.getElementById('photoModalImg');
+  const btnClose = document.getElementById('closePhotoModal');
+
+  function openPhoto(url){
+    img.src = url;
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+  }
+
+  function closePhoto(){
+    img.src = '';
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+  }
+
+  btnClose.addEventListener('click', closePhoto);
+  modal.addEventListener('click', (e) => {
+    if(e.target === modal) closePhoto();
+  });
+
+  // expose global supaya bisa dipanggil dari onclick
+  window.openPhoto = openPhoto;
+</script>
 @endsection
