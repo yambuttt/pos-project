@@ -2,92 +2,124 @@
 @section('title', 'Kitchen Display')
 
 @section('body')
-  <div class="flex items-center justify-between gap-3">
-    <div>
-      <h1 class="text-2xl font-semibold">Kitchen Display</h1>
-      <p class="text-sm text-slate-600">Antrian pesanan masuk dari kasir (real-time).</p>
-    </div>
-    <button id="btnEnableSound" type="button"
-      class="rounded-2xl border border-slate-200/70 bg-white/60 px-4 py-2 text-sm shadow-sm backdrop-blur-2xl hover:bg-white/80">
-      🔊 Enable Sound
-    </button>
-
-    <div class="rounded-2xl border border-slate-200/70 bg-white/60 px-4 py-2 text-sm shadow-sm backdrop-blur-2xl">
-      <span class="text-slate-500">Update:</span> <span id="lastUpdate" class="font-semibold">-</span>
-    </div>
-    {{-- Filters --}}
-    <div class="mt-4 rounded-2xl border border-slate-200/70 bg-white/60 p-3 shadow-sm backdrop-blur-2xl">
-      <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
-          <div>
-            <label class="text-xs text-slate-600">Filter Tipe</label>
-            <select id="filterType"
-              class="mt-1 w-full rounded-xl border border-slate-200/70 bg-white/70 px-3 py-2 text-sm outline-none">
-              <option value="all">Semua</option>
-              <option value="dine_in">Dine In</option>
-              <option value="takeaway">Take Away</option>
-            </select>
-          </div>
-
-          <div>
-            <label class="text-xs text-slate-600">Filter Meja</label>
-            <select id="filterTable"
-              class="mt-1 w-full rounded-xl border border-slate-200/70 bg-white/70 px-3 py-2 text-sm outline-none">
-              <option value="all">Semua Meja</option>
-            </select>
-          </div>
-
-          <div>
-            <label class="text-xs text-slate-600">Sort</label>
-            <select id="sortMode"
-              class="mt-1 w-full rounded-xl border border-slate-200/70 bg-white/70 px-3 py-2 text-sm outline-none">
-              <option value="time">Waktu</option>
-              <option value="table_time">Meja → Waktu</option>
-            </select>
-          </div>
+  {{-- HEADER --}}
+  <div class="rounded-[26px] border border-slate-200/70 bg-white/60 p-4 shadow-sm backdrop-blur-2xl sm:p-6">
+    <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+      <div class="min-w-0">
+        <div class="inline-flex items-center gap-2 rounded-full border border-slate-200/70 bg-white/70 px-3 py-1 text-xs text-slate-600">
+          <span class="h-1.5 w-1.5 rounded-full bg-sky-500"></span>
+          Kitchen • Real-time Queue
         </div>
 
-        <div class="text-xs text-slate-500">
-          Tips: pilih “Meja” hanya berlaku untuk Dine In.
+        <h1 class="mt-2 text-2xl font-extrabold tracking-tight text-slate-900 sm:text-3xl">
+          Kitchen Display
+        </h1>
+        <p class="mt-1 text-sm text-slate-600">
+          Antrian pesanan masuk dari kasir (real-time). Gunakan filter untuk fokus ke tipe & meja.
+        </p>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-2">
+        <button id="btnEnableSound" type="button"
+          class="rounded-2xl border border-slate-200/70 bg-white/70 px-4 py-2 text-sm font-semibold shadow-sm backdrop-blur-2xl hover:bg-white">
+          🔊 Enable Sound
+        </button>
+
+        <div class="rounded-2xl border border-slate-200/70 bg-white/70 px-4 py-2 text-sm shadow-sm backdrop-blur-2xl">
+          <span class="text-slate-500">Update:</span>
+          <span id="lastUpdate" class="font-semibold text-slate-900">-</span>
         </div>
       </div>
     </div>
+
+    {{-- FILTERS --}}
+    <div class="mt-4 rounded-2xl border border-slate-200/70 bg-white/70 p-4">
+      <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div>
+          <label class="text-xs font-semibold text-slate-600">Filter Tipe</label>
+          <select id="filterType"
+            class="mt-1 w-full rounded-xl border border-slate-200/70 bg-white px-3 py-2 text-sm outline-none focus:border-slate-300">
+            <option value="all">Semua</option>
+            <option value="dine_in">Dine In</option>
+            <option value="takeaway">Take Away</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="text-xs font-semibold text-slate-600">Filter Meja</label>
+          <select id="filterTable"
+            class="mt-1 w-full rounded-xl border border-slate-200/70 bg-white px-3 py-2 text-sm outline-none focus:border-slate-300">
+            <option value="all">Semua Meja</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="text-xs font-semibold text-slate-600">Sort</label>
+          <select id="sortMode"
+            class="mt-1 w-full rounded-xl border border-slate-200/70 bg-white px-3 py-2 text-sm outline-none focus:border-slate-300">
+            <option value="time">Waktu</option>
+            <option value="table_time">Meja → Waktu</option>
+          </select>
+        </div>
+
+        <div class="flex items-end">
+          <div class="w-full rounded-xl border border-slate-200/70 bg-white/70 px-3 py-2 text-xs text-slate-600">
+            Tips: filter “Meja” efektif untuk <span class="font-semibold text-slate-900">Dine In</span>.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    @if(session('success'))
+      <div class="mt-4 rounded-2xl border border-emerald-200/70 bg-emerald-200/40 px-4 py-3 text-sm font-semibold text-emerald-900">
+        ✅ {{ session('success') }}
+      </div>
+    @endif
   </div>
 
-  @if(session('success'))
-    <div class="mt-4 rounded-2xl border border-slate-200/70 bg-white/60 px-4 py-3 text-sm shadow-sm backdrop-blur-2xl">
-      ✅ {{ session('success') }}
-    </div>
-  @endif
-
+  {{-- COLUMNS --}}
   <div class="mt-5 grid grid-cols-1 gap-4 lg:grid-cols-3">
     {{-- NEW --}}
-    <div class="rounded-[26px] border border-slate-200/70 bg-white/55 p-4 shadow-sm backdrop-blur-2xl">
+    <section class="rounded-[26px] border border-slate-200/70 bg-white/55 p-4 shadow-sm backdrop-blur-2xl">
       <div class="flex items-center justify-between">
-        <h2 class="text-lg font-semibold">Baru Masuk</h2>
-        <span id="countNew" class="rounded-xl bg-slate-900/5 px-3 py-1 text-sm text-slate-700">0</span>
+        <div class="flex items-center gap-2">
+          <span class="inline-flex h-8 w-8 items-center justify-center rounded-xl border border-slate-200/70 bg-white/70">🆕</span>
+          <h2 class="text-lg font-extrabold tracking-tight text-slate-900">Baru Masuk</h2>
+        </div>
+        <span id="countNew"
+          class="rounded-xl border border-slate-200/70 bg-white/70 px-3 py-1 text-sm font-semibold text-slate-700">0</span>
       </div>
-      <div id="colNew" class="mt-3 space-y-3"></div>
-    </div>
+      <div class="mt-3 space-y-3" id="colNew"></div>
+    </section>
 
     {{-- PROCESSING --}}
-    <div class="rounded-[26px] border border-slate-200/70 bg-white/55 p-4 shadow-sm backdrop-blur-2xl">
+    <section class="rounded-[26px] border border-slate-200/70 bg-white/55 p-4 shadow-sm backdrop-blur-2xl">
       <div class="flex items-center justify-between">
-        <h2 class="text-lg font-semibold">Sedang Diproses</h2>
-        <span id="countProc" class="rounded-xl bg-slate-900/5 px-3 py-1 text-sm text-slate-700">0</span>
+        <div class="flex items-center gap-2">
+          <span class="inline-flex h-8 w-8 items-center justify-center rounded-xl border border-slate-200/70 bg-white/70">🔥</span>
+          <h2 class="text-lg font-extrabold tracking-tight text-slate-900">Sedang Diproses</h2>
+        </div>
+        <span id="countProc"
+          class="rounded-xl border border-slate-200/70 bg-white/70 px-3 py-1 text-sm font-semibold text-slate-700">0</span>
       </div>
-      <div id="colProc" class="mt-3 space-y-3"></div>
-    </div>
+      <div class="mt-3 space-y-3" id="colProc"></div>
+    </section>
 
     {{-- DONE --}}
-    <div class="rounded-[26px] border border-slate-200/70 bg-white/55 p-4 shadow-sm backdrop-blur-2xl">
-      <div class="flex items-center justify-between">
-        <h2 class="text-lg font-semibold">Selesai</h2>
-        <p class="mt-1 text-xs text-slate-500">READY + DELIVERED</p>
-        <span id="countDone" class="rounded-xl bg-slate-900/5 px-3 py-1 text-sm text-slate-700">0</span>
+    <section class="rounded-[26px] border border-slate-200/70 bg-white/55 p-4 shadow-sm backdrop-blur-2xl">
+      <div class="flex items-start justify-between gap-3">
+        <div class="flex items-center gap-2">
+          <span class="inline-flex h-8 w-8 items-center justify-center rounded-xl border border-slate-200/70 bg-white/70">✅</span>
+          <div>
+            <h2 class="text-lg font-extrabold tracking-tight text-slate-900">Selesai</h2>
+            <p class="text-xs text-slate-500">READY + DELIVERED</p>
+          </div>
+        </div>
+        <span id="countDone"
+          class="rounded-xl border border-slate-200/70 bg-white/70 px-3 py-1 text-sm font-semibold text-slate-700">0</span>
       </div>
-      <div id="colDone" class="mt-3 space-y-3"></div>
-    </div>
+      <div class="mt-3 space-y-3" id="colDone"></div>
+    </section>
   </div>
 
   <form id="actionForm" method="POST" class="hidden">
@@ -303,7 +335,6 @@
       for (const [id, name] of sorted) options.push({ value: id, label: name });
 
       filterTable.innerHTML = options.map(o => `<option value="${escapeHtml(o.value)}">${escapeHtml(o.label)}</option>`).join('');
-
       const stillExists = options.some(o => o.value === current);
       filterTable.value = stillExists ? current : 'all';
     }
@@ -370,7 +401,6 @@
       const timeText = (sale.created_at ?? '').replace('T', ' ').slice(0, 16);
       const queueLabel = `Q-${pad3(queueNo || 0)}`;
 
-      // ========= ITEM CHECKLIST + TIMER (UPDATED) =========
       const itemsHtml = (sale.items || []).map((it) => {
         const name = it.product?.name ?? ('Product#' + it.product_id);
         const note = (it.note || '').trim();
@@ -387,11 +417,10 @@
 
         const timeBadge = doneAtItem
           ? `<span class="ml-2 inline-flex items-center rounded-lg border border-slate-200/70 bg-white/70 px-2 py-0.5 text-[11px] text-slate-700">
-        ⏱ ${formatDuration(itemSec)}
-      </span>`
+              ⏱ ${formatDuration(itemSec)}
+            </span>`
           : '';
 
-        // qty 1 => toggle check
         if (qty <= 1) {
           const checked = cooked >= 1;
           return `
@@ -415,7 +444,6 @@
               `;
         }
 
-        // qty > 1 => boxes per pcs
         const boxes = Array.from({ length: qty }).map((_, idx) => {
           const done = (idx + 1) <= cooked;
           return `
@@ -444,10 +472,7 @@
               </li>
             `;
       }).join('') || `<li class="text-slate-500">Tidak ada item</li>`;
-      // ================================================
 
-      // Border:
-      // delivered => emerald, done => amber, others => SLA
       let borderClass = '';
       if (sale.kitchen_status === 'delivered') borderClass = 'border-l-4 border-emerald-400';
       else if (sale.kitchen_status === 'done') borderClass = 'border-l-4 border-amber-400';
@@ -478,13 +503,12 @@
                 Selesai
               </button>`;
       }
-      // done/delivered: tidak ada tombol di kitchen
 
       const orderTypeBadge = renderOrderTypeBadge(sale);
       const kitchenStatusBadge = renderKitchenStatusBadge(sale);
 
       return `
-            <div class="rounded-2xl border border-slate-200/70 bg-white/60 p-4 shadow-sm backdrop-blur-2xl ${borderClass}">
+            <div class="rounded-2xl border border-slate-200/70 bg-white/70 p-4 shadow-sm backdrop-blur-2xl ${borderClass}">
               <div class="flex items-start justify-between gap-3">
                 <div class="min-w-0">
                   <div class="flex flex-wrap items-center gap-2">
@@ -517,7 +541,6 @@
     // ==========================
     let initialLoaded = false;
     let lastNewIds = new Set();
-
     let cachedSales = [];
 
     function sortGroup(group, which) {
@@ -540,7 +563,6 @@
           const da = getTime(a)?.getTime?.() ?? 0;
           const db = getTime(b)?.getTime?.() ?? 0;
 
-          // NEW/PROC: oldest first; DONE: newest first
           if (which === 'done') return db - da;
           return da - db;
         });
@@ -559,8 +581,6 @@
 
       const groupNewRaw = filtered.filter(s => (s.kitchen_status || 'new') === 'new');
       const groupProcRaw = filtered.filter(s => s.kitchen_status === 'processing');
-
-      // ✅ Selesai = done + delivered
       const groupDoneRaw = filtered.filter(s => s.kitchen_status === 'done' || s.kitchen_status === 'delivered');
 
       const groupNew = sortGroup(groupNewRaw, 'new');
@@ -583,7 +603,6 @@
       lastUpdate.textContent = (data.now || '-');
       cachedSales = data.sales || [];
 
-      // ping jika ada NEW order baru (berdasarkan data mentah)
       const groupNew = cachedSales.filter(s => (s.kitchen_status || 'new') === 'new');
       const newIdsNow = new Set(groupNew.map(s => s.id));
 
@@ -601,17 +620,11 @@
       renderFromCache();
     }
 
-    // ==========================
-    // FILTER events
-    // ==========================
     [filterType, filterTable, sortMode].forEach(el => {
       if (!el) return;
       el.addEventListener('change', () => renderFromCache());
     });
 
-    // ==========================
-    // HELPER: POST (AJAX) untuk cook/uncook item
-    // ==========================
     async function postKitchen(url) {
       const token = document.querySelector('#actionForm input[name=_token]')?.value;
       const res = await fetch(url, {
@@ -624,9 +637,6 @@
       return res.ok;
     }
 
-    // ==========================
-    // ITEM ACTIONS (cook / uncook)
-    // ==========================
     document.addEventListener('click', async (e) => {
       const btn = e.target.closest('button[data-item-action][data-item-id]');
       if (!btn) return;
@@ -648,9 +658,6 @@
       }
     });
 
-    // ==========================
-    // ACTION BUTTONS (order-level: process / done)
-    // ==========================
     document.addEventListener('click', (e) => {
       const btn = e.target.closest('button[data-action]');
       if (!btn) return;
@@ -669,9 +676,6 @@
       form.submit();
     });
 
-    // ==========================
-    // START
-    // ==========================
     loadOrders();
     setInterval(loadOrders, 4000);
     setInterval(renderFromCache, 1000);
