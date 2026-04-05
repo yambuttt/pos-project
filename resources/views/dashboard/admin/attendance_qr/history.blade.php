@@ -33,9 +33,21 @@
             <div class="mt-1 text-xs text-white/60">Pilih tanggal untuk melihat siapa saja yang check-in & check-out.</div>
         </div>
 
-        <form method="GET" action="{{ route('admin.attendance.history') }}" class="flex items-center gap-2">
+        <form method="GET" action="{{ route('admin.attendance.history') }}"
+            class="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-2">
             <input type="date" name="date" value="{{ $date }}"
                 class="rounded-xl border border-yellow-500/20 bg-white/[0.04] px-3 py-2 text-sm text-white outline-none" />
+
+            <select name="user_id"
+                class="rounded-xl border border-yellow-500/20 bg-white/[0.04] px-3 py-2 text-sm text-white outline-none">
+                <option value="">Semua Pegawai</option>
+                @foreach($employees as $e)
+                    <option value="{{ $e->id }}" @selected((string) $selectedUserId === (string) $e->id)>
+                        {{ $e->name }}{{ $e->email ? ' • ' . $e->email : '' }}
+                    </option>
+                @endforeach
+            </select>
+
             <button class="rounded-xl bg-yellow-500 px-4 py-2 text-sm font-semibold text-black hover:bg-yellow-400">
                 Tampilkan
             </button>
@@ -92,11 +104,14 @@
                                         {{ $a->check_in_lat ?? '-' }}, {{ $a->check_in_lng ?? '-' }}
                                     </div>
                                     @if($a->check_in_lat && $a->check_in_lng)
-                                        <a class="text-xs text-yellow-400 hover:underline" target="_blank"
-                                            href="https://www.google.com/maps?q={{ $a->check_in_lat }},{{ $a->check_in_lng }}">
-                                            Lihat Map
-                                        </a>
-                                    @endif
+  <button
+    type="button"
+    onclick="openMap({{ $a->check_in_lat }}, {{ $a->check_in_lng }})"
+    class="text-xs text-yellow-400 hover:underline"
+  >
+    Lihat Map
+  </button>
+@endif
                                 </td>
 
                                 <td class="py-3 pr-4">
@@ -164,11 +179,14 @@
                                         {{ $a->check_out_lat ?? '-' }}, {{ $a->check_out_lng ?? '-' }}
                                     </div>
                                     @if($a->check_out_lat && $a->check_out_lng)
-                                        <a class="text-xs text-yellow-400 hover:underline" target="_blank"
-                                            href="https://www.google.com/maps?q={{ $a->check_out_lat }},{{ $a->check_out_lng }}">
-                                            Lihat Map
-                                        </a>
-                                    @endif
+  <button
+    type="button"
+    onclick="openMap({{ $a->check_out_lat }}, {{ $a->check_out_lng }})"
+    class="text-xs text-yellow-400 hover:underline"
+  >
+    Lihat Map
+  </button>
+@endif
                                 </td>
 
                                 <td class="py-3 pr-4">
@@ -209,6 +227,34 @@
         </div>
     </div>
 
+    <div id="mapModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/70 p-4">
+  <div class="w-full max-w-4xl overflow-hidden rounded-2xl border border-white/10 bg-[#0f0f0f]">
+    <div class="flex items-center justify-between border-b border-white/10 px-4 py-3">
+      <div class="text-sm font-semibold text-white">Lokasi Absensi</div>
+      <button id="closeMapModal"
+        class="rounded-lg border border-white/15 bg-white/[0.06] px-3 py-1.5 text-xs text-white/80 hover:bg-white/[0.10]">
+        Tutup
+      </button>
+    </div>
+
+    <div class="p-4">
+      <div class="overflow-hidden rounded-xl border border-white/10">
+        <iframe
+          id="mapFrame"
+          src=""
+          width="100%"
+          height="520"
+          style="border:0;"
+          loading="lazy"
+          referrerpolicy="no-referrer-when-downgrade"
+          allowfullscreen
+        ></iframe>
+      </div>
+      <div id="mapCoords" class="mt-2 text-xs text-white/60"></div>
+    </div>
+  </div>
+</div>
+
     <script>
         const modal = document.getElementById('photoModal');
         const img = document.getElementById('photoModalImg');
@@ -234,4 +280,35 @@
         // expose global supaya bisa dipanggil dari onclick
         window.openPhoto = openPhoto;
     </script>
+
+    <script>
+  // MAP MODAL
+  const mapModal = document.getElementById('mapModal');
+  const mapFrame = document.getElementById('mapFrame');
+  const mapCoords = document.getElementById('mapCoords');
+  const closeMapBtn = document.getElementById('closeMapModal');
+
+  function openMap(lat, lng){
+    // Embed Google Maps dengan titik koordinat.
+    // "q=lat,lng" akan menampilkan marker di titik itu.
+    const url = `https://www.google.com/maps?q=${lat},${lng}&z=18&output=embed`;
+
+    mapFrame.src = url;
+    mapCoords.textContent = `Koordinat: ${lat}, ${lng}`;
+
+    mapModal.classList.remove('hidden');
+    mapModal.classList.add('flex');
+  }
+
+  function closeMap(){
+    mapFrame.src = '';
+    mapModal.classList.add('hidden');
+    mapModal.classList.remove('flex');
+  }
+
+  closeMapBtn.addEventListener('click', closeMap);
+  mapModal.addEventListener('click', (e) => { if(e.target === mapModal) closeMap(); });
+
+  window.openMap = openMap;
+</script>
 @endsection
