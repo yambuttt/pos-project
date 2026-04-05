@@ -79,7 +79,7 @@
                                 </td>
                                 <td class="py-3 pr-4">
                                     @php $dur = $workDuration($a->check_in_at, $a->check_out_at); @endphp
-                                   {{ $a->work_duration ?? '--' }}
+                                    {{ $a->work_duration ?? '--' }}
                                     @if(!$dur)
                                         <div class="text-xs text-white/50">belum checkout</div>
                                     @endif
@@ -98,17 +98,15 @@
                                 </td>
 
                                 <td class="py-3 pr-4">
-                                    @if($a->check_in_photo_path && $a->check_in_attendance_id)
-  <button
-    type="button"
-    onclick="openPhoto('{{ route('admin.attendance.photo', ['attendance' => $a->check_in_attendance_id, 'type' => 'in']) }}')"
-    class="text-yellow-400 hover:underline text-xs"
-  >
-    Lihat Foto
-  </button>
-@else
-  <span class="text-xs text-white/50">-</span>
-@endif
+                                    @if($a->check_in_photo_path)
+                                        <button type="button"
+                                            onclick="openPhoto('{{ route('admin.attendance.photo', ['attendance' => $a->id, 'type' => 'in']) }}')"
+                                            class="text-yellow-400 hover:underline text-xs">
+                                            Lihat Foto
+                                        </button>
+                                    @else
+                                        <span class="text-xs text-white/50">-</span>
+                                    @endif
                                 </td>
                             </tr>
                         @empty
@@ -172,17 +170,15 @@
                                 </td>
 
                                 <td class="py-3 pr-4">
-                                    @if($a->check_out_photo_path && $a->check_out_attendance_id)
-  <button
-    type="button"
-    onclick="openPhoto('{{ route('admin.attendance.photo', ['attendance' => $a->check_out_attendance_id, 'type' => 'out']) }}')"
-    class="text-yellow-400 hover:underline text-xs"
-  >
-    Lihat Foto
-  </button>
-@else
-  <span class="text-xs text-white/50">-</span>
-@endif
+                                    @if($a->check_out_photo_path)
+                                        <button type="button"
+                                            onclick="openPhoto('{{ route('admin.attendance.photo', ['attendance' => $a->id, 'type' => 'out']) }}')"
+                                            class="text-yellow-400 hover:underline text-xs">
+                                            Lihat Foto
+                                        </button>
+                                    @else
+                                        <span class="text-xs text-white/50">-</span>
+                                    @endif
                                 </td>
                             </tr>
                         @empty
@@ -212,28 +208,28 @@
     </div>
 
     <script>
-  const modal = document.getElementById('photoModal');
-  const img = document.getElementById('photoModalImg');
-  const btnClose = document.getElementById('closePhotoModal');
+        const modal = document.getElementById('photoModal');
+        const img = document.getElementById('photoModalImg');
+        const btnClose = document.getElementById('closePhotoModal');
 
-  function openPhoto(url){
-    img.src = url;
-    modal.classList.remove('hidden');
-    modal.classList.add('flex');
-  }
+        function openPhoto(url) {
+            img.src = url;
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
 
-  function closePhoto(){
-    img.src = '';
-    modal.classList.add('hidden');
-    modal.classList.remove('flex');
-  }
+        function closePhoto() {
+            img.src = '';
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
 
-  btnClose.addEventListener('click', closePhoto);
-  modal.addEventListener('click', (e) => {
-    if(e.target === modal) closePhoto();
-  });
+        btnClose.addEventListener('click', closePhoto);
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) closePhoto();
+        });
 
-  // expose global supaya bisa dipanggil dari onclick
-  window.openPhoto = openPhoto;
-</script>
+        // expose global supaya bisa dipanggil dari onclick
+        window.openPhoto = openPhoto;
+    </script>
 @endsection
