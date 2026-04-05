@@ -58,25 +58,67 @@
     </div>
 
     <script src="https://unpkg.com/html5-qrcode"></script>
+    <script src="https://unpkg.com/html5-qrcode"></script>
     <script>
         const csrf = document.querySelector('meta[name="csrf-token"]').content;
 
+        // ambil status attendance dari server (blade)
+        const HAS_CHECKIN = {{ $attendance?->check_in_at ? 'true' : 'false' }};
+        const HAS_CHECKOUT = {{ $attendance?->check_out_at ? 'true' : 'false' }};
+
         let deviceHash = null;
         let geo = null; // {lat,lng}
-        let scannedToken = null;
+
         let reader = null;
         let selfieStream = null;
+
+        let gateOk = false;
+        let busy = false;            // mencegah double action
+        let currentMode = null;      // 'in' atau 'out'
+        let scannedToken = null;
 
         const gateStatus = document.getElementById('gateStatus');
         const scanStatus = document.getElementById('scanStatus');
         const btnInit = document.getElementById('btnInit');
         const btnCheckIn = document.getElementById('btnCheckIn');
         const btnCheckOut = document.getElementById('btnCheckOut');
+
         const video = document.getElementById('selfieVideo');
         const canvas = document.getElementById('selfieCanvas');
 
         function setGate(msg) { gateStatus.textContent = "Status: " + msg; }
         function setScan(msg) { scanStatus.textContent = "Status: " + msg; }
+
+        function setButtonsAfterGate() {
+            // default
+            btnCheckIn.disabled = true;
+            btnCheckOut.disabled = true;
+
+            // kalau belum gate, tetap disabled
+            if (!gateOk) return;
+
+            // kalau sudah complete hari ini
+            if (HAS_CHECKIN && HAS_CHECKOUT) {
+                setScan("kamu sudah check-in & check-out hari ini.");
+                return;
+            }
+
+            // kalau sudah check-in, hanya checkout yang aktif
+            if (HAS_CHECKIN && !HAS_CHECKOUT) {
+                btnCheckIn.disabled = true;
+                btnCheckOut.disabled = false;
+                setScan("silakan tekan Check-out untuk scan QR checkout.");
+                return;
+            }
+
+            // kalau belum check-in, hanya checkin yang aktif
+            if (!HAS_CHECKIN) {
+                btnCheckIn.disabled = false;
+                btnCheckOut.disabled = true;
+                setScan("silakan tekan Check-in untuk scan QR checkin.");
+                return;
+            }
+        }
 
         async function sha256Hex(str) {
             const enc = new TextEncoder().encode(str);
@@ -85,7 +127,7 @@
         }
 
         function buildFingerprint() {
-            // ini bukan “anti-spoof 100%”, tapi cukup untuk device locking praktis
+            // cukup untuk device locking operasional
             const parts = [
                 navigator.userAgent,
                 navigator.language,
@@ -107,83 +149,125 @@
         }
 
         async function initGate() {
-            setGate("mengambil fingerprint device...");
-            deviceHash = await sha256Hex(buildFingerprint());
+            if (busy) return;
+            busy = true;
 
-            setGate("cek lokasi...");
             try {
+                setGate("mengambil fingerprint device...");
+                deviceHash = await sha256Hex(buildFingerprint());
+
+                setGate("cek lokasi...");
                 geo = await getGeo();
+
+                setGate("cek device ke server...");
+                const res = await fetch("{{ route('pegawai.attendance.device.init') }}", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json", "X-CSRF-TOKEN": csrf },
+                    body: JSON.stringify({ device_hash: deviceHash, device_name: "Web" })
+                });
+                const json = await res.json().catch(() => ({}));
+
+                if (!res.ok) {
+                    gateOk = false;
+                    setGate(json.message || "device belum valid.");
+                    setScan("tidak bisa lanjut sebelum device approved.");
+                    setButtonsAfterGate();
+                    return;
+                }
+
+                gateOk = true;
+                setGate("device OK + lokasi OK ✅");
+                setButtonsAfterGate();
+
             } catch (e) {
+                gateOk = false;
                 setGate("gagal ambil lokasi. aktifkan GPS & izin lokasi.");
-                return;
+                setScan("menunggu verifikasi.");
+                setButtonsAfterGate();
+            } finally {
+                busy = false;
             }
-
-            setGate("cek device ke server...");
-            const res = await fetch("{{ route('pegawai.attendance.device.init') }}", {
-                method: "POST",
-                headers: { "Content-Type": "application/json", "X-CSRF-TOKEN": csrf },
-                body: JSON.stringify({ device_hash: deviceHash, device_name: "Web" })
-            });
-            const json = await res.json().catch(() => ({}));
-
-            if (!res.ok) {
-                setGate(json.message || "device belum valid.");
-                setScan("tidak bisa scan sebelum device approved.");
-                btnCheckIn.disabled = true;
-                btnCheckOut.disabled = true;
-                return;
-            }
-
-            setGate("device OK + lokasi didapat ✅");
-            setScan("silakan scan QR admin.");
-
-            btnCheckIn.disabled = false;
-            btnCheckOut.disabled = false;
-
-            startQrScanner();
         }
 
-        async function startQrScanner() {
-            if (reader) return;
-            reader = new Html5Qrcode("qrReader");
+        // ---------- QR FLOW ----------
+        async function startQrScanner(mode) {
+            // mode = 'in' atau 'out'
+            if (busy) return;
+            if (!gateOk) { setScan("verifikasi device & lokasi dulu."); return; }
+
+            busy = true;
+            currentMode = mode;
+            scannedToken = null;
 
             try {
+                setScan(`mode ${mode === 'in' ? 'CHECK-IN' : 'CHECK-OUT'}: arahkan kamera ke QR admin...`);
+
+                // pastikan kamera selfie mati kalau sebelumnya hidup
+                stopSelfie();
+
+                // start QR reader
+                if (reader) {
+                    await stopQrScanner();
+                }
+
+                reader = new Html5Qrcode("qrReader");
                 await reader.start(
                     { facingMode: "environment" },
                     { fps: 10, qrbox: 240 },
-                    (decodedText) => {
-                        scannedToken = decodedText.trim();
-                        setScan("QR terbaca ✅. siap ambil selfie.");
+                    async (decodedText) => {
+                        scannedToken = (decodedText || "").trim();
+                        if (!scannedToken) return;
+
+                        // stop QR segera agar tidak double trigger
+                        await stopQrScanner();
+
+                        setScan("QR valid ✅ mempersiapkan selfie...");
+
+                        // lanjut selfie auto + countdown
+                        await startSelfieAndCountdownThenSubmit();
                     },
                     () => { }
                 );
+
             } catch (e) {
                 setScan("kamera QR gagal dibuka. izinkan kamera.");
+                busy = false;
             }
-        }
-
-        async function startSelfieCamera() {
-            if (selfieStream) return;
-            selfieStream = await navigator.mediaDevices.getUserMedia({
-                video: { facingMode: "user", width: { ideal: 640 }, height: { ideal: 480 } },
-                audio: false
-            });
-            video.classList.remove("hidden");
-            video.srcObject = selfieStream;
-            await video.play();
         }
 
         async function stopQrScanner() {
             try {
                 if (reader) {
-                    // stop() akan release kamera yang dipakai html5-qrcode
                     await reader.stop();
                     reader.clear();
                     reader = null;
                 }
-            } catch (e) {
-                // ignore
-            }
+            } catch (e) { }
+        }
+
+        // ---------- SELFIE FLOW ----------
+        async function startSelfieCamera() {
+            if (selfieStream) return;
+
+            selfieStream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: "user", width: { ideal: 640 }, height: { ideal: 480 } },
+                audio: false
+            });
+
+            video.classList.remove("hidden");
+            video.srcObject = selfieStream;
+            await video.play();
+        }
+
+        function stopSelfie() {
+            try {
+                if (selfieStream) {
+                    selfieStream.getTracks().forEach(t => t.stop());
+                    selfieStream = null;
+                }
+                video.classList.add("hidden");
+                video.srcObject = null;
+            } catch (e) { }
         }
 
         function captureSelfieBlob() {
@@ -193,62 +277,104 @@
             canvas.height = h;
             const ctx = canvas.getContext("2d");
             ctx.drawImage(video, 0, 0, w, h);
-
             return new Promise(resolve => canvas.toBlob(resolve, "image/jpeg", 0.9));
         }
-        function stopSelfie() {
-            if (selfieStream) {
-                selfieStream.getTracks().forEach(t => t.stop());
-                selfieStream = null;
+
+        async function countdown(seconds) {
+            for (let i = seconds; i >= 1; i--) {
+                setScan(`selfie otomatis dalam ${i}...`);
+                await new Promise(r => setTimeout(r, 1000));
             }
-            video.classList.add("hidden");
-            video.srcObject = null;
         }
 
-        async function submit(mode) {
-            if (!deviceHash) { setScan("device belum diverifikasi."); return; }
-            if (!geo) { setScan("lokasi belum didapat."); return; }
-            if (!scannedToken) { setScan("scan QR dulu."); return; }
-
+        async function startSelfieAndCountdownThenSubmit() {
             try {
-                setScan("menutup kamera QR...");
-                await stopQrScanner();
+                // validasi data wajib sebelum lanjut
+                if (!deviceHash || !geo || !scannedToken || !currentMode) {
+                    setScan("data belum lengkap. ulangi proses.");
+                    busy = false;
+                    return;
+                }
+
                 setScan("membuka kamera selfie...");
                 await startSelfieCamera();
-                setScan("ambil selfie otomatis...");
+
+                await countdown(3);
+
+                setScan("mengambil foto...");
                 const blob = await captureSelfieBlob();
-                if (!blob) { setScan("gagal ambil foto."); return; }
+                if (!blob) {
+                    setScan("gagal ambil foto.");
+                    stopSelfie();
+                    busy = false;
+                    return;
+                }
 
                 setScan("mengirim absensi...");
+                const ok = await submitAttendance(currentMode, scannedToken, blob);
+
+                stopSelfie();
+
+                if (ok) {
+                    setScan(`berhasil ✅ ${currentMode === 'in' ? 'CHECK-IN' : 'CHECK-OUT'}`);
+                    setTimeout(() => window.location.reload(), 900);
+                } else {
+                    // submitAttendance sudah set message error
+                    busy = false;
+                }
+
+            } catch (e) {
+                setScan("error: " + (e?.message || "unknown"));
+                stopSelfie();
+                busy = false;
+            }
+        }
+
+        // ---------- SUBMIT ----------
+        async function submitAttendance(mode, qrToken, selfieBlob) {
+            try {
                 const fd = new FormData();
                 fd.append("mode", mode);
-                fd.append("qr_token", scannedToken);
+                fd.append("qr_token", qrToken);
                 fd.append("device_hash", deviceHash);
                 fd.append("lat", geo.lat);
                 fd.append("lng", geo.lng);
-                fd.append("selfie", blob, "selfie.jpg");
+                fd.append("selfie", selfieBlob, "selfie.jpg");
 
                 const res = await fetch("{{ route('pegawai.attendance.submit') }}", {
                     method: "POST",
                     headers: { "X-CSRF-TOKEN": csrf },
                     body: fd
                 });
+
                 const json = await res.json().catch(() => ({}));
 
                 if (!res.ok) {
                     setScan(json.message || "gagal.");
-                    return;
+                    return false;
                 }
 
-                setScan("berhasil ✅");
-                setTimeout(() => window.location.reload(), 900);
+                return true;
             } catch (e) {
-                setScan("error: " + (e?.message || "unknown"));
+                setScan("error submit: " + (e?.message || "unknown"));
+                return false;
             }
         }
 
+        // ---------- EVENTS ----------
         btnInit.addEventListener("click", initGate);
-        btnCheckIn.addEventListener("click", () => submit("in"));
-        btnCheckOut.addEventListener("click", () => submit("out"));
+
+        btnCheckIn.addEventListener("click", () => {
+            if (btnCheckIn.disabled) return;
+            startQrScanner("in");
+        });
+
+        btnCheckOut.addEventListener("click", () => {
+            if (btnCheckOut.disabled) return;
+            startQrScanner("out");
+        });
+
+        // initial state
+        setButtonsAfterGate();
     </script>
 @endsection
