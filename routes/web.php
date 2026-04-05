@@ -22,6 +22,9 @@ use App\Http\Controllers\Pegawai\DashboardController as PegawaiDashboardControll
 use App\Http\Controllers\Pegawai\FaceController;
 use App\Http\Controllers\Pegawai\AttendanceController;
 use App\Http\Controllers\Payment\MidtransWebhookController;
+use App\Http\Controllers\Admin\AttendanceQrController;
+use App\Http\Controllers\Admin\EmployeeDeviceController;
+use App\Http\Controllers\Pegawai\AttendanceV2Controller;
 
 
 Route::get('/landingtrial', [PublicMenuController::class, 'landingTrial'])->name('public.landingtrial');
@@ -118,6 +121,14 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::post('/admin/tables/{table}/regenerate-qr', [DiningTableController::class, 'regenerateQr'])
         ->name('admin.tables.regenerateQr');
 
+    Route::get('/admin/attendance/qr', [AttendanceQrController::class, 'index'])->name('admin.attendance.qr');
+    Route::post('/admin/attendance/qr/regenerate', [AttendanceQrController::class, 'regenerate'])->name('admin.attendance.qr.regenerate');
+
+    Route::get('/admin/attendance/devices', [EmployeeDeviceController::class, 'index'])->name('admin.attendance.devices');
+    Route::post('/admin/attendance/devices/{device}/approve', [EmployeeDeviceController::class, 'approve'])->name('admin.attendance.devices.approve');
+    Route::post('/admin/attendance/devices/{device}/revoke', [EmployeeDeviceController::class, 'revoke'])->name('admin.attendance.devices.revoke');
+    Route::post('/admin/attendance/users/{user}/reset-devices', [EmployeeDeviceController::class, 'resetUserDevices'])->name('admin.attendance.users.reset_devices');
+
 });
 
 Route::prefix('kasir')->name('kasir.')->middleware(['auth', 'role:kasir'])->group(function () {
@@ -162,12 +173,12 @@ Route::middleware(['auth', 'role:kitchen'])
 Route::prefix('pegawai')->name('pegawai.')->middleware(['auth', 'role:pegawai'])->group(function () {
     Route::get('/dashboard', [PegawaiDashboardController::class, 'index'])->name('dashboard');
 
-    // Face enrollment
-    Route::get('/face/enroll', [FaceController::class, 'showEnroll'])->name('face.enroll');
-    Route::post('/face/enroll', [FaceController::class, 'storeEnroll'])->name('face.enroll.store');
 
-    // Attendance
-    Route::get('/absensi', [AttendanceController::class, 'index'])->name('attendance');
-    Route::post('/absensi/check-in', [AttendanceController::class, 'checkIn'])->name('attendance.checkin');
-    Route::post('/absensi/check-out', [AttendanceController::class, 'checkOut'])->name('attendance.checkout');
+    Route::get('/absensi', [AttendanceV2Controller::class, 'index'])->name('attendance');
+
+    // init device check (AJAX)
+    Route::post('/absensi/device/init', [AttendanceV2Controller::class, 'initDevice'])->name('attendance.device.init');
+
+    // submit check-in/out (AJAX)
+    Route::post('/absensi/submit', [AttendanceV2Controller::class, 'submit'])->name('attendance.submit');
 });

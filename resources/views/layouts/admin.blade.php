@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="id" class="overflow-x-hidden">
+
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -18,14 +19,14 @@
         body {
             overflow-x: hidden;
             background:
-                radial-gradient(circle at top left, rgba(234,179,8,.08), transparent 26%),
-                radial-gradient(circle at bottom right, rgba(234,179,8,.06), transparent 24%),
+                radial-gradient(circle at top left, rgba(234, 179, 8, .08), transparent 26%),
+                radial-gradient(circle at bottom right, rgba(234, 179, 8, .06), transparent 24%),
                 linear-gradient(180deg, #030303 0%, #090909 100%);
         }
 
         .admin-shell {
             background:
-                linear-gradient(180deg, rgba(255,255,255,.01), rgba(255,255,255,.00));
+                linear-gradient(180deg, rgba(255, 255, 255, .01), rgba(255, 255, 255, .00));
         }
 
         .panel-dark {
@@ -34,7 +35,7 @@
         }
 
         .panel-soft {
-            background: rgba(255,255,255,.03);
+            background: rgba(255, 255, 255, .03);
             backdrop-filter: blur(10px);
         }
 
@@ -55,7 +56,7 @@
         }
 
         .sidebar-scroll::-webkit-scrollbar-thumb {
-            background: rgba(234,179,8,.18);
+            background: rgba(234, 179, 8, .18);
             border-radius: 999px;
         }
     </style>
@@ -64,8 +65,12 @@
 <body class="min-h-screen text-white">
     <div class="relative min-h-screen overflow-hidden">
         <!-- ambient -->
-        <div class="pointer-events-none absolute -left-24 top-0 h-[380px] w-[380px] rounded-full bg-yellow-500/10 blur-[120px]"></div>
-        <div class="pointer-events-none absolute bottom-0 right-0 h-[440px] w-[440px] rounded-full bg-yellow-400/8 blur-[140px]"></div>
+        <div
+            class="pointer-events-none absolute -left-24 top-0 h-[380px] w-[380px] rounded-full bg-yellow-500/10 blur-[120px]">
+        </div>
+        <div
+            class="pointer-events-none absolute bottom-0 right-0 h-[440px] w-[440px] rounded-full bg-yellow-400/8 blur-[140px]">
+        </div>
 
         <div class="relative min-h-screen admin-shell">
             <div class="flex min-h-screen w-full">
@@ -76,11 +81,14 @@
                     $isUsers = request()->routeIs('admin.cashiers.*');
                     $isRawMaterials = request()->routeIs('admin.raw_materials.*');
                     $isPurchases = request()->routeIs('admin.purchases.*');
+                    $isAttendanceQr = request()->routeIs('admin.attendance.qr*');
+                    $isAttendanceDevices = request()->routeIs('admin.attendance.devices*');
+                    $isUserGroup = $isUsers || $isAttendanceQr || $isAttendanceDevices;
                     $isWastes = request()->routeIs('admin.wastes.*');
                     $isOpnames = request()->routeIs('admin.opnames.*');
                     $isInvMovements = request()->routeIs('admin.inventory-movements.*');
                     $isTables = request()->routeIs('admin.tables.*');
-                    $isInventory = $isRawMaterials || $isPurchases || $isWastes || $isOpnames || $isInvMovements || $isTables;
+                    $isInventory = $isRawMaterials || $isPurchases || $isWastes || $isOpnames || $isInvMovements || $isTables || $isAttendanceQr || $isAttendanceDevices;
                 @endphp
 
                 <!-- DESKTOP SIDEBAR -->
@@ -108,8 +116,7 @@
                         </div>
 
                         <div class="mt-4 flex items-center gap-3 px-2">
-                            <img src="{{ asset('images/landing/logo-ayo-renne.png') }}"
-                                alt="Ayo Renne"
+                            <img src="{{ asset('images/landing/logo-ayo-renne.png') }}" alt="Ayo Renne"
                                 class="sidebar-label hidden h-12 w-auto object-contain">
                         </div>
 
@@ -118,7 +125,8 @@
                                 class="relative flex items-center gap-3 rounded-xl px-3 py-3 transition
                                 {{ $isDashboard ? 'bg-yellow-500/12 text-white border border-yellow-500/30' : 'border gold-border bg-white/[0.02] hover:bg-white/[0.05] text-white/88' }}">
                                 @if ($isDashboard)
-                                    <span class="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r bg-yellow-500"></span>
+                                    <span
+                                        class="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r bg-yellow-500"></span>
                                 @endif
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-500" fill="none"
                                     viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
@@ -132,7 +140,8 @@
                                 class="relative flex items-center gap-3 rounded-xl px-3 py-3 transition
                                 {{ $isProducts ? 'bg-yellow-500/12 text-white border border-yellow-500/30' : 'border gold-border bg-white/[0.02] hover:bg-white/[0.05] text-white/88' }}">
                                 @if ($isProducts)
-                                    <span class="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r bg-yellow-500"></span>
+                                    <span
+                                        class="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r bg-yellow-500"></span>
                                 @endif
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-500" fill="none"
                                     viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
@@ -148,7 +157,8 @@
                                     class="relative flex w-full items-center gap-3 rounded-xl px-3 py-3 transition
                                     {{ $isInventory ? 'bg-yellow-500/12 border border-yellow-500/30' : 'border gold-border bg-white/[0.02] hover:bg-white/[0.05]' }}">
                                     @if ($isInventory)
-                                        <span class="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r bg-yellow-500"></span>
+                                        <span
+                                            class="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r bg-yellow-500"></span>
                                     @endif
 
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-500" fill="none"
@@ -159,7 +169,8 @@
                                             d="M3 7.5v9L12 21l9-4.5v-9" />
                                     </svg>
 
-                                    <span class="sidebar-label hidden flex-1 text-left text-sm font-medium text-white/90">Inventory</span>
+                                    <span
+                                        class="sidebar-label hidden flex-1 text-left text-sm font-medium text-white/90">Inventory</span>
 
                                     <svg id="invChevronDesktop" xmlns="http://www.w3.org/2000/svg"
                                         class="sidebar-label hidden h-4 w-4 text-white/70 transition" fill="none"
@@ -173,45 +184,55 @@
                                         class="relative flex items-center gap-3 rounded-xl px-3 py-2.5 transition
                                         {{ $isRawMaterials ? 'bg-yellow-500/10 border border-yellow-500/25' : 'border gold-border bg-white/[0.02] hover:bg-white/[0.05]' }}">
                                         @if ($isRawMaterials)
-                                            <span class="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r bg-yellow-500"></span>
+                                            <span
+                                                class="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r bg-yellow-500"></span>
                                         @endif
-                                        <span class="sidebar-label hidden text-sm font-medium text-white/90">Bahan Baku</span>
+                                        <span class="sidebar-label hidden text-sm font-medium text-white/90">Bahan
+                                            Baku</span>
                                     </a>
 
                                     <a href="{{ route('admin.purchases.index') }}"
                                         class="relative flex items-center gap-3 rounded-xl px-3 py-2.5 transition
                                         {{ $isPurchases ? 'bg-yellow-500/10 border border-yellow-500/25' : 'border gold-border bg-white/[0.02] hover:bg-white/[0.05]' }}">
                                         @if ($isPurchases)
-                                            <span class="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r bg-yellow-500"></span>
+                                            <span
+                                                class="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r bg-yellow-500"></span>
                                         @endif
-                                        <span class="sidebar-label hidden text-sm font-medium text-white/90">Purchases</span>
+                                        <span
+                                            class="sidebar-label hidden text-sm font-medium text-white/90">Purchases</span>
                                     </a>
 
                                     <a href="{{ route('admin.wastes.index') }}"
                                         class="relative flex items-center gap-3 rounded-xl px-3 py-2.5 transition
                                         {{ $isWastes ? 'bg-yellow-500/10 border border-yellow-500/25' : 'border gold-border bg-white/[0.02] hover:bg-white/[0.05]' }}">
                                         @if ($isWastes)
-                                            <span class="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r bg-yellow-500"></span>
+                                            <span
+                                                class="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r bg-yellow-500"></span>
                                         @endif
-                                        <span class="sidebar-label hidden text-sm font-medium text-white/90">Waste</span>
+                                        <span
+                                            class="sidebar-label hidden text-sm font-medium text-white/90">Waste</span>
                                     </a>
 
                                     <a href="{{ route('admin.opnames.index') }}"
                                         class="relative flex items-center gap-3 rounded-xl px-3 py-2.5 transition
                                         {{ $isOpnames ? 'bg-yellow-500/10 border border-yellow-500/25' : 'border gold-border bg-white/[0.02] hover:bg-white/[0.05]' }}">
                                         @if ($isOpnames)
-                                            <span class="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r bg-yellow-500"></span>
+                                            <span
+                                                class="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r bg-yellow-500"></span>
                                         @endif
-                                        <span class="sidebar-label hidden text-sm font-medium text-white/90">Stock Opname</span>
+                                        <span class="sidebar-label hidden text-sm font-medium text-white/90">Stock
+                                            Opname</span>
                                     </a>
 
                                     <a href="{{ route('admin.inventory-movements.index') }}"
                                         class="relative flex items-center gap-3 rounded-xl px-3 py-2.5 transition
                                         {{ $isInvMovements ? 'bg-yellow-500/10 border border-yellow-500/25' : 'border gold-border bg-white/[0.02] hover:bg-white/[0.05]' }}">
                                         @if ($isInvMovements)
-                                            <span class="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r bg-yellow-500"></span>
+                                            <span
+                                                class="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r bg-yellow-500"></span>
                                         @endif
-                                        <span class="sidebar-label hidden text-sm font-medium text-white/90">Inventory Movement</span>
+                                        <span class="sidebar-label hidden text-sm font-medium text-white/90">Inventory
+                                            Movement</span>
                                     </a>
                                 </div>
                             </div>
@@ -220,7 +241,8 @@
                                 class="relative flex items-center gap-3 rounded-xl px-3 py-3 transition
                                 {{ $isSales ? 'bg-yellow-500/12 text-white border border-yellow-500/30' : 'border gold-border bg-white/[0.02] hover:bg-white/[0.05] text-white/88' }}">
                                 @if ($isSales)
-                                    <span class="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r bg-yellow-500"></span>
+                                    <span
+                                        class="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r bg-yellow-500"></span>
                                 @endif
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-500" fill="none"
                                     viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
@@ -231,27 +253,77 @@
                                 <span class="sidebar-label hidden text-sm font-medium">Transaksi</span>
                             </a>
 
-                            <a href="{{ route('admin.cashiers.index') }}"
-                                class="relative flex items-center gap-3 rounded-xl px-3 py-3 transition
-                                {{ $isUsers ? 'bg-yellow-500/12 text-white border border-yellow-500/30' : 'border gold-border bg-white/[0.02] hover:bg-white/[0.05] text-white/88' }}">
-                                @if ($isUsers)
-                                    <span class="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r bg-yellow-500"></span>
-                                @endif
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-500" fill="none"
-                                    viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                        d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" />
-                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                        d="M4.5 20.25a8.25 8.25 0 0115 0" />
-                                </svg>
-                                <span class="sidebar-label hidden text-sm font-medium">User</span>
-                            </a>
+
+                            <div class="mt-2">
+                                <button type="button" id="userToggleDesktop"
+                                    class="relative flex w-full items-center gap-3 rounded-xl px-3 py-3 transition
+     {{ $isUserGroup ? 'bg-yellow-500/12 border border-yellow-500/30' : 'border gold-border bg-white/[0.02] hover:bg-white/[0.05]' }}">
+                                    @if ($isUserGroup)
+                                        <span
+                                            class="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r bg-yellow-500"></span>
+                                    @endif
+
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-500" fill="none"
+                                        viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" />
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            d="M4.5 20.25a8.25 8.25 0 0115 0" />
+                                    </svg>
+
+                                    <span
+                                        class="sidebar-label hidden flex-1 text-left text-sm font-medium text-white/90">User</span>
+
+                                    <svg id="userChevronDesktop" xmlns="http://www.w3.org/2000/svg"
+                                        class="sidebar-label hidden h-4 w-4 text-white/70 transition" fill="none"
+                                        viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+                                    </svg>
+                                </button>
+
+                                <div id="userMenuDesktop"
+                                    class="mt-2 space-y-2 pl-2 {{ $isUserGroup ? '' : 'hidden' }}">
+                                    <a href="{{ route('admin.cashiers.index') }}"
+                                        class="relative flex items-center gap-3 rounded-xl px-3 py-2.5 transition
+       {{ $isUsers ? 'bg-yellow-500/10 border border-yellow-500/25' : 'border gold-border bg-white/[0.02] hover:bg-white/[0.05]' }}">
+                                        @if ($isUsers)
+                                            <span
+                                                class="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r bg-yellow-500"></span>
+                                        @endif
+                                        <span class="sidebar-label hidden text-sm font-medium text-white/90">Kelola
+                                            User</span>
+                                    </a>
+
+                                    <a href="{{ route('admin.attendance.qr') }}"
+                                        class="relative flex items-center gap-3 rounded-xl px-3 py-2.5 transition
+       {{ $isAttendanceQr ? 'bg-yellow-500/10 border border-yellow-500/25' : 'border gold-border bg-white/[0.02] hover:bg-white/[0.05]' }}">
+                                        @if ($isAttendanceQr)
+                                            <span
+                                                class="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r bg-yellow-500"></span>
+                                        @endif
+                                        <span class="sidebar-label hidden text-sm font-medium text-white/90">Absensi
+                                            QR</span>
+                                    </a>
+
+                                    <a href="{{ route('admin.attendance.devices') }}"
+                                        class="relative flex items-center gap-3 rounded-xl px-3 py-2.5 transition
+       {{ $isAttendanceDevices ? 'bg-yellow-500/10 border border-yellow-500/25' : 'border gold-border bg-white/[0.02] hover:bg-white/[0.05]' }}">
+                                        @if ($isAttendanceDevices)
+                                            <span
+                                                class="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r bg-yellow-500"></span>
+                                        @endif
+                                        <span class="sidebar-label hidden text-sm font-medium text-white/90">Device
+                                            Absensi</span>
+                                    </a>
+                                </div>
+                            </div>
 
                             <a href="{{ route('admin.tables.index') }}"
                                 class="relative flex items-center gap-3 rounded-xl px-3 py-3 transition
                                 {{ $isTables ? 'bg-yellow-500/12 text-white border border-yellow-500/30' : 'border gold-border bg-white/[0.02] hover:bg-white/[0.05] text-white/88' }}">
                                 @if ($isTables)
-                                    <span class="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r bg-yellow-500"></span>
+                                    <span
+                                        class="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r bg-yellow-500"></span>
                                 @endif
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-500" fill="none"
                                     viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
@@ -309,8 +381,7 @@
                     class="panel-dark gold-border fixed left-0 top-0 z-50 hidden h-full w-[290px] border-r p-4 lg:hidden">
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-3">
-                            <img src="{{ asset('images/landing/logo-ayo-renne.png') }}"
-                                alt="Ayo Renne"
+                            <img src="{{ asset('images/landing/logo-ayo-renne.png') }}" alt="Ayo Renne"
                                 class="h-12 w-auto object-contain">
                             <div>
                                 <div class="text-xs uppercase tracking-[0.22em] text-yellow-500">Admin Panel</div>
@@ -369,10 +440,26 @@
                             Transaksi
                         </a>
 
-                        <a href="{{ route('admin.cashiers.index') }}"
-                            class="block rounded-xl px-3 py-3 {{ $isUsers ? 'bg-yellow-500/12 border border-yellow-500/30' : 'border gold-border bg-white/[0.02]' }}">
-                            User
-                        </a>
+
+
+                        <div class="rounded-xl border gold-border bg-white/[0.02] p-2">
+                            <div class="px-2 py-2 text-sm font-semibold text-white/90">User</div>
+
+                            <a href="{{ route('admin.cashiers.index') }}"
+                                class="mt-1 block rounded-xl px-3 py-2 {{ $isUsers ? 'bg-yellow-500/12' : 'hover:bg-white/[0.05]' }}">
+                                Kelola User
+                            </a>
+
+                            <a href="{{ route('admin.attendance.qr') }}"
+                                class="mt-1 block rounded-xl px-3 py-2 {{ $isAttendanceQr ? 'bg-yellow-500/12' : 'hover:bg-white/[0.05]' }}">
+                                Absensi QR
+                            </a>
+
+                            <a href="{{ route('admin.attendance.devices') }}"
+                                class="mt-1 block rounded-xl px-3 py-2 {{ $isAttendanceDevices ? 'bg-yellow-500/12' : 'hover:bg-white/[0.05]' }}">
+                                Device Absensi
+                            </a>
+                        </div>
 
                         <a href="{{ route('admin.tables.index') }}"
                             class="block rounded-xl px-3 py-3 {{ $isTables ? 'bg-yellow-500/12 border border-yellow-500/30' : 'border gold-border bg-white/[0.02]' }}">
@@ -502,7 +589,24 @@
                     invChevron.classList.add('rotate-90');
                 }
             }
+
+            const userToggle = document.getElementById('userToggleDesktop');
+            const userMenu = document.getElementById('userMenuDesktop');
+            const userChevron = document.getElementById('userChevronDesktop');
+
+            if (userToggle && userMenu && userChevron) {
+                userToggle.addEventListener('click', () => {
+                    const isHidden = userMenu.classList.contains('hidden');
+                    userMenu.classList.toggle('hidden');
+                    userChevron.classList.toggle('rotate-90', isHidden);
+                });
+
+                if (!userMenu.classList.contains('hidden')) {
+                    userChevron.classList.add('rotate-90');
+                }
+            }
         })();
     </script>
 </body>
+
 </html>

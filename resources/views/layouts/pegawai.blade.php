@@ -49,10 +49,7 @@
                             Absensi
                         </a>
 
-                        <a href="{{ route('pegawai.face.enroll') }}"
-                            class="block rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm hover:bg-white/10">
-                            Daftarkan Wajah
-                        </a>
+                      
                     </nav>
 
                     <div class="mt-6 rounded-2xl border border-white/10 bg-white/5 p-4">
@@ -130,10 +127,7 @@
                 Absensi
             </a>
 
-            <a href="{{ route('pegawai.face.enroll') }}"
-                class="block rounded-xl border border-white/10 bg-white/5 px-4 py-3 hover:bg-white/10">
-                Daftarkan Wajah
-            </a>
+
         </nav>
 
         <div class="mt-6 rounded-2xl border border-white/10 bg-white/5 p-4">
