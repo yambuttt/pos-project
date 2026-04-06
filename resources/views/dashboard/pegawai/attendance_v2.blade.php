@@ -78,10 +78,10 @@
             <div class="relative">
               <video id="selfieVideo" autoplay playsinline class="aspect-video w-full object-cover"></video>
 
-              <!-- overlay untuk face landmarks -->
+              {{-- overlay face mesh --}}
               <canvas id="faceOverlay" class="absolute inset-0 h-full w-full"></canvas>
 
-              <!-- hint text -->
+              {{-- hint --}}
               <div id="faceHint"
                 class="absolute bottom-3 left-3 rounded-xl border border-white/15 bg-black/40 px-3 py-2 text-xs text-white/85 backdrop-blur-xl">
                 Menyiapkan deteksi wajah…
@@ -104,11 +104,9 @@
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
 
-
   <script>
     const csrf = document.querySelector('meta[name="csrf-token"]').content;
 
-    // status attendance dari server (blade)
     const HAS_CHECKIN = {{ $attendance?->check_in_at ? 'true' : 'false' }};
     const HAS_CHECKOUT = {{ $attendance?->check_out_at ? 'true' : 'false' }};
 
@@ -118,15 +116,16 @@
     let reader = null;
     let selfieStream = null;
 
+    // Face detection state
     let faceMesh = null;
     let faceDetectRunning = false;
     let faceOk = false;
-    let faceOkStreak = 0;     // hitung frame berturut-turut terdeteksi
-    const FACE_OK_NEED = 6;   // butuh 6 frame (~0.2-0.5s) biar stabil
+    let faceOkStreak = 0;
+    const FACE_OK_NEED = 6;
 
     let gateOk = false;
     let busy = false;
-    let currentMode = null;      // 'in' atau 'out'
+    let currentMode = null;      // 'in'/'out'
     let scannedToken = null;
 
     const gateStatus = document.getElementById('gateStatus');
@@ -135,7 +134,7 @@
     const btnCheckIn = document.getElementById('btnCheckIn');
     const btnCheckOut = document.getElementById('btnCheckOut');
 
-    // modal elements
+    // modal
     const camModal = document.getElementById('camModal');
     const camTitle = document.getElementById('camTitle');
     const camSubtitle = document.getElementById('camSubtitle');
@@ -276,7 +275,7 @@
           if (v?.platform) platform = v.platform;
           if (v?.model) model = v.model;
         }
-      } catch (e) { }
+      } catch (e) {}
 
       const parts = [];
       parts.push(platform + (androidVer ? ` ${androidVer}` : ''));
@@ -287,7 +286,6 @@
     }
 
     async function detectDeviceNameAsync() {
-      // FIX: base harus string (bukan Promise)
       let base = await detectDeviceName();
       try {
         if (navigator.userAgentData && navigator.userAgentData.getHighEntropyValues) {
@@ -300,7 +298,7 @@
             base = parts.join(' • ');
           }
         }
-      } catch (e) { }
+      } catch (e) {}
       return base || 'Web';
     }
 
@@ -353,7 +351,7 @@
       }
     }
 
-    // ---------- QR FLOW (IN MODAL) ----------
+    // ---------- QR FLOW ----------
     async function startQrScanner(mode) {
       if (busy) return;
       if (!gateOk) { setScan("verifikasi device & lokasi dulu."); return; }
@@ -388,7 +386,7 @@
             setCamStatus("QR valid ✅ Menyiapkan selfie…");
             await startSelfieAndCountdownThenSubmit();
           },
-          () => { }
+          () => {}
         );
 
         setCamStatus('Silakan scan QR…');
@@ -405,10 +403,10 @@
           reader.clear();
           reader = null;
         }
-      } catch (e) { }
+      } catch (e) {}
     }
 
-    // ---------- SELFIE FLOW ----------
+    // ---------- SELFIE ----------
     async function startSelfieCamera() {
       if (selfieStream) return;
 
@@ -421,13 +419,54 @@
       await video.play();
     }
 
+    function stopFaceDetection() {
+      faceDetectRunning = false;
+      faceOk = false;
+      faceOkStreak = 0;
+
+      try {
+        if (faceOverlay) {
+          const ctx = faceOverlay.getContext('2d');
+          ctx.clearRect(0, 0, faceOverlay.width, faceOverlay.height);
+        }
+      } catch (e) {}
+    }
+
+    function stopSelfie() {
+      stopFaceDetection();
+      try {
+        if (selfieStream) {
+          selfieStream.getTracks().forEach(t => t.stop());
+          selfieStream = null;
+        }
+        video.srcObject = null;
+      } catch (e) {}
+    }
+
+    function captureSelfieBlob() {
+      const w = video.videoWidth || 640;
+      const h = video.videoHeight || 480;
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(video, 0, 0, w, h);
+      return new Promise(resolve => canvas.toBlob(resolve, "image/jpeg", 0.9));
+    }
+
+    async function countdown(seconds) {
+      for (let i = seconds; i >= 1; i--) {
+        setCamStatus(`Selfie otomatis dalam ${i}…`);
+        await new Promise(r => setTimeout(r, 1000));
+      }
+    }
+
     async function startFaceDetection() {
       if (faceDetectRunning) return;
       faceDetectRunning = true;
       faceOk = false;
       faceOkStreak = 0;
 
-      // safety: pastikan script mediapipe sudah ada
+      // guard: mediapipe belum loaded
       if (typeof FaceMesh === "undefined" || typeof drawConnectors === "undefined") {
         setFaceHint("Deteksi wajah belum siap. Reload halaman dulu.", false);
         faceDetectRunning = false;
@@ -437,9 +476,8 @@
       resizeOverlayToVideo();
       const ctx = faceOverlay.getContext('2d');
 
-      // init FaceMesh sekali
       if (!faceMesh) {
-        // ✅ CDN exports constructor = FaceMesh
+        // ✅ constructor dari CDN: new FaceMesh(...)
         faceMesh = new FaceMesh({
           locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`
         });
@@ -464,7 +502,6 @@
             return;
           }
 
-          // wajah terdeteksi
           faceOkStreak += 1;
           if (faceOkStreak >= FACE_OK_NEED) faceOk = true;
 
@@ -472,10 +509,12 @@
 
           const landmarks = faces[0];
 
-          // gambar overlay
-          drawLandmarks(ctx, landmarks, { color: '#7dd3fc', lineWidth: 1 });
+          // titik landmark
+          if (typeof drawLandmarks !== "undefined") {
+            drawLandmarks(ctx, landmarks, { color: '#7dd3fc', lineWidth: 1 });
+          }
 
-          // ✅ connectors biasanya global constants (tanpa FaceMesh.)
+          // garis mesh (global constants; aman pakai guard)
           if (typeof FACEMESH_TESSELATION !== "undefined") {
             drawConnectors(ctx, landmarks, FACEMESH_TESSELATION, { color: '#ffffff', lineWidth: 0.6 });
           }
@@ -494,107 +533,16 @@
         });
       }
 
-      // loop kirim frame ke faceMesh
       async function loop() {
         if (!faceDetectRunning) return;
         try {
           await faceMesh.send({ image: video });
-        } catch (e) {
-          // ignore
-        }
+        } catch (e) {}
         requestAnimationFrame(loop);
       }
 
       setFaceHint("Menyiapkan deteksi wajah…", false);
       requestAnimationFrame(loop);
-    }
-
-    faceMesh.setOptions({
-      maxNumFaces: 1,
-      refineLandmarks: true,
-      minDetectionConfidence: 0.6,
-      minTrackingConfidence: 0.6,
-    });
-
-    faceMesh.onResults((results) => {
-      if (!faceDetectRunning) return;
-
-      ctx.clearRect(0, 0, faceOverlay.width, faceOverlay.height);
-
-      const faces = results.multiFaceLandmarks || [];
-      if (faces.length === 0) {
-        faceOkStreak = 0;
-        faceOk = false;
-        setFaceHint("Wajah tidak terdeteksi. Arahkan kamera ke wajah.", false);
-        return;
-      }
-
-      faceOkStreak += 1;
-      if (faceOkStreak >= FACE_OK_NEED) faceOk = true;
-
-      setFaceHint(faceOk ? "Wajah OK ✅ Tahan sebentar…" : "Wajah terdeteksi… (stabilkan)", faceOk);
-
-      const landmarks = faces[0];
-      drawLandmarks(ctx, landmarks, { color: '#7dd3fc', lineWidth: 1 });
-      drawConnectors(ctx, landmarks, FaceMesh.FACEMESH_TESSELATION, { color: '#ffffff', lineWidth: 0.6 });
-      drawConnectors(ctx, landmarks, FaceMesh.FACEMESH_FACE_OVAL, { color: '#22c55e', lineWidth: 1.2 });
-      drawConnectors(ctx, landmarks, FaceMesh.FACEMESH_LEFT_EYE, { color: '#60a5fa', lineWidth: 1 });
-      drawConnectors(ctx, landmarks, FaceMesh.FACEMESH_RIGHT_EYE, { color: '#60a5fa', lineWidth: 1 });
-      drawConnectors(ctx, landmarks, FaceMesh.FACEMESH_LIPS, { color: '#fb7185', lineWidth: 1 });
-    });
-      }
-
-    async function loop() {
-      if (!faceDetectRunning) return;
-      try {
-        await faceMesh.send({ image: video });
-      } catch (e) { }
-      requestAnimationFrame(loop);
-    }
-
-    setFaceHint("Menyiapkan deteksi wajah…", false);
-    requestAnimationFrame(loop);
-        }
-
-    function stopFaceDetection() {
-      faceDetectRunning = false;
-      faceOk = false;
-      faceOkStreak = 0;
-
-      try {
-        if (faceOverlay) {
-          const ctx = faceOverlay.getContext('2d');
-          ctx.clearRect(0, 0, faceOverlay.width, faceOverlay.height);
-        }
-      } catch (e) { }
-    }
-
-    function stopSelfie() {
-      stopFaceDetection();
-      try {
-        if (selfieStream) {
-          selfieStream.getTracks().forEach(t => t.stop());
-          selfieStream = null;
-        }
-        video.srcObject = null;
-      } catch (e) { }
-    }
-
-    function captureSelfieBlob() {
-      const w = video.videoWidth || 640;
-      const h = video.videoHeight || 480;
-      canvas.width = w;
-      canvas.height = h;
-      const ctx = canvas.getContext("2d");
-      ctx.drawImage(video, 0, 0, w, h);
-      return new Promise(resolve => canvas.toBlob(resolve, "image/jpeg", 0.9));
-    }
-
-    async function countdown(seconds) {
-      for (let i = seconds; i >= 1; i--) {
-        setCamStatus(`Selfie otomatis dalam ${i}…`);
-        await new Promise(r => setTimeout(r, 1000));
-      }
     }
 
     async function startSelfieAndCountdownThenSubmit() {
@@ -617,6 +565,7 @@
         setCamStatus("Deteksi wajah aktif. Tunjukkan wajah ke kamera…");
         await startFaceDetection();
 
+        // tunggu wajah stabil
         let waited = 0;
         while (!faceOk) {
           await new Promise(r => setTimeout(r, 200));
@@ -633,7 +582,7 @@
         await countdown(3);
 
         setCamStatus("Mengambil foto…");
-        const selfieBlob = await captureSelfieBlob(); // FIX: hanya 1 deklarasi
+        const selfieBlob = await captureSelfieBlob();
         if (!selfieBlob) {
           setCamStatus("Gagal ambil foto.");
           stopSelfie();
