@@ -275,7 +275,7 @@
           if (v?.platform) platform = v.platform;
           if (v?.model) model = v.model;
         }
-      } catch (e) {}
+      } catch (e) { }
 
       const parts = [];
       parts.push(platform + (androidVer ? ` ${androidVer}` : ''));
@@ -298,7 +298,7 @@
             base = parts.join(' • ');
           }
         }
-      } catch (e) {}
+      } catch (e) { }
       return base || 'Web';
     }
 
@@ -386,7 +386,7 @@
             setCamStatus("QR valid ✅ Menyiapkan selfie…");
             await startSelfieAndCountdownThenSubmit();
           },
-          () => {}
+          () => { }
         );
 
         setCamStatus('Silakan scan QR…');
@@ -403,7 +403,7 @@
           reader.clear();
           reader = null;
         }
-      } catch (e) {}
+      } catch (e) { }
     }
 
     // ---------- SELFIE ----------
@@ -429,7 +429,7 @@
           const ctx = faceOverlay.getContext('2d');
           ctx.clearRect(0, 0, faceOverlay.width, faceOverlay.height);
         }
-      } catch (e) {}
+      } catch (e) { }
     }
 
     function stopSelfie() {
@@ -440,7 +440,7 @@
           selfieStream = null;
         }
         video.srcObject = null;
-      } catch (e) {}
+      } catch (e) { }
     }
 
     function captureSelfieBlob() {
@@ -453,11 +453,22 @@
       return new Promise(resolve => canvas.toBlob(resolve, "image/jpeg", 0.9));
     }
 
-    async function countdown(seconds) {
+    async function countdownWithFaceGuard(seconds) {
+      // countdown yang akan batal kalau wajah hilang
       for (let i = seconds; i >= 1; i--) {
+        // cek wajah beberapa kali per detik biar responsif
+        const start = Date.now();
+        while (Date.now() - start < 1000) {
+          if (!faceOk) {
+            setCamStatus("Wajah hilang. Countdown dibatalkan. Arahkan wajah ke kamera…");
+            return false;
+          }
+          await new Promise(r => setTimeout(r, 120));
+        }
+
         setCamStatus(`Selfie otomatis dalam ${i}…`);
-        await new Promise(r => setTimeout(r, 1000));
       }
+      return true;
     }
 
     async function startFaceDetection() {
@@ -537,7 +548,7 @@
         if (!faceDetectRunning) return;
         try {
           await faceMesh.send({ image: video });
-        } catch (e) {}
+        } catch (e) { }
         requestAnimationFrame(loop);
       }
 
@@ -566,6 +577,7 @@
         await startFaceDetection();
 
         // tunggu wajah stabil
+        // tunggu wajah stabil (awal)
         let waited = 0;
         while (!faceOk) {
           await new Promise(r => setTimeout(r, 200));
@@ -579,7 +591,43 @@
           }
         }
 
-        await countdown(3);
+        // ✅ countdown yang akan batal kalau wajah hilang
+        let okCountdown = await countdownWithFaceGuard(3);
+        if (!okCountdown) {
+          // reset lalu tunggu wajah balik lagi
+          faceOk = false;
+          faceOkStreak = 0;
+
+          let waited2 = 0;
+          while (!faceOk) {
+            await new Promise(r => setTimeout(r, 200));
+            waited2 += 200;
+
+            if (waited2 >= 15000) {
+              setCamStatus("Wajah tidak terdeteksi. Ulangi dari awal.");
+              stopSelfie();
+              busy = false;
+              return;
+            }
+          }
+
+          // ulang countdown dari awal
+          okCountdown = await countdownWithFaceGuard(3);
+          if (!okCountdown) {
+            setCamStatus("Wajah hilang lagi. Ulangi proses.");
+            stopSelfie();
+            busy = false;
+            return;
+          }
+        }
+
+        // safety check terakhir sebelum capture
+        if (!faceOk) {
+          setCamStatus("Wajah tidak terdeteksi. Foto dibatalkan.");
+          stopSelfie();
+          busy = false;
+          return;
+        }
 
         setCamStatus("Mengambil foto…");
         const selfieBlob = await captureSelfieBlob();
