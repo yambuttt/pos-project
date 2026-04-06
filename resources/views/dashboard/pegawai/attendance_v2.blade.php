@@ -256,51 +256,51 @@
     }
 
 
-    function detectDeviceName() {
-      try {
-        const ua = navigator.userAgent || '';
-        const brand = (navigator.userAgentData && navigator.userAgentData.brands)
-          ? navigator.userAgentData.brands.map(b => b.brand).join('/')
-          : '';
+    async function detectDeviceName() {
+      const ua = navigator.userAgent || '';
 
-        // 1) Kalau support Client Hints (Chrome modern Android)
-        // NOTE: model biasanya hanya muncul di Android via getHighEntropyValues
-        if (navigator.userAgentData && navigator.userAgentData.getHighEntropyValues) {
-          // kita return promise-like via fallback sync (lihat pemakaian di bawah)
-        }
+      // platform
+      let platform = 'Web';
+      if (/Android/i.test(ua)) platform = 'Android';
+      else if (/iPhone|iPad|iPod/i.test(ua)) platform = 'iOS';
+      else if (/Windows/i.test(ua)) platform = 'Windows';
+      else if (/Macintosh/i.test(ua)) platform = 'macOS';
+      else if (/Linux/i.test(ua)) platform = 'Linux';
 
-        // 2) Fallback parse userAgent klasik
-        let platform = 'Web';
-        if (/Android/i.test(ua)) platform = 'Android';
-        else if (/iPhone|iPad|iPod/i.test(ua)) platform = 'iOS';
-        else if (/Windows/i.test(ua)) platform = 'Windows';
-        else if (/Macintosh/i.test(ua)) platform = 'macOS';
-        else if (/Linux/i.test(ua)) platform = 'Linux';
+      // versi android (kalau ada)
+      let androidVer = '';
+      const av = ua.match(/Android\s([\d\.]+)/i);
+      if (av && av[1]) androidVer = av[1];
 
-        // Ambil model Android dari UA: "Android 13; SM-G991B Build/..."
-        let model = '';
-        if (platform === 'Android') {
-          const m = ua.match(/Android\s[\d\.]+;\s([^;)]*?)\sBuild\//i) || ua.match(/Android\s[\d\.]+;\s([^;)]*)/i);
-          if (m && m[1]) model = m[1].trim();
-        }
-
-        // Browser
-        let browser = '';
-        if (/Chrome\/([\d\.]+)/i.test(ua) && !/Edg\//i.test(ua)) browser = 'Chrome ' + (ua.match(/Chrome\/([\d\.]+)/i)?.[1] || '');
-        else if (/Edg\/([\d\.]+)/i.test(ua)) browser = 'Edge ' + (ua.match(/Edg\/([\d\.]+)/i)?.[1] || '');
-        else if (/Firefox\/([\d\.]+)/i.test(ua)) browser = 'Firefox ' + (ua.match(/Firefox\/([\d\.]+)/i)?.[1] || '');
-        else if (/Safari\/([\d\.]+)/i.test(ua) && /Version\/([\d\.]+)/i.test(ua)) browser = 'Safari ' + (ua.match(/Version\/([\d\.]+)/i)?.[1] || '');
-
-        const parts = [];
-        parts.push(platform);
-        if (model) parts.push(model);
-        if (brand && platform !== 'Android') parts.push(brand); // brand sering “Chromium/Google Chrome”
-        if (browser) parts.push(browser.trim());
-
-        return parts.join(' • ').replace(/\s+/g, ' ').trim() || 'Web';
-      } catch (e) {
-        return 'Web';
+      // model android (kalau UA mengandung, seringnya "SM-xxxx")
+      let model = '';
+      if (platform === 'Android') {
+        const m = ua.match(/Android\s[\d\.]+;\s([^;)]*?)\sBuild\//i) || ua.match(/Android\s[\d\.]+;\s([^;)]*)/i);
+        if (m && m[1]) model = m[1].trim();
       }
+
+      // browser singkat
+      let browser = '';
+      if (/Edg\/([\d\.]+)/i.test(ua)) browser = 'Edge ' + (ua.match(/Edg\/([\d\.]+)/i)?.[1]?.split('.')[0] || '');
+      else if (/Chrome\/([\d\.]+)/i.test(ua) && !/Edg\//i.test(ua)) browser = 'Chrome ' + (ua.match(/Chrome\/([\d\.]+)/i)?.[1]?.split('.')[0] || '');
+      else if (/Firefox\/([\d\.]+)/i.test(ua)) browser = 'Firefox ' + (ua.match(/Firefox\/([\d\.]+)/i)?.[1]?.split('.')[0] || '');
+      else if (/Safari\/([\d\.]+)/i.test(ua) && /Version\/([\d\.]+)/i.test(ua)) browser = 'Safari ' + (ua.match(/Version\/([\d\.]+)/i)?.[1]?.split('.')[0] || '');
+
+      // Client Hints (kalau tersedia) untuk ambil model yg lebih akurat
+      try {
+        if (navigator.userAgentData?.getHighEntropyValues) {
+          const v = await navigator.userAgentData.getHighEntropyValues(['platform', 'model']);
+          if (v?.platform) platform = v.platform;
+          if (v?.model) model = v.model;
+        }
+      } catch (e) { }
+
+      const parts = [];
+      parts.push(platform + (androidVer ? ` ${androidVer}` : ''));
+      if (model) parts.push(model);
+      if (browser) parts.push(browser);
+
+      return parts.join(' • ').replace(/\s+/g, ' ').trim() || 'Web';
     }
 
     // versi async kalau mau ambil "model" dari userAgentData (Android)

@@ -40,6 +40,17 @@ class AttendanceV2Controller extends Controller
             ]
         );
 
+        // UPDATE tiap init (biar tidak nyangkut "Web" selamanya)
+        $incomingName = trim((string) ($data['device_name'] ?? ''));
+        if ($incomingName !== '') {
+            $device->device_name = $incomingName;
+        }
+
+        $ua = substr((string) $request->userAgent(), 0, 180);
+        if ($ua !== '') {
+            $device->user_agent = $ua;
+        }
+
         $device->last_seen_at = now();
         $device->save();
 
