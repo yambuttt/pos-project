@@ -129,6 +129,8 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::post('/admin/attendance/qr/regenerate', [AttendanceQrController::class, 'regenerate'])->name('admin.attendance.qr.regenerate');
 
     Route::get('/admin/attendance/devices', [EmployeeDeviceController::class, 'index'])->name('admin.attendance.devices');
+    Route::post('/admin/attendance/devices/{device}/rename', [EmployeeDeviceController::class, 'rename'])
+    ->name('admin.attendance.devices.rename');
     Route::post('/admin/attendance/devices/{device}/approve', [EmployeeDeviceController::class, 'approve'])->name('admin.attendance.devices.approve');
     Route::post('/admin/attendance/devices/{device}/revoke', [EmployeeDeviceController::class, 'revoke'])->name('admin.attendance.devices.revoke');
     Route::post('/admin/attendance/users/{user}/reset-devices', [EmployeeDeviceController::class, 'resetUserDevices'])->name('admin.attendance.users.reset_devices');

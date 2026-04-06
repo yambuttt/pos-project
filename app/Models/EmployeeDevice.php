@@ -7,8 +7,14 @@ use Illuminate\Database\Eloquent\Model;
 class EmployeeDevice extends Model
 {
     protected $fillable = [
-        'user_id','device_hash','device_name','user_agent',
-        'approved_at','approved_by','revoked_at','last_seen_at',
+        'user_id',
+        'device_hash',
+        'device_name',
+        'user_agent',
+        'approved_at',
+        'approved_by',
+        'revoked_at',
+        'last_seen_at',
     ];
 
     protected $casts = [
@@ -20,5 +26,9 @@ class EmployeeDevice extends Model
     public function isApproved(): bool
     {
         return $this->approved_at !== null && $this->revoked_at === null;
+    }
+    public function user()
+    {
+        return $this->belongsTo(\App\Models\User::class);
     }
 }
