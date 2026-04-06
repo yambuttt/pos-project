@@ -8,6 +8,8 @@ use App\Models\AttendanceQrToken;
 use App\Models\EmployeeDevice;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Http\UploadedFile;
+use Carbon\Carbon;
 
 class AttendanceV2Controller extends Controller
 {
@@ -47,6 +49,99 @@ class AttendanceV2Controller extends Controller
         }
 
         return response()->json(['ok' => true, 'status' => 'approved']);
+    }
+
+    private function storeSelfieWithWatermark(
+        UploadedFile $file,
+        string $mode,
+        string $date,
+        float $lat,
+        float $lng,
+        Carbon $takenAt
+    ): string {
+        $userId = auth()->id();
+        $name = $mode === 'in' ? 'checkin' : 'checkout';
+
+        // kita paksa jpg biar konsisten
+        $filename = $name . '_' . $takenAt->format('His') . '.jpg';
+
+        // simpan dulu
+        $path = $file->storeAs("public/attendances/{$userId}/{$date}", $filename);
+
+        // lalu tempel watermark (overwrite file yang sama)
+        $employeeName = (string) (auth()->user()->name ?? 'Unknown');
+        $this->applyWatermarkToStoredImage($path, $employeeName, $mode, $takenAt, $lat, $lng);
+
+        return $path;
+    }
+
+    private function applyWatermarkToStoredImage(
+        string $path,
+        string $employeeName,
+        string $mode,
+        Carbon $takenAt,
+        float $lat,
+        float $lng
+    ): void {
+        // file tersimpan di disk local (di hosting kamu ini mengarah ke storage/app/private)
+        $disk = Storage::disk('local');
+
+        if (!$disk->exists($path)) {
+            return;
+        }
+
+        $abs = $disk->path($path);
+        $raw = @file_get_contents($abs);
+        if ($raw === false)
+            return;
+
+        $img = @imagecreatefromstring($raw);
+        if (!$img)
+            return;
+
+        $w = imagesx($img);
+        $h = imagesy($img);
+
+        // === watermark box (bawah) ===
+        $padding = max(14, (int) round(min($w, $h) * 0.02));
+        $lineGap = 6;
+
+        $lines = [];
+        $lines[] = 'Nama: ' . $employeeName;
+        $lines[] = 'Mode: ' . strtoupper($mode) . '  •  ' . $takenAt->format('Y-m-d H:i:s');
+        $lines[] = 'Lokasi: ' . number_format($lat, 6, '.', '') . ', ' . number_format($lng, 6, '.', '');
+        $lines[] = 'Maps: https://www.google.com/maps?q=' . $lat . ',' . $lng;
+
+        // pakai font bawaan GD (aman tanpa file font)
+        $font = 3; // 1..5
+        $charH = imagefontheight($font);
+        $boxH = $padding + (count($lines) * $charH) + ((count($lines) - 1) * $lineGap) + $padding;
+
+        $y1 = max(0, $h - $boxH);
+        $y2 = $h;
+
+        // warna
+        imagealphablending($img, true);
+        imagesavealpha($img, true);
+
+        $bg = imagecolorallocatealpha($img, 0, 0, 0, 60);   // hitam transparan
+        $white = imagecolorallocatealpha($img, 255, 255, 255, 0);
+
+        // background rectangle
+        imagefilledrectangle($img, 0, $y1, $w, $y2, $bg);
+
+        // tulis teks
+        $x = $padding;
+        $y = $y1 + $padding;
+
+        foreach ($lines as $i => $t) {
+            imagestring($img, $font, $x, $y, $t, $white);
+            $y += $charH + $lineGap;
+        }
+
+        // simpan ulang ke JPEG (overwrite)
+        @imagejpeg($img, $abs, 88);
+        imagedestroy($img);
     }
 
     public function submit(Request $request)
@@ -141,18 +236,28 @@ class AttendanceV2Controller extends Controller
         }
 
         // 5) simpan selfie (tetap ke disk default kamu)
-        $path = $this->storeSelfie($request->file('selfie'), $data['mode'], $today);
+        $now = now(); // pakai 1 timestamp yang konsisten
+
+        // 5) simpan selfie + watermark otomatis
+        $path = $this->storeSelfieWithWatermark(
+            $request->file('selfie'),
+            $data['mode'],
+            $today,
+            (float) $data['lat'],
+            (float) $data['lng'],
+            $now
+        );
 
         // 6) commit attendance
         $att->device_hash = $data['device_hash'];
 
         if ($data['mode'] === 'in') {
-            $att->check_in_at = now();
+            $att->check_in_at = $now;
             $att->check_in_lat = $data['lat'];
             $att->check_in_lng = $data['lng'];
             $att->check_in_photo_path = $path;
         } else {
-            $att->check_out_at = now();
+            $att->check_out_at = $now;
             $att->check_out_lat = $data['lat'];
             $att->check_out_lng = $data['lng'];
             $att->check_out_photo_path = $path;
