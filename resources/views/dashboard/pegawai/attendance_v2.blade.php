@@ -520,7 +520,7 @@
 
           setFaceHint(faceOk ? "Wajah OK ✅ Tahan sebentar…" : "Wajah terdeteksi… (stabilkan)", faceOk);
 
-          const landmarks = faces[0];
+
 
           // titik landmark
           // titik-titik kecil (opsional, kalau mau lebih clean bisa hapus)
