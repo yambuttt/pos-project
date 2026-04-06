@@ -225,7 +225,6 @@
           body: JSON.stringify({
             device_hash: deviceHash,
             device_name: deviceName,
-            device_name: "Web",
             lat: geo.lat,
             lng: geo.lng
           })
