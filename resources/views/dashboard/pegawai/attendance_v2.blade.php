@@ -160,8 +160,10 @@
 
     function resizeOverlayToVideo() {
       if (!faceOverlay) return;
+
       const w = video.videoWidth || 640;
       const h = video.videoHeight || 480;
+
       faceOverlay.width = w;
       faceOverlay.height = h;
     }
@@ -522,23 +524,45 @@
 
           // titik landmark
           // titik-titik kecil (opsional, kalau mau lebih clean bisa hapus)
-          if (typeof drawLandmarks !== "undefined") {
-            drawLandmarks(ctx, landmarks, { color: '#7dd3fc', lineWidth: 1 });
+          const landmarks = faces[0];
+
+          // hitung bounding box wajah (normalisasi 0..1)
+          let minX = 1, minY = 1, maxX = 0, maxY = 0;
+          for (const p of landmarks) {
+            if (p.x < minX) minX = p.x;
+            if (p.y < minY) minY = p.y;
+            if (p.x > maxX) maxX = p.x;
+            if (p.y > maxY) maxY = p.y;
           }
 
-          // ✅ jangan gambar TESSELATION (ini yang bikin padat)
-          if (typeof FACEMESH_FACE_OVAL !== "undefined") {
-            drawConnectors(ctx, landmarks, FACEMESH_FACE_OVAL, { color: '#22c55e', lineWidth: 2 });
-          }
-          if (typeof FACEMESH_LEFT_EYE !== "undefined") {
-            drawConnectors(ctx, landmarks, FACEMESH_LEFT_EYE, { color: '#60a5fa', lineWidth: 1.5 });
-          }
-          if (typeof FACEMESH_RIGHT_EYE !== "undefined") {
-            drawConnectors(ctx, landmarks, FACEMESH_RIGHT_EYE, { color: '#60a5fa', lineWidth: 1.5 });
-          }
-          if (typeof FACEMESH_LIPS !== "undefined") {
-            drawConnectors(ctx, landmarks, FACEMESH_LIPS, { color: '#fb7185', lineWidth: 1.5 });
-          }
+          // ubah ke pixel canvas
+          const cw = faceOverlay.width;
+          const ch = faceOverlay.height;
+
+          let x = minX * cw;
+          let y = minY * ch;
+          let bw = (maxX - minX) * cw;
+          let bh = (maxY - minY) * ch;
+
+          // kasih padding biar frame sedikit lebih besar dari wajah
+          const pad = Math.max(12, Math.round(Math.min(bw, bh) * 0.12));
+          x = Math.max(0, x - pad);
+          y = Math.max(0, y - pad);
+          bw = Math.min(cw - x, bw + pad * 2);
+          bh = Math.min(ch - y, bh + pad * 2);
+
+          // gambar frame oval/rounded (lebih “ngikut wajah”)
+          ctx.save();
+          ctx.lineWidth = 4;
+          ctx.strokeStyle = 'rgba(34,197,94,0.9)'; // hijau
+          ctx.shadowColor = 'rgba(34,197,94,0.45)';
+          ctx.shadowBlur = 10;
+
+          // ellipse
+          ctx.beginPath();
+          ctx.ellipse(x + bw / 2, y + bh / 2, bw / 2, bh / 2, 0, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.restore();
         });
       }
 
