@@ -8,334 +8,468 @@
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
-    {{-- hanya animasi liquid --}}
     <style>
-        @keyframes floaty {
-            0% { transform: translate(-10px, 10px) scale(1); }
-            50% { transform: translate(30px, -25px) scale(1.05); }
-            100% { transform: translate(-10px, 10px) scale(1); }
+        html {
+            scroll-behavior: smooth;
         }
 
-        @keyframes sheen {
-            0% { transform: translateX(-6%) rotate(10deg); }
-            50% { transform: translateX(6%) rotate(10deg); }
-            100% { transform: translateX(-6%) rotate(10deg); }
+        body {
+            overflow-x: hidden;
+        }
+
+        @keyframes floaty {
+            0% {
+                transform: translate(-10px, 10px) scale(1);
+            }
+
+            50% {
+                transform: translate(30px, -25px) scale(1.05);
+            }
+
+            100% {
+                transform: translate(-10px, 10px) scale(1);
+            }
+        }
+
+        @keyframes pulseSoft {
+
+            0%,
+            100% {
+                transform: scale(1);
+                opacity: .85;
+            }
+
+            50% {
+                transform: scale(1.05);
+                opacity: 1;
+            }
+        }
+
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
         }
     </style>
 </head>
 
-<body class="min-h-screen text-white">
-    <!-- Base background -->
-    <div class="fixed inset-0 -z-10 bg-gradient-to-b from-[#070708] to-[#0b0b0d]"></div>
-
-    <!-- Liquid blobs -->
-    <div class="pointer-events-none fixed -left-36 -top-40 -z-10 h-[520px] w-[520px] rounded-full bg-yellow-400/25 blur-[60px]"
-        style="animation: floaty 12s ease-in-out infinite;"></div>
-    <div class="pointer-events-none fixed -right-52 top-28 -z-10 h-[620px] w-[620px] rounded-full bg-white/15 blur-[70px]"
-        style="animation: floaty 16s ease-in-out infinite;"></div>
-    <div class="pointer-events-none fixed left-24 -bottom-56 -z-10 h-[480px] w-[480px] rounded-full bg-yellow-300/20 blur-[65px]"
+<body class="min-h-screen bg-[#070708] text-white">
+    {{-- Background --}}
+    <div
+        class="fixed inset-0 -z-10 bg-[radial-gradient(circle_at_top_left,rgba(250,204,21,.18),transparent_28%),radial-gradient(circle_at_top_right,rgba(255,255,255,.08),transparent_24%),linear-gradient(to_bottom,#070708,#0a0a0d)]">
+    </div>
+    <div class="pointer-events-none fixed -left-40 -top-40 -z-10 h-[420px] w-[420px] rounded-full bg-yellow-400/15 blur-[70px]"
         style="animation: floaty 14s ease-in-out infinite;"></div>
+    <div class="pointer-events-none fixed right-[-120px] top-[80px] -z-10 h-[360px] w-[360px] rounded-full bg-white/10 blur-[80px]"
+        style="animation: floaty 16s ease-in-out infinite;"></div>
+    <div class="pointer-events-none fixed bottom-[-160px] left-[20%] -z-10 h-[320px] w-[320px] rounded-full bg-yellow-300/10 blur-[70px]"
+        style="animation: floaty 13s ease-in-out infinite;"></div>
 
-    <div class="mx-auto max-w-6xl px-4 pb-24 pt-7">
-        <!-- Topbar -->
-        <div class="mb-5 flex items-center justify-between gap-4">
-            <div class="flex items-center gap-3">
-                <div class="h-11 w-11 rounded-2xl border border-yellow-300/30 bg-yellow-400/20 shadow-lg shadow-yellow-400/10 backdrop-blur-2xl"></div>
-                <div>
-                    <div class="text-xs tracking-[0.22em] uppercase text-white/85">Ayo Renne</div>
-                    <div class="text-xs text-white/60">Pesan menu langsung dari aplikasi</div>
+    <div class="mx-auto max-w-7xl px-4 pb-28 pt-5 sm:px-5 lg:px-6">
+        {{-- Top Bar --}}
+        <div class="mb-4 flex items-center justify-between gap-3">
+            <div class="flex min-w-0 items-center gap-3">
+                <div
+                    class="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-yellow-300/25 bg-yellow-400/10 shadow-lg shadow-yellow-400/10 backdrop-blur-2xl">
+                    <img src="{{ asset('images/landing/logo-ayo-renne.png') }}" alt="Ayo Renne"
+                        class="h-8 w-8 object-contain">
+                </div>
+                <div class="min-w-0">
+                    <div class="truncate text-[11px] font-semibold uppercase tracking-[0.28em] text-yellow-200/95">Ayo
+                        Renne</div>
+                    <div class="truncate text-xs text-white/60">Pesan menu cepat, rapi, dan nyaman</div>
                 </div>
             </div>
 
-            <div class="inline-flex items-center gap-2 rounded-full border border-white/15 bg-black/20 px-3 py-2 text-xs text-white/85 backdrop-blur-2xl">
-                <span class="h-2 w-2 rounded-full bg-yellow-400 shadow-[0_0_0_6px_rgba(250,204,21,0.12)]"></span>
+            <div
+                class="hidden items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-2 text-xs text-white/75 backdrop-blur-2xl sm:inline-flex">
+                <span class="h-2.5 w-2.5 rounded-full bg-yellow-400 shadow-[0_0_0_6px_rgba(250,204,21,0.12)]"
+                    style="animation:pulseSoft 2.2s ease-in-out infinite;"></span>
                 <span id="timeGreeting">Selamat datang</span>
             </div>
         </div>
 
-        <!-- Hero -->
-        <div class="mb-4 grid grid-cols-1 gap-4 lg:grid-cols-[1.35fr_.65fr]">
-            <div class="relative overflow-hidden rounded-[26px] border border-white/15 bg-white/10 p-5 shadow-2xl backdrop-blur-2xl">
-                <!-- sheen overlay -->
-                <div class="pointer-events-none absolute -inset-[40%] opacity-70" style="background:
-                    radial-gradient(circle at 20% 30%, rgba(255,255,255,.20), transparent 45%),
-                    radial-gradient(circle at 70% 55%, rgba(250,204,21,.22), transparent 50%),
-                    linear-gradient(120deg, transparent, rgba(255,255,255,.08), transparent);
-                    transform: rotate(10deg);
-                    animation: sheen 8s ease-in-out infinite;">
+        {{-- Hero --}}
+        <section class="mb-5 grid grid-cols-1 gap-4 xl:grid-cols-[1.2fr_.8fr]">
+            <div
+                class="relative overflow-hidden rounded-[28px] border border-white/12 bg-white/[0.06] p-5 shadow-2xl backdrop-blur-2xl sm:p-7">
+                <div
+                    class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(250,204,21,.16),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(255,255,255,.08),transparent_26%)]">
                 </div>
 
                 <div class="relative">
-                    <h1 class="mb-2 text-3xl font-semibold tracking-tight sm:text-4xl">
-                        <span class="text-yellow-300 drop-shadow-[0_18px_50px_rgba(250,204,21,0.16)]">Halo!</span>
-                        Mau pesan apa hari ini?
+                    <div
+                        class="inline-flex items-center gap-2 rounded-full border border-yellow-300/20 bg-yellow-400/10 px-3 py-1 text-[11px] font-medium text-yellow-100/95">
+                        <span class="h-2 w-2 rounded-full bg-yellow-300"></span>
+                        Menu favorit tersedia hari ini
+                    </div>
+
+                    <h1
+                        class="mt-4 max-w-3xl text-3xl font-bold leading-tight tracking-tight text-white sm:text-4xl lg:text-5xl">
+                        Pilih menu dengan
+                        <span class="text-yellow-300">lebih cepat</span>,
+                        lebih jelas, dan lebih nyaman.
                     </h1>
 
-                    <p class="max-w-[62ch] text-sm leading-relaxed text-white/75">
-                        Pilih menu favorit kamu, masukin ke keranjang, lalu checkout. Tampilan modern & elegan dengan
-                        efek <i>liquid glass</i>.
+                    <p class="mt-3 max-w-2xl text-sm leading-7 text-white/68 sm:text-[15px]">
+                        Cari menu favoritmu, pilih kategori, masukkan ke keranjang, lalu lanjut checkout.
+                        Semua dibuat agar pelanggan lebih mudah memahami pilihan menu, baik di mobile maupun desktop.
                     </p>
 
-                    <div class="mt-4 flex flex-wrap items-center gap-2">
-                        <button
-                            class="rounded-xl bg-yellow-400/95 px-4 py-2 text-sm font-semibold text-black shadow-lg shadow-yellow-400/10 hover:bg-yellow-300"
-                            onclick="document.getElementById('menu').scrollIntoView({behavior:'smooth'})" type="button">
-                            Lihat Menu
+                    <div class="mt-5 flex flex-wrap items-center gap-3">
+                        <button type="button"
+                            onclick="document.getElementById('menu-section').scrollIntoView({ behavior: 'smooth' })"
+                            class="rounded-2xl bg-yellow-400 px-5 py-3 text-sm font-semibold text-black shadow-lg shadow-yellow-400/10 transition hover:bg-yellow-300">
+                            Jelajahi Menu
                         </button>
 
-                        <button
-                            class="rounded-xl border border-white/15 bg-black/20 px-4 py-2 text-sm font-semibold text-white/90 backdrop-blur-2xl hover:bg-white/10"
-                            onclick="openCart()" type="button">
+                        <button type="button" onclick="openCart()"
+                            class="rounded-2xl border border-white/12 bg-white/[0.05] px-5 py-3 text-sm font-semibold text-white/90 backdrop-blur-2xl transition hover:bg-white/[0.09]">
                             Buka Keranjang
                         </button>
 
-                        <span class="ml-1 text-xs text-white/55">Warna: hitam × kuning • Style: modern elegant</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="rounded-[26px] border border-white/15 bg-white/10 p-5 shadow-2xl backdrop-blur-2xl">
-                <div class="flex items-start justify-between gap-3">
-                    <div>
-                        <div class="text-xs tracking-[0.18em] uppercase text-white/75">Info Cepat</div>
-                        <div class="mt-2 text-sm text-white/70">
-                            Order kamu akan dirangkum sebelum checkout.
+                        <div class="text-xs text-white/48">
+                            Tampilan baru: modern • elegan • responsif
                         </div>
                     </div>
-                    <span class="text-yellow-300">●</span>
-                </div>
-
-                <p class="mt-4 text-xs leading-relaxed text-white/55">
-                    Tip: kalau ada menu yang tombolnya nonaktif, berarti stok bahan sedang tidak mencukupi (stock-based).
-                </p>
-            </div>
-        </div>
-
-        <section id="menu" class="rounded-[24px] border border-white/15 bg-white/10 p-4 shadow-2xl backdrop-blur-2xl">
-            <div class="mb-3 flex items-center justify-between gap-3">
-                <h2 class="text-xs tracking-[0.22em] uppercase text-white/80">Menu</h2>
-                <div class="inline-flex items-center gap-2 rounded-full border border-white/15 bg-black/20 px-3 py-2 text-xs text-white/80 backdrop-blur-2xl">
-                    <span class="h-2 w-2 rounded-full bg-yellow-400 shadow-[0_0_0_6px_rgba(250,204,21,0.12)]"></span>
-                    <span id="menuCount">0 item</span>
                 </div>
             </div>
 
-            <!-- filters -->
-            <div class="mb-3 flex flex-wrap gap-2" id="filters">
-                <button
-                    class="pill active rounded-full border border-yellow-300/30 bg-yellow-400/10 px-3 py-2 text-xs text-white/90 shadow-[0_0_0_6px_rgba(250,204,21,0.08)]"
-                    data-cat="__all" type="button">Semua</button>
-                @foreach($categories as $c)
-                    <button
-                        class="pill rounded-full border border-white/15 bg-black/20 px-3 py-2 text-xs text-white/80 backdrop-blur-2xl hover:bg-white/10"
-                        data-cat="{{ $c }}" type="button">{{ $c }}</button>
-                @endforeach
-            </div>
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-1">
+                <div class="rounded-[28px] border border-white/12 bg-white/[0.06] p-5 shadow-2xl backdrop-blur-2xl">
+                    <div class="flex items-start justify-between gap-3">
+                        <div>
+                            <div class="text-[11px] uppercase tracking-[0.24em] text-white/55">Info Cepat</div>
+                            <div class="mt-2 text-base font-semibold text-white/92">Pesan lebih mudah</div>
+                        </div>
+                        <span class="text-yellow-300">●</span>
+                    </div>
 
-            <!-- Search -->
-            <div class="mb-3">
-                <div class="flex items-center gap-2 rounded-2xl border border-white/12 bg-black/20 px-4 py-3 backdrop-blur-2xl">
-                    <svg class="h-5 w-5 text-white/50" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                        <path d="M21 21l-4.3-4.3m1.8-5.2a7 7 0 11-14 0 7 7 0 0114 0z"
-                            stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-                    </svg>
-                    <input id="searchInput" type="text" placeholder="Cari menu... (contoh: bakso, cendol)"
-                        class="w-full bg-transparent text-sm text-white/90 placeholder:text-white/40 outline-none"
-                        autocomplete="off" />
-                    <button id="clearSearch" type="button"
-                        class="hidden rounded-xl border border-white/12 bg-black/20 px-3 py-2 text-xs font-semibold text-white/75 hover:bg-white/10">
-                        Clear
+                    <ul class="mt-4 space-y-3 text-sm leading-6 text-white/70">
+                        <li>• Cari menu dengan kolom pencarian yang lebih jelas.</li>
+                        <li>• Filter kategori lebih mudah disentuh di HP.</li>
+                        <li>• Ringkasan keranjang selalu terlihat.</li>
+                    </ul>
+                </div>
+
+                <div class="rounded-[28px] border border-white/12 bg-white/[0.06] p-5 shadow-2xl backdrop-blur-2xl">
+                    <div class="text-[11px] uppercase tracking-[0.24em] text-white/55">Catatan</div>
+                    <p class="mt-3 text-sm leading-6 text-white/68">
+                        Jika tombol menu nonaktif, berarti stok bahan sedang tidak mencukupi.
+                        Sistem akan menonaktifkan item yang tidak bisa dipesan.
+                    </p>
+
+                    <div
+                        class="mt-4 inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/20 px-3 py-2 text-xs text-white/75">
+                        <span class="h-2 w-2 rounded-full bg-yellow-400"></span>
+                        <span id="menuCount">0 item</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        {{-- Sticky Search / Filter --}}
+        <section id="menu-section"
+            class="rounded-[28px] border border-white/12 bg-white/[0.06] p-4 shadow-2xl backdrop-blur-2xl sm:p-5">
+            <div class="flex flex-col gap-4">
+                <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                    <div>
+                        <div class="text-[11px] uppercase tracking-[0.28em] text-white/55">Menu</div>
+                        <div class="mt-1 text-lg font-semibold text-white/95">Pilih makanan & minuman favoritmu</div>
+                    </div>
+
+                    <div
+                        class="inline-flex items-center gap-2 self-start rounded-full border border-white/10 bg-black/20 px-3 py-2 text-xs text-white/78">
+                        <span
+                            class="h-2.5 w-2.5 rounded-full bg-yellow-400 shadow-[0_0_0_6px_rgba(250,204,21,0.12)]"></span>
+                        <span id="searchMeta">Semua menu ditampilkan</span>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 gap-3 lg:grid-cols-[1fr_auto]">
+                    <div
+                        class="flex items-center gap-3 rounded-2xl border border-white/12 bg-black/20 px-4 py-3 backdrop-blur-2xl">
+                        <svg class="h-5 w-5 shrink-0 text-white/45" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <path d="M21 21l-4.3-4.3m1.8-5.2a7 7 0 11-14 0 7 7 0 0114 0z" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" />
+                        </svg>
+                        <input id="searchInput" type="text" placeholder="Cari menu... misalnya ayam, kopi, cireng"
+                            class="w-full bg-transparent text-sm text-white placeholder:text-white/38 outline-none"
+                            autocomplete="off">
+                        <button id="clearSearch" type="button"
+                            class="hidden rounded-xl border border-white/12 bg-white/[0.04] px-3 py-2 text-xs font-semibold text-white/75 hover:bg-white/[0.08]">
+                            Clear
+                        </button>
+                    </div>
+
+                    <button type="button" onclick="openCart()"
+                        class="hidden rounded-2xl border border-white/12 bg-white/[0.05] px-4 py-3 text-sm font-semibold text-white/90 transition hover:bg-white/[0.09] lg:inline-flex lg:items-center lg:justify-center">
+                        Lihat Keranjang
                     </button>
                 </div>
 
-                <div id="searchMeta" class="mt-2 text-xs text-white/55"></div>
-            </div>
+                <div id="filters" class="hide-scrollbar flex gap-2 overflow-x-auto pb-1">
+                    <button
+                        class="pill active whitespace-nowrap rounded-full border border-yellow-300/30 bg-yellow-400/12 px-4 py-2 text-xs font-medium text-white shadow-[0_0_0_6px_rgba(250,204,21,0.08)]"
+                        data-cat="__all" type="button">
+                        Semua
+                    </button>
+                    @foreach($categories as $c)
+                        <button
+                            class="pill whitespace-nowrap rounded-full border border-white/12 bg-black/20 px-4 py-2 text-xs font-medium text-white/80 backdrop-blur-2xl transition hover:bg-white/[0.08]"
+                            data-cat="{{ $c }}" type="button">
+                            {{ $c }}
+                        </button>
+                    @endforeach
+                </div>
 
-            <!-- products grid -->
-            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3" id="menuGrid">
-                @foreach($products as $p)
-                    @php
-                        $max = (int) $p->maxServingsFromStock();
-                        $sellable = $max > 0;
-                        $cat = trim((string)($p->category ?? 'Lainnya'));
-                        $img = $p->imageUrl();
-                    @endphp
+                {{-- Menu Grid --}}
+                <div id="menuGrid" class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                    @foreach($products as $p)
+                        @php
+                            $max = (int) $p->maxServingsFromStock();
+                            $sellable = $max > 0;
+                            $cat = trim((string) ($p->category ?? 'Lainnya'));
+                            $img = $p->imageUrl();
+                        @endphp
 
-                    <div
-                        class="group relative overflow-hidden rounded-[18px] border border-white/12 bg-white/5 p-4 backdrop-blur-2xl hover:border-white/20 hover:bg-white/10 transition cursor-pointer"
-                        data-cat="{{ $cat }}"
-                        data-id="{{ $p->id }}"
-                        data-name="{{ $p->name }}"
-                        data-price="{{ (int)$p->price }}"
-                        data-desc="{{ e($p->description ?? '') }}"
-                        data-img="{{ $img ? e($img) : '' }}"
-                        onclick="openProductModal({{ $p->id }})"
-                    >
-                        <div class="pointer-events-none absolute -inset-24 opacity-60"
-                            style="background: radial-gradient(circle at 30% 30%, rgba(255,255,255,.14), transparent 55%);">
-                        </div>
+                        <article
+                            class="group relative overflow-hidden rounded-[24px] border border-white/10 bg-[#121214]/85 p-4 shadow-xl transition duration-200 hover:-translate-y-[2px] hover:border-white/18 hover:bg-[#151518]"
+                            data-cat="{{ $cat }}" data-id="{{ $p->id }}" data-name="{{ $p->name }}"
+                            data-price="{{ (int) $p->price }}" data-desc="{{ e($p->description ?? '') }}"
+                            data-img="{{ $img ? e($img) : '' }}" onclick="openProductModal({{ $p->id }})">
 
-                        <div class="relative flex gap-3">
-                            {{-- IMAGE --}}
-                            <div class="h-16 w-16 shrink-0 overflow-hidden rounded-2xl border border-white/12 bg-black/30">
-                                @if($img)
-                                    <img src="{{ $img }}" alt="{{ $p->name }}" class="h-full w-full object-cover" loading="lazy">
-                                @else
-                                    <div class="h-full w-full bg-gradient-to-br from-yellow-400/20 via-white/5 to-transparent"></div>
-                                @endif
+                            <div
+                                class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,.08),transparent_24%),radial-gradient(circle_at_bottom_right,rgba(250,204,21,.10),transparent_20%)] opacity-80">
                             </div>
 
-                            {{-- INFO --}}
-                            <div class="min-w-0 flex-1">
-                                <div class="flex items-start justify-between gap-3">
-                                    <div class="min-w-0">
-                                        <div class="truncate text-sm font-semibold text-white/95">{{ $p->name }}</div>
-                                        <div class="mt-1 text-xs text-white/55">{{ $cat }}</div>
+                            <div class="relative flex h-full flex-col">
+                                <div class="flex items-start gap-4">
+                                    <div
+                                        class="h-20 w-20 shrink-0 overflow-hidden rounded-2xl border border-white/10 bg-black/30">
+                                        @if($img)
+                                            <img src="{{ $img }}" alt="{{ $p->name }}" class="h-full w-full object-cover"
+                                                loading="lazy">
+                                        @else
+                                            <div
+                                                class="h-full w-full bg-gradient-to-br from-yellow-400/15 via-white/5 to-transparent">
+                                            </div>
+                                        @endif
                                     </div>
-                                    <div class="shrink-0 text-sm font-bold text-yellow-300">
-                                        Rp {{ number_format((int)$p->price, 0, ',', '.') }}
+
+                                    <div class="min-w-0 flex-1">
+                                        <div class="flex items-start justify-between gap-3">
+                                            <div class="min-w-0">
+                                                <h3 class="line-clamp-2 text-base font-semibold leading-6 text-white/95">
+                                                    {{ $p->name }}
+                                                </h3>
+                                                <div
+                                                    class="mt-1 inline-flex items-center rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 text-[11px] text-white/62">
+                                                    {{ $cat }}
+                                                </div>
+                                            </div>
+
+                                            <div class="shrink-0 text-right">
+                                                <div class="text-sm font-bold text-yellow-300">
+                                                    Rp {{ number_format((int) $p->price, 0, ',', '.') }}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <p class="mt-3 line-clamp-2 text-sm leading-6 text-white/62">
+                                            {{ $p->description ?: 'Belum ada deskripsi menu.' }}
+                                        </p>
                                     </div>
                                 </div>
 
-                                {{-- DESCRIPTION --}}
-                                <div class="mt-2 line-clamp-2 text-xs leading-relaxed text-white/65">
-                                    {{ $p->description ?: '—' }}
-                                </div>
+                                <div class="mt-4 flex items-center justify-between gap-3">
+                                    <div class="text-xs text-white/45">
+                                        @if($sellable)
+                                            Siap dipesan
+                                        @else
+                                            Stok tidak tersedia
+                                        @endif
+                                    </div>
 
-                                <div class="mt-3 flex items-center justify-end">
-                                    <button
-                                        class="rounded-xl border border-yellow-300/30 bg-yellow-400/10 px-3 py-2 text-xs font-semibold text-white/90 hover:bg-yellow-400/15 disabled:cursor-not-allowed disabled:opacity-40 disabled:border-white/10 disabled:bg-black/20"
-                                        onclick="event.stopPropagation(); addToCart({{ $p->id }});"
-                                        @if(!$sellable) disabled @endif
-                                        type="button"
-                                    >
-                                        + Add
+                                    <button type="button" onclick="event.stopPropagation(); addToCart({{ $p->id }});"
+                                        @if(!$sellable) disabled @endif class="inline-flex items-center justify-center rounded-2xl px-4 py-2.5 text-sm font-semibold transition
+                                                    @if($sellable)
+                                                        bg-yellow-400 text-black shadow-lg shadow-yellow-400/10 hover:bg-yellow-300
+                                                    @else
+                                                        cursor-not-allowed border border-white/10 bg-black/20 text-white/35
+                                                    @endif">
+                                        @if($sellable)
+                                            + Tambah
+                                        @else
+                                            Habis
+                                        @endif
                                     </button>
                                 </div>
                             </div>
-                        </div>
-                    </div>
-                @endforeach
+                        </article>
+                    @endforeach
+                </div>
             </div>
         </section>
     </div>
 
-    <!-- FLOATING CART BUTTON -->
+    {{-- Floating cart --}}
     <button id="fabCart"
-        class="fixed bottom-6 right-6 z-50 inline-flex items-center gap-3 rounded-full border border-white/15 bg-black/40 px-4 py-3 text-sm font-semibold text-white/90 shadow-2xl backdrop-blur-2xl hover:bg-white/10"
+        class="fixed bottom-5 right-4 z-50 inline-flex items-center gap-3 rounded-full border border-white/12 bg-black/55 px-4 py-3 text-sm font-semibold text-white shadow-2xl backdrop-blur-2xl transition hover:bg-white/[0.08] sm:right-6"
         type="button" onclick="openCart()">
-        <span class="h-2.5 w-2.5 rounded-full bg-yellow-400 shadow-[0_0_0_6px_rgba(250,204,21,0.12)]"></span>
-        <span>Keranjang</span>
-        <span id="cartBadge"
-            class="ml-1 inline-flex min-w-[28px] items-center justify-center rounded-full bg-yellow-400/90 px-2 py-1 text-xs font-extrabold text-black">0</span>
+        <span class="hidden sm:inline">Keranjang</span>
+        <span
+            class="inline-flex min-w-[30px] items-center justify-center rounded-full bg-yellow-400 px-2.5 py-1 text-xs font-extrabold text-black"
+            id="cartBadge">0</span>
     </button>
 
-    <!-- CART BACKDROP -->
-    <div id="cartBackdrop" class="fixed inset-0 z-50 hidden bg-black/60 backdrop-blur-[2px]" onclick="closeCart()"></div>
-
-    <!-- CART DRAWER -->
-    <div id="cartDrawer"
-        class="fixed right-0 top-0 z-50 h-full w-full max-w-[420px] translate-x-full border-l border-white/15 bg-black/50 p-4 shadow-2xl backdrop-blur-2xl transition-transform duration-200"
-        role="dialog" aria-modal="true">
-        <div class="flex items-center justify-between gap-3">
-            <h2 class="text-xs tracking-[0.22em] uppercase text-white/80">Keranjang</h2>
-            <div class="flex items-center gap-2">
-                <button
-                    class="rounded-xl border border-white/15 bg-black/20 px-3 py-2 text-xs font-semibold text-white/85 backdrop-blur-2xl hover:bg-white/10"
-                    onclick="clearCart()" type="button">Clear</button>
-                <button
-                    class="rounded-xl border border-white/15 bg-black/20 px-3 py-2 text-xs font-semibold text-white/85 backdrop-blur-2xl hover:bg-white/10"
-                    onclick="closeCart()" type="button">Tutup</button>
-            </div>
-        </div>
-
-        <div id="cartList" class="mt-3 flex max-h-[340px] flex-col gap-2 overflow-auto pr-1"></div>
-
-        <div class="mt-3 space-y-2 border-t border-white/10 pt-3 text-sm">
-            <div class="flex items-center justify-between text-white/75">
-                <span>Subtotal</span>
-                <span class="font-semibold text-white/90" id="subtotal">Rp 0</span>
-            </div>
-            <div class="flex items-center justify-between text-white/75">
-                <span>Estimasi Pajak (11%)</span>
-                <span class="font-semibold text-white/90" id="tax">Rp 0</span>
-            </div>
-            <div class="flex items-center justify-between text-white/75">
-                <span>Total</span>
-                <span class="font-semibold text-white/95" id="total">Rp 0</span>
-            </div>
-        </div>
-
-        <button
-            class="mt-4 w-full rounded-xl bg-yellow-400/95 px-4 py-3 text-sm font-semibold text-black shadow-lg shadow-yellow-400/10 hover:bg-yellow-300"
-            onclick="goToOverview()" type="button">
-            Checkout
-        </button>
-
-        <p class="mt-2 text-xs leading-relaxed text-white/50">
-            Lanjutkan ke halaman overview untuk isi keterangan.
-        </p>
+    {{-- Cart backdrop --}}
+    <div id="cartBackdrop" class="fixed inset-0 z-50 hidden bg-black/60 backdrop-blur-[2px]" onclick="closeCart()">
     </div>
 
-    <!-- PRODUCT MODAL BACKDROP -->
-    <div id="productBackdrop" class="fixed inset-0 z-50 hidden bg-black/70 backdrop-blur-[2px]" onclick="closeProductModal()"></div>
-
-    <!-- PRODUCT MODAL -->
-    <div id="productModal"
-        class="fixed left-1/2 top-1/2 z-50 hidden w-[92%] max-w-[520px] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-[26px] border border-white/15 bg-black/55 shadow-2xl backdrop-blur-2xl"
+    {{-- Cart drawer --}}
+    <aside id="cartDrawer"
+        class="fixed right-0 top-0 z-50 flex h-full w-full max-w-[430px] translate-x-full flex-col border-l border-white/12 bg-[#0b0b0d]/95 p-4 shadow-2xl backdrop-blur-2xl transition-transform duration-200"
         role="dialog" aria-modal="true">
-        <div class="relative">
-            <div id="pmImageWrap" class="h-[220px] w-full bg-black/30">
-                <img id="pmImage" class="hidden h-full w-full object-cover" alt="">
-                <div id="pmNoImage" class="h-full w-full bg-gradient-to-br from-yellow-400/20 via-white/5 to-transparent"></div>
+        <div class="flex items-center justify-between gap-3">
+            <div>
+                <div class="text-[11px] uppercase tracking-[0.24em] text-white/55">Keranjang</div>
+                <div class="mt-1 text-lg font-semibold text-white/95">Pesanan Kamu</div>
             </div>
 
-            <button type="button"
-                class="absolute right-3 top-3 rounded-xl border border-white/15 bg-black/30 px-3 py-2 text-xs font-semibold text-white/90 backdrop-blur-2xl hover:bg-white/10"
-                onclick="closeProductModal()">Tutup</button>
+            <div class="flex items-center gap-2">
+                <button type="button"
+                    class="rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-xs font-semibold text-white/80 hover:bg-white/[0.08]"
+                    onclick="clearCart()">
+                    Clear
+                </button>
+                <button type="button"
+                    class="rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-xs font-semibold text-white/80 hover:bg-white/[0.08]"
+                    onclick="closeCart()">
+                    Tutup
+                </button>
+            </div>
         </div>
 
-        <div class="p-5">
-            <div class="flex items-start justify-between gap-4">
-                <div class="min-w-0">
-                    <div id="pmName" class="truncate text-lg font-semibold text-white/95">Nama Produk</div>
-                    <div id="pmCategory" class="mt-1 text-xs text-white/55">Kategori</div>
+        <div id="cartList" class="mt-4 flex-1 space-y-3 overflow-auto pr-1"></div>
+
+        <div class="mt-4 rounded-2xl border border-white/10 bg-white/[0.04] p-4">
+            <div class="space-y-2 text-sm">
+                <div class="flex items-center justify-between text-white/68">
+                    <span>Subtotal</span>
+                    <span id="subtotal" class="font-semibold text-white/95">Rp 0</span>
                 </div>
-                <div id="pmPrice" class="shrink-0 text-base font-extrabold text-yellow-300">Rp 0</div>
+                <div class="flex items-center justify-between text-white/68">
+                    <span>Estimasi Pajak (11%)</span>
+                    <span id="tax" class="font-semibold text-white/95">Rp 0</span>
+                </div>
+                <div class="flex items-center justify-between border-t border-white/10 pt-3 text-white/80">
+                    <span class="font-medium">Total</span>
+                    <span id="total" class="text-base font-bold text-yellow-300">Rp 0</span>
+                </div>
             </div>
 
-            <p id="pmDesc" class="mt-3 text-sm leading-relaxed text-white/75"></p>
+            <button type="button" onclick="goToOverview()"
+                class="mt-4 w-full rounded-2xl bg-yellow-400 px-4 py-3 text-sm font-semibold text-black shadow-lg shadow-yellow-400/10 transition hover:bg-yellow-300">
+                Lanjut Checkout
+            </button>
 
-            <div class="mt-5 flex items-center justify-between gap-3">
-                <div class="text-xs text-white/50">Kamu bisa add dari sini atau langsung dari card.</div>
-                <button id="pmAddBtn"
-                    class="rounded-xl bg-yellow-400/95 px-4 py-2 text-sm font-semibold text-black shadow-lg shadow-yellow-400/10 hover:bg-yellow-300 disabled:opacity-40 disabled:cursor-not-allowed"
-                    type="button">
-                    + Add ke Keranjang
+            <p class="mt-2 text-xs leading-6 text-white/45">
+                Kamu akan diarahkan ke halaman overview untuk mengisi detail pesanan.
+            </p>
+        </div>
+    </aside>
+
+    {{-- Product backdrop --}}
+    <div id="productBackdrop" class="fixed inset-0 z-50 hidden bg-black/70 backdrop-blur-[2px]"
+        onclick="closeProductModal()"></div>
+
+    {{-- Product modal --}}
+    <div id="productModal"
+        class="fixed left-1/2 top-1/2 z-50 hidden w-[92%] max-w-[560px] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-[28px] border border-white/12 bg-[#0b0b0d]/95 shadow-2xl backdrop-blur-2xl"
+        role="dialog" aria-modal="true">
+        <div class="relative">
+            <div id="pmImageWrap" class="h-[240px] w-full bg-black/30">
+                <img id="pmImage" class="hidden h-full w-full object-cover" alt="">
+                <div id="pmNoImage"
+                    class="h-full w-full bg-gradient-to-br from-yellow-400/20 via-white/5 to-transparent"></div>
+            </div>
+
+            <button type="button" onclick="closeProductModal()"
+                class="absolute right-3 top-3 rounded-xl border border-white/12 bg-black/35 px-3 py-2 text-xs font-semibold text-white/90 backdrop-blur-2xl hover:bg-white/[0.08]">
+                Tutup
+            </button>
+        </div>
+
+        <div class="p-5 sm:p-6">
+            <div class="flex items-start justify-between gap-4">
+                <div class="min-w-0">
+                    <div id="pmName" class="text-xl font-semibold text-white/95">Nama Produk</div>
+                    <div id="pmCategory"
+                        class="mt-2 inline-flex rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 text-xs text-white/60">
+                        Kategori
+                    </div>
+                </div>
+
+                <div id="pmPrice" class="shrink-0 text-lg font-bold text-yellow-300">Rp 0</div>
+            </div>
+
+            <p id="pmDesc" class="mt-4 text-sm leading-7 text-white/70"></p>
+
+            <div class="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div class="text-xs text-white/45">
+                    Tambahkan langsung ke keranjang atau tutup untuk kembali ke daftar menu.
+                </div>
+                <button id="pmAddBtn" type="button"
+                    class="rounded-2xl bg-yellow-400 px-4 py-3 text-sm font-semibold text-black shadow-lg shadow-yellow-400/10 hover:bg-yellow-300 disabled:cursor-not-allowed disabled:opacity-40">
+                    + Tambah ke Keranjang
                 </button>
             </div>
         </div>
     </div>
 
+    {{-- Mobile bottom helper --}}
+    <div
+        class="fixed bottom-0 left-0 right-0 z-40 border-t border-white/10 bg-black/65 px-4 py-3 backdrop-blur-2xl sm:hidden">
+        <div class="flex items-center justify-between gap-3">
+            <div class="min-w-0">
+                <div class="text-[11px] uppercase tracking-[0.18em] text-white/45">Keranjang</div>
+                <div class="truncate text-sm font-semibold text-white/90">
+                    <span id="mobileCartCount">0</span> item dipilih
+                </div>
+            </div>
+            <button type="button" onclick="openCart()"
+                class="rounded-2xl bg-yellow-400 px-4 py-2.5 text-sm font-semibold text-black">
+                Lihat
+            </button>
+        </div>
+    </div>
+
     <script>
-        // ===== Greeting by time =====
+        // ===== Greeting =====
         (function () {
             const h = new Date().getHours();
-            let t = "Selamat datang";
-            if (h >= 4 && h < 11) t = "Selamat pagi 👋";
-            else if (h >= 11 && h < 15) t = "Selamat siang 👋";
-            else if (h >= 15 && h < 18) t = "Selamat sore 👋";
-            else t = "Selamat malam 👋";
-            document.getElementById('timeGreeting').textContent = t;
+            let t = 'Selamat datang';
+            if (h >= 4 && h < 11) t = 'Selamat pagi 👋';
+            else if (h >= 11 && h < 15) t = 'Selamat siang 👋';
+            else if (h >= 15 && h < 18) t = 'Selamat sore 👋';
+            else t = 'Selamat malam 👋';
+
+            const el = document.getElementById('timeGreeting');
+            if (el) el.textContent = t;
         })();
 
         // ===== Menu count =====
         (function () {
             const n = document.querySelectorAll('#menuGrid [data-id]').length;
-            document.getElementById('menuCount').textContent = n + " item";
+            const c = document.getElementById('menuCount');
+            if (c) c.textContent = n + ' item tersedia';
         })();
 
-        // ===== Search + Category filter (sinkron) =====
+        // ===== Search + Filter =====
         let activeCategory = '__all';
 
         function applyFilters() {
@@ -346,9 +480,10 @@
             for (const card of cards) {
                 const cat = (card.getAttribute('data-cat') || '').trim();
                 const name = (card.getAttribute('data-name') || '').toLowerCase();
+                const desc = (card.getAttribute('data-desc') || '').toLowerCase();
 
-                const matchCat = (activeCategory === '__all') || (cat === activeCategory);
-                const matchText = !q || name.includes(q);
+                const matchCat = activeCategory === '__all' || cat === activeCategory;
+                const matchText = !q || name.includes(q) || desc.includes(q);
 
                 const show = matchCat && matchText;
                 card.style.display = show ? '' : 'none';
@@ -357,7 +492,7 @@
 
             const meta = document.getElementById('searchMeta');
             if (meta) {
-                if (!q && activeCategory === '__all') meta.textContent = '';
+                if (!q && activeCategory === '__all') meta.textContent = 'Semua menu ditampilkan';
                 else meta.textContent = `Menampilkan ${visible} item`;
             }
 
@@ -365,17 +500,17 @@
             if (clearBtn) clearBtn.classList.toggle('hidden', q.length === 0);
         }
 
-        document.getElementById('filters').addEventListener('click', (e) => {
+        document.getElementById('filters')?.addEventListener('click', (e) => {
             const pill = e.target.closest('.pill');
             if (!pill) return;
 
-            document.querySelectorAll('#filters .pill').forEach(p => {
-                p.classList.remove('active', 'border-yellow-300/30', 'bg-yellow-400/10', 'shadow-[0_0_0_6px_rgba(250,204,21,0.08)]');
-                p.classList.add('border-white/15', 'bg-black/20');
+            document.querySelectorAll('#filters .pill').forEach((p) => {
+                p.classList.remove('active', 'border-yellow-300/30', 'bg-yellow-400/12', 'shadow-[0_0_0_6px_rgba(250,204,21,0.08)]');
+                p.classList.add('border-white/12', 'bg-black/20');
             });
 
-            pill.classList.add('active', 'border-yellow-300/30', 'bg-yellow-400/10', 'shadow-[0_0_0_6px_rgba(250,204,21,0.08)]');
-            pill.classList.remove('border-white/15', 'bg-black/20');
+            pill.classList.add('active', 'border-yellow-300/30', 'bg-yellow-400/12', 'shadow-[0_0_0_6px_rgba(250,204,21,0.08)]');
+            pill.classList.remove('border-white/12', 'bg-black/20');
 
             activeCategory = pill.getAttribute('data-cat') || '__all';
             applyFilters();
@@ -389,25 +524,22 @@
         });
 
         // ===== Storage Keys =====
-        const CART_QTY_KEY = 'ayo_renne_cart_v1';                 // qty map {id: number}
-        const CART_OVERVIEW_KEY = 'ayo_renne_order_overview_v1';  // detail {id: {name, price, qty}}
-        const TABLE_TOKEN_KEY = 'ayo_renne_table_token_v1';       // qr token meja
+        const CART_QTY_KEY = 'ayo_renne_cart_v1';
+        const CART_OVERVIEW_KEY = 'ayo_renne_order_overview_v1';
+        const TABLE_TOKEN_KEY = 'ayo_renne_table_token_v1';
 
-        // ===== Table token (QR) capture =====
-        (function captureTableTokenFromUrl(){
+        // ===== Capture table token =====
+        (function captureTableTokenFromUrl() {
             const u = new URL(window.location.href);
             const token = (u.searchParams.get('table') || '').trim();
 
             if (token) {
                 localStorage.setItem(TABLE_TOKEN_KEY, token);
-
-                // rapihin URL (hapus param table) biar gak keliatan
                 u.searchParams.delete('table');
                 window.history.replaceState({}, '', u.toString());
             }
         })();
 
-        // Auto-migrate jika CART_QTY_KEY terlanjur berisi object detail
         function loadQtyCart() {
             let raw = {};
             try { raw = JSON.parse(localStorage.getItem(CART_QTY_KEY) || '{}') || {}; }
@@ -449,8 +581,12 @@
 
         function updateCartBadge() {
             const count = cartItemCount(loadQtyCart());
+
             const badge = document.getElementById('cartBadge');
             if (badge) badge.textContent = String(count);
+
+            const mobile = document.getElementById('mobileCartCount');
+            if (mobile) mobile.textContent = String(count);
         }
 
         function formatRp(n) {
@@ -513,7 +649,7 @@
             renderCart();
         }
 
-        // ===== Drawer controls =====
+        // ===== Drawer =====
         function openCart() {
             const backdrop = document.getElementById('cartBackdrop');
             const drawer = document.getElementById('cartDrawer');
@@ -550,29 +686,47 @@
 
             if (entries.length === 0) {
                 list.innerHTML = `
-                    <div class="rounded-2xl border border-white/10 bg-black/20 px-4 py-4 text-center text-sm text-white/65 backdrop-blur-2xl">
-                        Keranjang kosong. Tambahkan menu dulu ya 🙂
-                    </div>`;
+                    <div class="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-5 text-center text-sm text-white/60">
+                        Keranjang masih kosong. Yuk pilih menu dulu 🙂
+                    </div>
+                `;
             } else {
                 for (const [id, qty] of entries) {
                     const p = getProductData(id);
                     if (!p) continue;
 
                     const item = document.createElement('div');
-                    item.className = "flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-black/20 px-4 py-3 backdrop-blur-2xl";
+                    item.className = 'flex items-start justify-between gap-3 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3';
                     item.innerHTML = `
-                        <div class="min-w-0">
-                            <div class="truncate text-sm font-semibold text-white/90">${escapeHtml(p.name)}</div>
-                            <div class="mt-1 text-xs text-white/55">${formatRp(p.price)} × ${qty}</div>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <button class="h-8 w-8 rounded-xl border border-white/12 bg-black/25 text-white/90 font-black hover:bg-white/10"
-                                    onclick="setQty(${p.id}, ${Number(qty) - 1})" type="button">−</button>
-                            <div class="min-w-[20px] text-center text-sm font-bold text-white/95">${qty}</div>
-                            <button class="h-8 w-8 rounded-xl border border-white/12 bg-black/25 text-white/90 font-black hover:bg-white/10"
-                                    onclick="setQty(${p.id}, ${Number(qty) + 1})" type="button">+</button>
-                        </div>
-                    `;
+    <div class="min-w-0 flex-1">
+        <div class="truncate text-sm font-semibold text-white/92">${escapeHtml(p.name)}</div>
+
+        <div class="mt-2 space-y-1 text-xs text-white/60">
+            <div class="flex items-center justify-between gap-3">
+                <span>Harga satuan</span>
+                <span class="font-medium text-white/82">${formatRp(p.price)}</span>
+            </div>
+
+            <div class="flex items-center justify-between gap-3">
+                <span>Qty</span>
+                <span class="font-medium text-white/82">${qty}</span>
+            </div>
+
+            <div class="flex items-center justify-between gap-3 border-t border-white/8 pt-2">
+                <span class="text-white/72">Subtotal item</span>
+                <span class="font-semibold text-yellow-300">${formatRp(p.price * qty)}</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="ml-3 flex items-center gap-2 self-start">
+        <button class="h-8 w-8 rounded-xl border border-white/12 bg-black/25 text-white/90 font-black hover:bg-white/[0.08]"
+                onclick="setQty(${p.id}, ${Number(qty) - 1})" type="button">−</button>
+        <div class="min-w-[22px] text-center text-sm font-bold text-white/95">${qty}</div>
+        <button class="h-8 w-8 rounded-xl border border-white/12 bg-black/25 text-white/90 font-black hover:bg-white/[0.08]"
+                onclick="setQty(${p.id}, ${Number(qty) + 1})" type="button">+</button>
+    </div>
+`;
                     list.appendChild(item);
                 }
             }
@@ -585,18 +739,25 @@
             updateCartBadge();
         }
 
-        // ===== Checkout -> Overview =====
         function goToOverview() {
             const qtyCart = loadQtyCart();
             const entries = Object.entries(qtyCart);
-            if (entries.length === 0) { alert('Keranjang masih kosong.'); return; }
+            if (entries.length === 0) {
+                alert('Keranjang masih kosong.');
+                return;
+            }
 
             const overview = {};
             for (const [id, qty] of entries) {
                 const p = getProductData(id);
                 if (!p) continue;
-                overview[id] = { name: p.name, price: p.price, qty: Number(qty) || 0 };
+                overview[id] = {
+                    name: p.name,
+                    price: p.price,
+                    qty: Number(qty) || 0
+                };
             }
+
             localStorage.setItem(CART_OVERVIEW_KEY, JSON.stringify(overview));
 
             const token = (localStorage.getItem(TABLE_TOKEN_KEY) || '').trim();
@@ -621,7 +782,7 @@
             document.getElementById('pmName').textContent = name;
             document.getElementById('pmCategory').textContent = cat;
             document.getElementById('pmPrice').textContent = formatRp(price);
-            document.getElementById('pmDesc').textContent = desc.trim() ? desc : 'Belum ada deskripsi.';
+            document.getElementById('pmDesc').textContent = desc.trim() ? desc : 'Belum ada deskripsi menu.';
 
             const imgEl = document.getElementById('pmImage');
             const noImg = document.getElementById('pmNoImage');
@@ -637,7 +798,6 @@
                 noImg.classList.remove('hidden');
             }
 
-            // disable add kalau card add disabled
             const cardAddBtn = el.querySelector('button[onclick*="addToCart"]');
             const sellable = cardAddBtn ? !cardAddBtn.disabled : true;
 
