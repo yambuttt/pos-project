@@ -27,6 +27,9 @@ class AttendanceV2Controller extends Controller
         $data = $request->validate([
             'device_hash' => ['required', 'string', 'size:64'],
             'device_name' => ['nullable', 'string', 'max:80'],
+            // TAMBAH: lokasi
+            'lat' => ['required', 'numeric'],
+            'lng' => ['required', 'numeric'],
         ]);
 
         $device = EmployeeDevice::firstOrCreate(
@@ -41,16 +44,32 @@ class AttendanceV2Controller extends Controller
         $device->save();
 
         if ($device->revoked_at) {
-            return response()->json(['ok' => false, 'status' => 'revoked', 'message' => 'Device kamu dicabut. Hubungi admin.'], 403);
+            return response()->json([
+                'ok' => false,
+                'status' => 'revoked',
+                'message' => 'Device kamu dicabut. Hubungi admin.'
+            ], 403);
         }
 
         if (!$device->approved_at) {
-            return response()->json(['ok' => false, 'status' => 'pending', 'message' => 'Device belum di-approve admin.'], 403);
+            return response()->json([
+                'ok' => false,
+                'status' => 'pending',
+                'message' => 'Device belum di-approve admin.'
+            ], 403);
+        }
+
+        // TAMBAH: geofence di step verifikasi
+        if (!$this->isWithinRestaurant((float) $data['lat'], (float) $data['lng'])) {
+            return response()->json([
+                'ok' => false,
+                'status' => 'out_of_area',
+                'message' => 'Lokasi di luar area restoran.'
+            ], 403);
         }
 
         return response()->json(['ok' => true, 'status' => 'approved']);
     }
-
     private function storeSelfieWithWatermark(
         UploadedFile $file,
         string $mode,
