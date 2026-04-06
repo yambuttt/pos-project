@@ -75,7 +75,19 @@
 
           {{-- Selfie (kamera depan) --}}
           <div id="selfieWrap" class="hidden overflow-hidden rounded-2xl border border-white/10 bg-black/40">
-            <video id="selfieVideo" autoplay playsinline class="aspect-video w-full object-cover"></video>
+            <div class="relative">
+              <video id="selfieVideo" autoplay playsinline class="aspect-video w-full object-cover"></video>
+
+              <!-- overlay untuk face landmarks -->
+              <canvas id="faceOverlay" class="absolute inset-0 h-full w-full"></canvas>
+
+              <!-- hint text -->
+              <div id="faceHint"
+                class="absolute bottom-3 left-3 rounded-xl border border-white/15 bg-black/40 px-3 py-2 text-xs text-white/85 backdrop-blur-xl">
+                Menyiapkan deteksi wajah…
+              </div>
+            </div>
+
             <canvas id="selfieCanvas" class="hidden"></canvas>
           </div>
 
@@ -88,6 +100,9 @@
   </div>
 
   <script src="https://unpkg.com/html5-qrcode"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
   <script>
     const csrf = document.querySelector('meta[name="csrf-token"]').content;
 
@@ -100,6 +115,25 @@
 
     let reader = null;
     let selfieStream = null;
+    let faceMesh = null;
+    let faceDetectRunning = false;
+    let faceOk = false;
+    let faceOkStreak = 0;     // hitung frame berturut-turut terdeteksi
+    const FACE_OK_NEED = 6;   // butuh 6 frame (~0.2-0.5s) biar stabil
+
+    function setFaceHint(msg, ok = false) {
+      if (!faceHint) return;
+      faceHint.textContent = msg;
+      faceHint.style.borderColor = ok ? 'rgba(16,185,129,.35)' : 'rgba(255,255,255,.15)'; // emerald-ish
+    }
+
+    function resizeOverlayToVideo() {
+      if (!faceOverlay) return;
+      const w = video.videoWidth || 640;
+      const h = video.videoHeight || 480;
+      faceOverlay.width = w;
+      faceOverlay.height = h;
+    }
 
     let gateOk = false;
     let busy = false;
@@ -123,6 +157,8 @@
 
     const video = document.getElementById('selfieVideo');
     const canvas = document.getElementById('selfieCanvas');
+    const faceOverlay = document.getElementById('faceOverlay');
+    const faceHint = document.getElementById('faceHint');
 
     function setGate(msg) { gateStatus.textContent = "Status: " + msg; }
     function setScan(msg) { scanStatus.textContent = "Status: " + msg; }
@@ -388,8 +424,93 @@
       video.srcObject = selfieStream;
       await video.play();
     }
+    async function startFaceDetection() {
+      if (faceDetectRunning) return;
+      faceDetectRunning = true;
+      faceOk = false;
+      faceOkStreak = 0;
+
+      resizeOverlayToVideo();
+      const ctx = faceOverlay.getContext('2d');
+
+      // init FaceMesh sekali
+      if (!faceMesh) {
+        faceMesh = new FaceMesh.FaceMesh({
+          locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`
+        });
+
+        faceMesh.setOptions({
+          maxNumFaces: 1,
+          refineLandmarks: true,
+          minDetectionConfidence: 0.6,
+          minTrackingConfidence: 0.6,
+        });
+
+        faceMesh.onResults((results) => {
+          if (!faceDetectRunning) return;
+
+          // clear
+          ctx.clearRect(0, 0, faceOverlay.width, faceOverlay.height);
+
+          const faces = results.multiFaceLandmarks || [];
+          if (faces.length === 0) {
+            faceOkStreak = 0;
+            faceOk = false;
+            setFaceHint("Wajah tidak terdeteksi. Arahkan kamera ke wajah.", false);
+            return;
+          }
+
+          // ada wajah
+          faceOkStreak += 1;
+          if (faceOkStreak >= FACE_OK_NEED) faceOk = true;
+
+          setFaceHint(faceOk ? "Wajah OK ✅ Tahan sebentar…" : "Wajah terdeteksi… (stabilkan)", faceOk);
+
+          // gambar mesh seperti contoh
+          const landmarks = faces[0];
+          // titik
+          drawLandmarks(ctx, landmarks, { color: '#7dd3fc', lineWidth: 1 }); // sky-ish
+          // garis mesh
+          drawConnectors(ctx, landmarks, FaceMesh.FACEMESH_TESSELATION, { color: '#ffffff', lineWidth: 0.6 });
+          // kontur
+          drawConnectors(ctx, landmarks, FaceMesh.FACEMESH_FACE_OVAL, { color: '#22c55e', lineWidth: 1.2 });
+          // mata & bibir (lebih jelas)
+          drawConnectors(ctx, landmarks, FaceMesh.FACEMESH_LEFT_EYE, { color: '#60a5fa', lineWidth: 1 });
+          drawConnectors(ctx, landmarks, FaceMesh.FACEMESH_RIGHT_EYE, { color: '#60a5fa', lineWidth: 1 });
+          drawConnectors(ctx, landmarks, FaceMesh.FACEMESH_LIPS, { color: '#fb7185', lineWidth: 1 });
+        });
+      }
+
+      // loop kirim frame ke faceMesh
+      async function loop() {
+        if (!faceDetectRunning) return;
+        try {
+          await faceMesh.send({ image: video });
+        } catch (e) {
+          // ignore
+        }
+        requestAnimationFrame(loop);
+      }
+
+      setFaceHint("Menyiapkan deteksi wajah…", false);
+      requestAnimationFrame(loop);
+    }
+
+    function stopFaceDetection() {
+      faceDetectRunning = false;
+      faceOk = false;
+      faceOkStreak = 0;
+
+      try {
+        if (faceOverlay) {
+          const ctx = faceOverlay.getContext('2d');
+          ctx.clearRect(0, 0, faceOverlay.width, faceOverlay.height);
+        }
+      } catch (e) { }
+    }
 
     function stopSelfie() {
+      stopFaceDetection();
       try {
         if (selfieStream) {
           selfieStream.getTracks().forEach(t => t.stop());
@@ -433,9 +554,29 @@
         setCamStatus("Membuka kamera selfie…");
         await startSelfieCamera();
 
+        setCamStatus("Deteksi wajah aktif. Tunjukkan wajah ke kamera…");
+        await startFaceDetection();
+
+        // tunggu wajah stabil dulu baru mulai countdown
+        let waited = 0;
+        while (!faceOk) {
+          await new Promise(r => setTimeout(r, 200));
+          waited += 200;
+
+          // optional: timeout biar tidak “macet” selamanya
+          if (waited >= 15000) { // 15 detik
+            setCamStatus("Wajah tidak terdeteksi. Pastikan pencahayaan cukup & wajah terlihat jelas.");
+            stopSelfie();
+            busy = false;
+            return;
+          }
+        }
+
+        // kalau sudah ok, baru countdown & capture
         await countdown(3);
 
         setCamStatus("Mengambil foto…");
+        const blob = await captureSelfieBlob();
         const blob = await captureSelfieBlob();
         if (!blob) {
           setCamStatus("Gagal ambil foto.");
