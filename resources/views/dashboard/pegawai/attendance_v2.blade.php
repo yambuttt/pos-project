@@ -217,11 +217,14 @@
         geo = await getGeo();
 
         setGate("cek device ke server...");
+        const deviceName = await detectDeviceNameAsync();
+
         const res = await fetch("{{ route('pegawai.attendance.device.init') }}", {
           method: "POST",
           headers: { "Content-Type": "application/json", "X-CSRF-TOKEN": csrf },
           body: JSON.stringify({
             device_hash: deviceHash,
+            device_name: deviceName,
             device_name: "Web",
             lat: geo.lat,
             lng: geo.lng
@@ -250,6 +253,73 @@
       } finally {
         busy = false;
       }
+    }
+
+
+    function detectDeviceName() {
+      try {
+        const ua = navigator.userAgent || '';
+        const brand = (navigator.userAgentData && navigator.userAgentData.brands)
+          ? navigator.userAgentData.brands.map(b => b.brand).join('/')
+          : '';
+
+        // 1) Kalau support Client Hints (Chrome modern Android)
+        // NOTE: model biasanya hanya muncul di Android via getHighEntropyValues
+        if (navigator.userAgentData && navigator.userAgentData.getHighEntropyValues) {
+          // kita return promise-like via fallback sync (lihat pemakaian di bawah)
+        }
+
+        // 2) Fallback parse userAgent klasik
+        let platform = 'Web';
+        if (/Android/i.test(ua)) platform = 'Android';
+        else if (/iPhone|iPad|iPod/i.test(ua)) platform = 'iOS';
+        else if (/Windows/i.test(ua)) platform = 'Windows';
+        else if (/Macintosh/i.test(ua)) platform = 'macOS';
+        else if (/Linux/i.test(ua)) platform = 'Linux';
+
+        // Ambil model Android dari UA: "Android 13; SM-G991B Build/..."
+        let model = '';
+        if (platform === 'Android') {
+          const m = ua.match(/Android\s[\d\.]+;\s([^;)]*?)\sBuild\//i) || ua.match(/Android\s[\d\.]+;\s([^;)]*)/i);
+          if (m && m[1]) model = m[1].trim();
+        }
+
+        // Browser
+        let browser = '';
+        if (/Chrome\/([\d\.]+)/i.test(ua) && !/Edg\//i.test(ua)) browser = 'Chrome ' + (ua.match(/Chrome\/([\d\.]+)/i)?.[1] || '');
+        else if (/Edg\/([\d\.]+)/i.test(ua)) browser = 'Edge ' + (ua.match(/Edg\/([\d\.]+)/i)?.[1] || '');
+        else if (/Firefox\/([\d\.]+)/i.test(ua)) browser = 'Firefox ' + (ua.match(/Firefox\/([\d\.]+)/i)?.[1] || '');
+        else if (/Safari\/([\d\.]+)/i.test(ua) && /Version\/([\d\.]+)/i.test(ua)) browser = 'Safari ' + (ua.match(/Version\/([\d\.]+)/i)?.[1] || '');
+
+        const parts = [];
+        parts.push(platform);
+        if (model) parts.push(model);
+        if (brand && platform !== 'Android') parts.push(brand); // brand sering “Chromium/Google Chrome”
+        if (browser) parts.push(browser.trim());
+
+        return parts.join(' • ').replace(/\s+/g, ' ').trim() || 'Web';
+      } catch (e) {
+        return 'Web';
+      }
+    }
+
+    // versi async kalau mau ambil "model" dari userAgentData (Android)
+    async function detectDeviceNameAsync() {
+      let base = detectDeviceName();
+      try {
+        if (navigator.userAgentData && navigator.userAgentData.getHighEntropyValues) {
+          const v = await navigator.userAgentData.getHighEntropyValues(['platform', 'model', 'uaFullVersion']);
+          // v.model biasanya ada di Android (contoh: "SM-G991B")
+          if (v && v.platform) {
+            const parts = [];
+            parts.push(v.platform);
+            if (v.model) parts.push(v.model);
+            if (v.uaFullVersion) parts.push('UA ' + v.uaFullVersion);
+            base = parts.join(' • ');
+          }
+        }
+      } catch (e) { }
+      return base || 'Web';
     }
 
     // ---------- QR FLOW (IN MODAL) ----------
