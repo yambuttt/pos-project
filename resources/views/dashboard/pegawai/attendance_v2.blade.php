@@ -103,6 +103,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
+
   <script>
     const csrf = document.querySelector('meta[name="csrf-token"]').content;
 
@@ -115,25 +116,12 @@
 
     let reader = null;
     let selfieStream = null;
+
     let faceMesh = null;
     let faceDetectRunning = false;
     let faceOk = false;
     let faceOkStreak = 0;     // hitung frame berturut-turut terdeteksi
     const FACE_OK_NEED = 6;   // butuh 6 frame (~0.2-0.5s) biar stabil
-
-    function setFaceHint(msg, ok = false) {
-      if (!faceHint) return;
-      faceHint.textContent = msg;
-      faceHint.style.borderColor = ok ? 'rgba(16,185,129,.35)' : 'rgba(255,255,255,.15)'; // emerald-ish
-    }
-
-    function resizeOverlayToVideo() {
-      if (!faceOverlay) return;
-      const w = video.videoWidth || 640;
-      const h = video.videoHeight || 480;
-      faceOverlay.width = w;
-      faceOverlay.height = h;
-    }
 
     let gateOk = false;
     let busy = false;
@@ -163,6 +151,20 @@
     function setGate(msg) { gateStatus.textContent = "Status: " + msg; }
     function setScan(msg) { scanStatus.textContent = "Status: " + msg; }
     function setCamStatus(msg) { camStatus.textContent = msg; }
+
+    function setFaceHint(msg, ok = false) {
+      if (!faceHint) return;
+      faceHint.textContent = msg;
+      faceHint.style.borderColor = ok ? 'rgba(16,185,129,.35)' : 'rgba(255,255,255,.15)';
+    }
+
+    function resizeOverlayToVideo() {
+      if (!faceOverlay) return;
+      const w = video.videoWidth || 640;
+      const h = video.videoHeight || 480;
+      faceOverlay.width = w;
+      faceOverlay.height = h;
+    }
 
     function openCamModal(title, subtitle) {
       camTitle.textContent = title || 'Kamera';
@@ -241,6 +243,66 @@
       });
     }
 
+    async function detectDeviceName() {
+      const ua = navigator.userAgent || '';
+
+      let platform = 'Web';
+      if (/Android/i.test(ua)) platform = 'Android';
+      else if (/iPhone|iPad|iPod/i.test(ua)) platform = 'iOS';
+      else if (/Windows/i.test(ua)) platform = 'Windows';
+      else if (/Macintosh/i.test(ua)) platform = 'macOS';
+      else if (/Linux/i.test(ua)) platform = 'Linux';
+
+      let androidVer = '';
+      const av = ua.match(/Android\s([\d\.]+)/i);
+      if (av && av[1]) androidVer = av[1];
+
+      let model = '';
+      if (platform === 'Android') {
+        const m = ua.match(/Android\s[\d\.]+;\s([^;)]*?)\sBuild\//i) || ua.match(/Android\s[\d\.]+;\s([^;)]*)/i);
+        if (m && m[1]) model = m[1].trim();
+      }
+
+      let browser = '';
+      if (/Edg\/([\d\.]+)/i.test(ua)) browser = 'Edge ' + (ua.match(/Edg\/([\d\.]+)/i)?.[1]?.split('.')[0] || '');
+      else if (/Chrome\/([\d\.]+)/i.test(ua) && !/Edg\//i.test(ua)) browser = 'Chrome ' + (ua.match(/Chrome\/([\d\.]+)/i)?.[1]?.split('.')[0] || '');
+      else if (/Firefox\/([\d\.]+)/i.test(ua)) browser = 'Firefox ' + (ua.match(/Firefox\/([\d\.]+)/i)?.[1]?.split('.')[0] || '');
+      else if (/Safari\/([\d\.]+)/i.test(ua) && /Version\/([\d\.]+)/i.test(ua)) browser = 'Safari ' + (ua.match(/Version\/([\d\.]+)/i)?.[1]?.split('.')[0] || '');
+
+      try {
+        if (navigator.userAgentData?.getHighEntropyValues) {
+          const v = await navigator.userAgentData.getHighEntropyValues(['platform', 'model']);
+          if (v?.platform) platform = v.platform;
+          if (v?.model) model = v.model;
+        }
+      } catch (e) {}
+
+      const parts = [];
+      parts.push(platform + (androidVer ? ` ${androidVer}` : ''));
+      if (model) parts.push(model);
+      if (browser) parts.push(browser);
+
+      return parts.join(' • ').replace(/\s+/g, ' ').trim() || 'Web';
+    }
+
+    async function detectDeviceNameAsync() {
+      // FIX: base harus string (bukan Promise)
+      let base = await detectDeviceName();
+      try {
+        if (navigator.userAgentData && navigator.userAgentData.getHighEntropyValues) {
+          const v = await navigator.userAgentData.getHighEntropyValues(['platform', 'model', 'uaFullVersion']);
+          if (v && v.platform) {
+            const parts = [];
+            parts.push(v.platform);
+            if (v.model) parts.push(v.model);
+            if (v.uaFullVersion) parts.push('UA ' + v.uaFullVersion);
+            base = parts.join(' • ');
+          }
+        }
+      } catch (e) {}
+      return base || 'Web';
+    }
+
     async function initGate() {
       if (busy) return;
       busy = true;
@@ -288,73 +350,6 @@
       } finally {
         busy = false;
       }
-    }
-
-
-    async function detectDeviceName() {
-      const ua = navigator.userAgent || '';
-
-      // platform
-      let platform = 'Web';
-      if (/Android/i.test(ua)) platform = 'Android';
-      else if (/iPhone|iPad|iPod/i.test(ua)) platform = 'iOS';
-      else if (/Windows/i.test(ua)) platform = 'Windows';
-      else if (/Macintosh/i.test(ua)) platform = 'macOS';
-      else if (/Linux/i.test(ua)) platform = 'Linux';
-
-      // versi android (kalau ada)
-      let androidVer = '';
-      const av = ua.match(/Android\s([\d\.]+)/i);
-      if (av && av[1]) androidVer = av[1];
-
-      // model android (kalau UA mengandung, seringnya "SM-xxxx")
-      let model = '';
-      if (platform === 'Android') {
-        const m = ua.match(/Android\s[\d\.]+;\s([^;)]*?)\sBuild\//i) || ua.match(/Android\s[\d\.]+;\s([^;)]*)/i);
-        if (m && m[1]) model = m[1].trim();
-      }
-
-      // browser singkat
-      let browser = '';
-      if (/Edg\/([\d\.]+)/i.test(ua)) browser = 'Edge ' + (ua.match(/Edg\/([\d\.]+)/i)?.[1]?.split('.')[0] || '');
-      else if (/Chrome\/([\d\.]+)/i.test(ua) && !/Edg\//i.test(ua)) browser = 'Chrome ' + (ua.match(/Chrome\/([\d\.]+)/i)?.[1]?.split('.')[0] || '');
-      else if (/Firefox\/([\d\.]+)/i.test(ua)) browser = 'Firefox ' + (ua.match(/Firefox\/([\d\.]+)/i)?.[1]?.split('.')[0] || '');
-      else if (/Safari\/([\d\.]+)/i.test(ua) && /Version\/([\d\.]+)/i.test(ua)) browser = 'Safari ' + (ua.match(/Version\/([\d\.]+)/i)?.[1]?.split('.')[0] || '');
-
-      // Client Hints (kalau tersedia) untuk ambil model yg lebih akurat
-      try {
-        if (navigator.userAgentData?.getHighEntropyValues) {
-          const v = await navigator.userAgentData.getHighEntropyValues(['platform', 'model']);
-          if (v?.platform) platform = v.platform;
-          if (v?.model) model = v.model;
-        }
-      } catch (e) { }
-
-      const parts = [];
-      parts.push(platform + (androidVer ? ` ${androidVer}` : ''));
-      if (model) parts.push(model);
-      if (browser) parts.push(browser);
-
-      return parts.join(' • ').replace(/\s+/g, ' ').trim() || 'Web';
-    }
-
-    // versi async kalau mau ambil "model" dari userAgentData (Android)
-    async function detectDeviceNameAsync() {
-      let base = detectDeviceName();
-      try {
-        if (navigator.userAgentData && navigator.userAgentData.getHighEntropyValues) {
-          const v = await navigator.userAgentData.getHighEntropyValues(['platform', 'model', 'uaFullVersion']);
-          // v.model biasanya ada di Android (contoh: "SM-G991B")
-          if (v && v.platform) {
-            const parts = [];
-            parts.push(v.platform);
-            if (v.model) parts.push(v.model);
-            if (v.uaFullVersion) parts.push('UA ' + v.uaFullVersion);
-            base = parts.join(' • ');
-          }
-        }
-      } catch (e) { }
-      return base || 'Web';
     }
 
     // ---------- QR FLOW (IN MODAL) ----------
@@ -424,6 +419,7 @@
       video.srcObject = selfieStream;
       await video.play();
     }
+
     async function startFaceDetection() {
       if (faceDetectRunning) return;
       faceDetectRunning = true;
@@ -433,7 +429,6 @@
       resizeOverlayToVideo();
       const ctx = faceOverlay.getContext('2d');
 
-      // init FaceMesh sekali
       if (!faceMesh) {
         faceMesh = new FaceMesh.FaceMesh({
           locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`
@@ -449,7 +444,6 @@
         faceMesh.onResults((results) => {
           if (!faceDetectRunning) return;
 
-          // clear
           ctx.clearRect(0, 0, faceOverlay.width, faceOverlay.height);
 
           const faces = results.multiFaceLandmarks || [];
@@ -460,35 +454,26 @@
             return;
           }
 
-          // ada wajah
           faceOkStreak += 1;
           if (faceOkStreak >= FACE_OK_NEED) faceOk = true;
 
           setFaceHint(faceOk ? "Wajah OK ✅ Tahan sebentar…" : "Wajah terdeteksi… (stabilkan)", faceOk);
 
-          // gambar mesh seperti contoh
           const landmarks = faces[0];
-          // titik
-          drawLandmarks(ctx, landmarks, { color: '#7dd3fc', lineWidth: 1 }); // sky-ish
-          // garis mesh
+          drawLandmarks(ctx, landmarks, { color: '#7dd3fc', lineWidth: 1 });
           drawConnectors(ctx, landmarks, FaceMesh.FACEMESH_TESSELATION, { color: '#ffffff', lineWidth: 0.6 });
-          // kontur
           drawConnectors(ctx, landmarks, FaceMesh.FACEMESH_FACE_OVAL, { color: '#22c55e', lineWidth: 1.2 });
-          // mata & bibir (lebih jelas)
           drawConnectors(ctx, landmarks, FaceMesh.FACEMESH_LEFT_EYE, { color: '#60a5fa', lineWidth: 1 });
           drawConnectors(ctx, landmarks, FaceMesh.FACEMESH_RIGHT_EYE, { color: '#60a5fa', lineWidth: 1 });
           drawConnectors(ctx, landmarks, FaceMesh.FACEMESH_LIPS, { color: '#fb7185', lineWidth: 1 });
         });
       }
 
-      // loop kirim frame ke faceMesh
       async function loop() {
         if (!faceDetectRunning) return;
         try {
           await faceMesh.send({ image: video });
-        } catch (e) {
-          // ignore
-        }
+        } catch (e) {}
         requestAnimationFrame(loop);
       }
 
@@ -557,14 +542,12 @@
         setCamStatus("Deteksi wajah aktif. Tunjukkan wajah ke kamera…");
         await startFaceDetection();
 
-        // tunggu wajah stabil dulu baru mulai countdown
         let waited = 0;
         while (!faceOk) {
           await new Promise(r => setTimeout(r, 200));
           waited += 200;
 
-          // optional: timeout biar tidak “macet” selamanya
-          if (waited >= 15000) { // 15 detik
+          if (waited >= 15000) {
             setCamStatus("Wajah tidak terdeteksi. Pastikan pencahayaan cukup & wajah terlihat jelas.");
             stopSelfie();
             busy = false;
@@ -572,13 +555,11 @@
           }
         }
 
-        // kalau sudah ok, baru countdown & capture
         await countdown(3);
 
         setCamStatus("Mengambil foto…");
-        const blob = await captureSelfieBlob();
-        const blob = await captureSelfieBlob();
-        if (!blob) {
+        const selfieBlob = await captureSelfieBlob(); // FIX: hanya 1 deklarasi
+        if (!selfieBlob) {
           setCamStatus("Gagal ambil foto.");
           stopSelfie();
           busy = false;
@@ -586,7 +567,7 @@
         }
 
         setCamStatus("Mengirim absensi…");
-        const ok = await submitAttendance(currentMode, scannedToken, blob);
+        const ok = await submitAttendance(currentMode, scannedToken, selfieBlob);
 
         stopSelfie();
 
