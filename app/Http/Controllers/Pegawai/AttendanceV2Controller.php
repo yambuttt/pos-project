@@ -109,12 +109,11 @@ class AttendanceV2Controller extends Controller
         string $path,
         string $employeeName,
         string $mode,
-        Carbon $takenAt,
+        \Carbon\Carbon $takenAt,
         float $lat,
         float $lng
     ): void {
-        // file tersimpan di disk local (di hosting kamu ini mengarah ke storage/app/private)
-        $disk = Storage::disk('local');
+        $disk = \Illuminate\Support\Facades\Storage::disk('local');
 
         if (!$disk->exists($path)) {
             return;
@@ -132,20 +131,60 @@ class AttendanceV2Controller extends Controller
         $w = imagesx($img);
         $h = imagesy($img);
 
-        // === watermark box (bawah) ===
-        $padding = max(14, (int) round(min($w, $h) * 0.02));
-        $lineGap = 6;
-
+        // =========================
+        // 1) Siapkan teks watermark
+        // =========================
         $lines = [];
         $lines[] = 'Nama: ' . $employeeName;
         $lines[] = 'Mode: ' . strtoupper($mode) . '  •  ' . $takenAt->format('Y-m-d H:i:s');
         $lines[] = 'Lokasi: ' . number_format($lat, 6, '.', '') . ', ' . number_format($lng, 6, '.', '');
         $lines[] = 'Maps: https://www.google.com/maps?q=' . $lat . ',' . $lng;
 
-        // pakai font bawaan GD (aman tanpa file font)
+        // font bawaan GD
         $font = 3; // 1..5
         $charH = imagefontheight($font);
-        $boxH = $padding + (count($lines) * $charH) + ((count($lines) - 1) * $lineGap) + $padding;
+
+        $padding = max(14, (int) round(min($w, $h) * 0.02));
+        $lineGap = 6;
+
+        // =========================
+        // 2) Load logo (PNG) dari public/
+        // =========================
+        $logoPath = public_path('images/landing/logo-ayo-renne.png');
+        $logo = null;
+
+        if (is_file($logoPath)) {
+            $logo = @imagecreatefrompng($logoPath);
+            if ($logo) {
+                imagealphablending($logo, true);
+                imagesavealpha($logo, true);
+            }
+        }
+
+        // ukuran logo (maks 18% lebar foto, atau max 120px)
+        $logoW = 0;
+        $logoH = 0;
+        $logoMarginRight = 0;
+
+        if ($logo) {
+            $srcW = imagesx($logo);
+            $srcH = imagesy($logo);
+
+            $maxW = min((int) round($w * 0.18), 120);
+            $scale = $maxW / max(1, $srcW);
+
+            $logoW = max(1, (int) round($srcW * $scale));
+            $logoH = max(1, (int) round($srcH * $scale));
+
+            $logoMarginRight = $padding; // jarak logo ke teks
+        }
+
+        // =========================
+        // 3) Hitung tinggi box watermark
+        // =========================
+        $textBlockH = (count($lines) * $charH) + ((count($lines) - 1) * $lineGap);
+        $contentH = max($textBlockH, $logoH); // box harus muat logo atau teks
+        $boxH = $padding + $contentH + $padding;
 
         $y1 = max(0, $h - $boxH);
         $y2 = $h;
@@ -154,22 +193,60 @@ class AttendanceV2Controller extends Controller
         imagealphablending($img, true);
         imagesavealpha($img, true);
 
-        $bg = imagecolorallocatealpha($img, 0, 0, 0, 60);   // hitam transparan
+        $bg = imagecolorallocatealpha($img, 0, 0, 0, 60); // hitam transparan
         $white = imagecolorallocatealpha($img, 255, 255, 255, 0);
 
         // background rectangle
         imagefilledrectangle($img, 0, $y1, $w, $y2, $bg);
 
-        // tulis teks
-        $x = $padding;
-        $y = $y1 + $padding;
+        // =========================
+        // 4) Tempel logo di kanan bawah dalam box
+        // =========================
+        $textX = $padding;
 
-        foreach ($lines as $i => $t) {
-            imagestring($img, $font, $x, $y, $t, $white);
+        if ($logo && $logoW > 0 && $logoH > 0) {
+            // posisi logo: kanan bawah (di dalam box)
+            $dstX = $w - $padding - $logoW;
+            $dstY = $y1 + (int) round(($boxH - $logoH) / 2);
+
+            // copy resample
+            imagecopyresampled(
+                $img,
+                $logo,
+                $dstX,
+                $dstY,
+                0,
+                0,
+                $logoW,
+                $logoH,
+                imagesx($logo),
+                imagesy($logo)
+            );
+
+            // batasi area teks supaya tidak nabrak logo
+            $maxTextWidth = $dstX - $logoMarginRight;
+            // kalau terlalu sempit, geser teks sedikit ke kiri tetap aja; (font GD susah wrap rapi)
+            // minimal kita pastikan start X aman:
+            $textX = $padding;
+        }
+
+        // =========================
+        // 5) Tulis teks watermark
+        // =========================
+        $y = $y1 + $padding + (int) round((max($logoH, $textBlockH) - $textBlockH) / 2);
+
+        foreach ($lines as $t) {
+            imagestring($img, $font, $textX, $y, $t, $white);
             $y += $charH + $lineGap;
         }
 
-        // simpan ulang ke JPEG (overwrite)
+        if ($logo) {
+            imagedestroy($logo);
+        }
+
+        // =========================
+        // 6) Simpan ulang (overwrite)
+        // =========================
         @imagejpeg($img, $abs, 88);
         imagedestroy($img);
     }
