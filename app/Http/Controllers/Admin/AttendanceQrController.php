@@ -41,25 +41,24 @@ class AttendanceQrController extends Controller
             'mode' => ['required', 'in:in,out'],
         ]);
 
-        $ttl = (int) config('attendance.qr_ttl_seconds', 15);  // set 10-20 detik
-        $slot = (int) floor(time() / $ttl);                    // time slot berubah tiap ttl detik
+        $ttl = (int) config('attendance.qr_ttl_seconds', 15);
 
-        $payload = [
-            'm' => $data['mode'],
-            's' => $slot,
-            'v' => 1, // versioning kalau nanti format berubah
-        ];
+        // (Opsional tapi recommended) matikan token lama yang belum dipakai untuk mode ini
+        AttendanceQrToken::where('mode', $data['mode'])
+            ->whereNull('used_at')
+            ->where('expires_at', '>', now())
+            ->update(['expires_at' => now()]);
 
-        $json = json_encode($payload);
-        $sig = hash_hmac('sha256', $json, config('app.key'));
-
-        // token final (ringkas)
-        $token = rtrim(strtr(base64_encode($json), '+/', '-_'), '=') . '.' . $sig;
+        $token = AttendanceQrToken::create([
+            'token' => hash('sha256', \Illuminate\Support\Str::random(64) . microtime(true)),
+            'mode' => $data['mode'],
+            'expires_at' => now()->addSeconds($ttl),
+            'created_by' => auth()->id(),
+        ]);
 
         return response()->json([
-            'token' => $token,
-            'expires_in' => $ttl - (time() % $ttl),
-            'slot' => $slot,
+            'token' => $token->token,
+            'expires_in' => now()->diffInSeconds($token->expires_at, false),
         ]);
     }
 }

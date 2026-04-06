@@ -277,49 +277,37 @@ class AttendanceV2Controller extends Controller
             return response()->json(['ok' => false, 'message' => 'Lokasi di luar area restoran.'], 403);
         }
 
-        // 3) VALIDASI QR TOKEN (SIGNED + TTL) - TANPA DB
-        $tokenParts = explode('.', $data['qr_token'], 2);
-        if (count($tokenParts) !== 2) {
-            return response()->json(['ok' => false, 'message' => 'QR tidak valid.'], 422);
+        // 3) VALIDASI QR TOKEN (DB + single-use)
+        try {
+            \DB::transaction(function () use ($data) {
+                $qr = \App\Models\AttendanceQrToken::where('token', $data['qr_token'])
+                    ->lockForUpdate()
+                    ->first();
+
+                if (!$qr) {
+                    throw new \RuntimeException('QR tidak valid.');
+                }
+
+                if ($qr->mode !== $data['mode']) {
+                    throw new \RuntimeException('QR salah mode.');
+                }
+
+                if (!$qr->expires_at || now()->gte($qr->expires_at)) {
+                    throw new \RuntimeException('QR sudah expired.');
+                }
+
+                if ($qr->used_at) {
+                    throw new \RuntimeException('QR sudah digunakan.');
+                }
+
+                // tandai used (single-use global)
+                $qr->used_at = now();
+                $qr->used_by = auth()->id();
+                $qr->save();
+            });
+        } catch (\RuntimeException $e) {
+            return response()->json(['ok' => false, 'message' => $e->getMessage()], 422);
         }
-
-        [$b64, $sig] = $tokenParts;
-
-        $json = base64_decode(strtr($b64, '-_', '+/'), true);
-        if (!$json) {
-            return response()->json(['ok' => false, 'message' => 'QR tidak valid.'], 422);
-        }
-
-        $expectedSig = hash_hmac('sha256', $json, config('app.key'));
-        if (!hash_equals($expectedSig, $sig)) {
-            return response()->json(['ok' => false, 'message' => 'QR tidak valid.'], 422);
-        }
-
-        $payload = json_decode($json, true);
-        if (!is_array($payload)) {
-            return response()->json(['ok' => false, 'message' => 'QR tidak valid.'], 422);
-        }
-
-        $modeInToken = $payload['m'] ?? null;
-        $slot = isset($payload['s']) ? (int) $payload['s'] : -1;
-
-        if ($modeInToken !== $data['mode']) {
-            return response()->json(['ok' => false, 'message' => 'QR salah mode.'], 422);
-        }
-
-        $ttl = (int) config('attendance.qr_ttl_seconds', 15);
-        $nowSlot = (int) floor(time() / $ttl);
-
-        if (!in_array($slot, [$nowSlot, $nowSlot - 1], true)) {
-            return response()->json(['ok' => false, 'message' => 'QR sudah expired.'], 422);
-        }
-
-        // anti replay ringan (cache, bukan DB)
-        $cacheKey = "att_qr_used:{$data['mode']}:{$data['device_hash']}:{$slot}";
-        if (\Illuminate\Support\Facades\Cache::has($cacheKey)) {
-            return response()->json(['ok' => false, 'message' => 'QR sudah digunakan.'], 422);
-        }
-        \Illuminate\Support\Facades\Cache::put($cacheKey, true, now()->addMinutes(2));
 
         // 4) ambil attendance hari ini (1 row per user per date)
         $today = now()->toDateString();
@@ -342,10 +330,9 @@ class AttendanceV2Controller extends Controller
             }
         }
 
-        // 5) simpan selfie (tetap ke disk default kamu)
+        // 5) simpan selfie + watermark otomatis
         $now = now(); // pakai 1 timestamp yang konsisten
 
-        // 5) simpan selfie + watermark otomatis
         $path = $this->storeSelfieWithWatermark(
             $request->file('selfie'),
             $data['mode'],
