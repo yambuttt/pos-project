@@ -103,7 +103,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
-  
+
 
   <script>
     const csrf = document.querySelector('meta[name="csrf-token"]').content;
@@ -427,12 +427,19 @@
       faceOk = false;
       faceOkStreak = 0;
 
+      // safety: pastikan script mediapipe sudah ada
+      if (typeof FaceMesh === "undefined" || typeof drawConnectors === "undefined") {
+        setFaceHint("Deteksi wajah belum siap. Reload halaman dulu.", false);
+        faceDetectRunning = false;
+        return;
+      }
+
       resizeOverlayToVideo();
       const ctx = faceOverlay.getContext('2d');
 
-
+      // init FaceMesh sekali
       if (!faceMesh) {
-        // ✅ CDN exports: constructor = FaceMesh (bukan FaceMesh.FaceMesh)
+        // ✅ CDN exports constructor = FaceMesh
         faceMesh = new FaceMesh({
           locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`
         });
@@ -457,6 +464,7 @@
             return;
           }
 
+          // wajah terdeteksi
           faceOkStreak += 1;
           if (faceOkStreak >= FACE_OK_NEED) faceOk = true;
 
@@ -464,52 +472,77 @@
 
           const landmarks = faces[0];
 
-          // ✅ drawing_utils exports global: drawLandmarks/drawConnectors
+          // gambar overlay
           drawLandmarks(ctx, landmarks, { color: '#7dd3fc', lineWidth: 1 });
 
-          // ✅ face mesh connectors biasanya global constants (tanpa FaceMesh.)
-          drawConnectors(ctx, landmarks, FACEMESH_TESSELATION, { color: '#ffffff', lineWidth: 0.6 });
-          drawConnectors(ctx, landmarks, FACEMESH_FACE_OVAL, { color: '#22c55e', lineWidth: 1.2 });
-          drawConnectors(ctx, landmarks, FACEMESH_LEFT_EYE, { color: '#60a5fa', lineWidth: 1 });
-          drawConnectors(ctx, landmarks, FACEMESH_RIGHT_EYE, { color: '#60a5fa', lineWidth: 1 });
-          drawConnectors(ctx, landmarks, FACEMESH_LIPS, { color: '#fb7185', lineWidth: 1 });
+          // ✅ connectors biasanya global constants (tanpa FaceMesh.)
+          if (typeof FACEMESH_TESSELATION !== "undefined") {
+            drawConnectors(ctx, landmarks, FACEMESH_TESSELATION, { color: '#ffffff', lineWidth: 0.6 });
+          }
+          if (typeof FACEMESH_FACE_OVAL !== "undefined") {
+            drawConnectors(ctx, landmarks, FACEMESH_FACE_OVAL, { color: '#22c55e', lineWidth: 1.2 });
+          }
+          if (typeof FACEMESH_LEFT_EYE !== "undefined") {
+            drawConnectors(ctx, landmarks, FACEMESH_LEFT_EYE, { color: '#60a5fa', lineWidth: 1 });
+          }
+          if (typeof FACEMESH_RIGHT_EYE !== "undefined") {
+            drawConnectors(ctx, landmarks, FACEMESH_RIGHT_EYE, { color: '#60a5fa', lineWidth: 1 });
+          }
+          if (typeof FACEMESH_LIPS !== "undefined") {
+            drawConnectors(ctx, landmarks, FACEMESH_LIPS, { color: '#fb7185', lineWidth: 1 });
+          }
         });
       }
 
-      faceMesh.setOptions({
-        maxNumFaces: 1,
-        refineLandmarks: true,
-        minDetectionConfidence: 0.6,
-        minTrackingConfidence: 0.6,
-      });
-
-      faceMesh.onResults((results) => {
+      // loop kirim frame ke faceMesh
+      async function loop() {
         if (!faceDetectRunning) return;
-
-        ctx.clearRect(0, 0, faceOverlay.width, faceOverlay.height);
-
-        const faces = results.multiFaceLandmarks || [];
-        if (faces.length === 0) {
-          faceOkStreak = 0;
-          faceOk = false;
-          setFaceHint("Wajah tidak terdeteksi. Arahkan kamera ke wajah.", false);
-          return;
+        try {
+          await faceMesh.send({ image: video });
+        } catch (e) {
+          // ignore
         }
+        requestAnimationFrame(loop);
+      }
 
-        faceOkStreak += 1;
-        if (faceOkStreak >= FACE_OK_NEED) faceOk = true;
-
-        setFaceHint(faceOk ? "Wajah OK ✅ Tahan sebentar…" : "Wajah terdeteksi… (stabilkan)", faceOk);
-
-        const landmarks = faces[0];
-        drawLandmarks(ctx, landmarks, { color: '#7dd3fc', lineWidth: 1 });
-        drawConnectors(ctx, landmarks, FaceMesh.FACEMESH_TESSELATION, { color: '#ffffff', lineWidth: 0.6 });
-        drawConnectors(ctx, landmarks, FaceMesh.FACEMESH_FACE_OVAL, { color: '#22c55e', lineWidth: 1.2 });
-        drawConnectors(ctx, landmarks, FaceMesh.FACEMESH_LEFT_EYE, { color: '#60a5fa', lineWidth: 1 });
-        drawConnectors(ctx, landmarks, FaceMesh.FACEMESH_RIGHT_EYE, { color: '#60a5fa', lineWidth: 1 });
-        drawConnectors(ctx, landmarks, FaceMesh.FACEMESH_LIPS, { color: '#fb7185', lineWidth: 1 });
-      });
+      setFaceHint("Menyiapkan deteksi wajah…", false);
+      requestAnimationFrame(loop);
     }
+
+    faceMesh.setOptions({
+      maxNumFaces: 1,
+      refineLandmarks: true,
+      minDetectionConfidence: 0.6,
+      minTrackingConfidence: 0.6,
+    });
+
+    faceMesh.onResults((results) => {
+      if (!faceDetectRunning) return;
+
+      ctx.clearRect(0, 0, faceOverlay.width, faceOverlay.height);
+
+      const faces = results.multiFaceLandmarks || [];
+      if (faces.length === 0) {
+        faceOkStreak = 0;
+        faceOk = false;
+        setFaceHint("Wajah tidak terdeteksi. Arahkan kamera ke wajah.", false);
+        return;
+      }
+
+      faceOkStreak += 1;
+      if (faceOkStreak >= FACE_OK_NEED) faceOk = true;
+
+      setFaceHint(faceOk ? "Wajah OK ✅ Tahan sebentar…" : "Wajah terdeteksi… (stabilkan)", faceOk);
+
+      const landmarks = faces[0];
+      drawLandmarks(ctx, landmarks, { color: '#7dd3fc', lineWidth: 1 });
+      drawConnectors(ctx, landmarks, FaceMesh.FACEMESH_TESSELATION, { color: '#ffffff', lineWidth: 0.6 });
+      drawConnectors(ctx, landmarks, FaceMesh.FACEMESH_FACE_OVAL, { color: '#22c55e', lineWidth: 1.2 });
+      drawConnectors(ctx, landmarks, FaceMesh.FACEMESH_LEFT_EYE, { color: '#60a5fa', lineWidth: 1 });
+      drawConnectors(ctx, landmarks, FaceMesh.FACEMESH_RIGHT_EYE, { color: '#60a5fa', lineWidth: 1 });
+      drawConnectors(ctx, landmarks, FaceMesh.FACEMESH_LIPS, { color: '#fb7185', lineWidth: 1 });
+    });
+      }
 
     async function loop() {
       if (!faceDetectRunning) return;
@@ -521,7 +554,7 @@
 
     setFaceHint("Menyiapkan deteksi wajah…", false);
     requestAnimationFrame(loop);
-      }
+        }
 
     function stopFaceDetection() {
       faceDetectRunning = false;
