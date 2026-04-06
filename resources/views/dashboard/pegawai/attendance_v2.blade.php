@@ -76,7 +76,7 @@
           {{-- Selfie (kamera depan) --}}
           <div id="selfieWrap" class="hidden overflow-hidden rounded-2xl border border-white/10 bg-black/40">
             <div class="relative">
-              <video id="selfieVideo" autoplay playsinline class="aspect-video w-full object-cover"></video>
+              <video id="selfieVideo" autoplay playsinline class="aspect-video w-full object-contain bg-black"></video>
 
               {{-- overlay face mesh --}}
               <canvas id="faceOverlay" class="absolute inset-0 h-full w-full"></canvas>
@@ -521,25 +521,23 @@
           const landmarks = faces[0];
 
           // titik landmark
+          // titik-titik kecil (opsional, kalau mau lebih clean bisa hapus)
           if (typeof drawLandmarks !== "undefined") {
             drawLandmarks(ctx, landmarks, { color: '#7dd3fc', lineWidth: 1 });
           }
 
-          // garis mesh (global constants; aman pakai guard)
-          if (typeof FACEMESH_TESSELATION !== "undefined") {
-            drawConnectors(ctx, landmarks, FACEMESH_TESSELATION, { color: '#ffffff', lineWidth: 0.6 });
-          }
+          // ✅ jangan gambar TESSELATION (ini yang bikin padat)
           if (typeof FACEMESH_FACE_OVAL !== "undefined") {
-            drawConnectors(ctx, landmarks, FACEMESH_FACE_OVAL, { color: '#22c55e', lineWidth: 1.2 });
+            drawConnectors(ctx, landmarks, FACEMESH_FACE_OVAL, { color: '#22c55e', lineWidth: 2 });
           }
           if (typeof FACEMESH_LEFT_EYE !== "undefined") {
-            drawConnectors(ctx, landmarks, FACEMESH_LEFT_EYE, { color: '#60a5fa', lineWidth: 1 });
+            drawConnectors(ctx, landmarks, FACEMESH_LEFT_EYE, { color: '#60a5fa', lineWidth: 1.5 });
           }
           if (typeof FACEMESH_RIGHT_EYE !== "undefined") {
-            drawConnectors(ctx, landmarks, FACEMESH_RIGHT_EYE, { color: '#60a5fa', lineWidth: 1 });
+            drawConnectors(ctx, landmarks, FACEMESH_RIGHT_EYE, { color: '#60a5fa', lineWidth: 1.5 });
           }
           if (typeof FACEMESH_LIPS !== "undefined") {
-            drawConnectors(ctx, landmarks, FACEMESH_LIPS, { color: '#fb7185', lineWidth: 1 });
+            drawConnectors(ctx, landmarks, FACEMESH_LIPS, { color: '#fb7185', lineWidth: 1.5 });
           }
         });
       }
