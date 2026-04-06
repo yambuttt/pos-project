@@ -430,7 +430,7 @@
       resizeOverlayToVideo();
       const ctx = faceOverlay.getContext('2d');
 
-      i// init FaceMesh sekali
+
       if (!faceMesh) {
         // ✅ CDN exports: constructor = FaceMesh (bukan FaceMesh.FaceMesh)
         faceMesh = new FaceMesh({
