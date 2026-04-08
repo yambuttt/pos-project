@@ -23,6 +23,9 @@ class User extends Authenticatable
         'password',
         'role',
         'created_by',
+        // di $fillable
+        'default_shift_id',
+        'shift_scheme',
     ];
 
     /**
@@ -51,5 +54,10 @@ class User extends Authenticatable
     public function creator()
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function defaultShift()
+    {
+        return $this->belongsTo(\App\Models\Shift::class, 'default_shift_id');
     }
 }

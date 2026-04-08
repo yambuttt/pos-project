@@ -18,8 +18,11 @@ class AttendanceV2Controller extends Controller
     {
         $today = now()->toDateString();
         $attendance = Attendance::where('user_id', auth()->id())->where('date', $today)->first();
+        $shiftSvc = app(\App\Services\ShiftResolverService::class);
+        $winIn = $shiftSvc->getWindow(auth()->user(), 'in', now());
+        $winOut = $shiftSvc->getWindow(auth()->user(), 'out', now());
 
-        return view('dashboard.pegawai.attendance_v2', compact('attendance'));
+        return view('dashboard.pegawai.attendance_v2', compact('attendance', 'winIn', 'winOut'));
     }
 
     // dipanggil saat page load: cek device hash, kalau belum ada => buat pending
@@ -154,6 +157,11 @@ class AttendanceV2Controller extends Controller
             'selfie' => ['required', 'image', 'max:4096'],
             'reason' => ['nullable', 'string', 'max:500'],
         ]);
+        try {
+            app(\App\Services\ShiftResolverService::class)->enforceWindow(auth()->user(), $data['mode'], now());
+        } catch (\RuntimeException $e) {
+            return response()->json(['ok' => false, 'message' => $e->getMessage()], 422);
+        }
 
         // 1) geofence wajib
         if (!$this->isWithinRestaurant((float) $data['lat'], (float) $data['lng'])) {
@@ -464,6 +472,12 @@ class AttendanceV2Controller extends Controller
             'lng' => ['required', 'numeric'],
             'selfie' => ['required', 'image', 'max:4096'],
         ]);
+
+        try {
+            app(\App\Services\ShiftResolverService::class)->enforceWindow(auth()->user(), $data['mode'], now());
+        } catch (\RuntimeException $e) {
+            return response()->json(['ok' => false, 'message' => $e->getMessage()], 422);
+        }
 
         // 1) device harus approved
         $device = \App\Models\EmployeeDevice::where('user_id', auth()->id())

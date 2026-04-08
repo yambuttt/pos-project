@@ -154,6 +154,23 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/admin/attendance/exception-requests/{req}/photo', [\App\Http\Controllers\Admin\AttendanceExceptionRequestController::class, 'photo'])
         ->name('admin.attendance.exception_requests.photo');
 
+    // Shift Settings (pegawai)
+    Route::get('/admin/shifts', [\App\Http\Controllers\Admin\ShiftSettingController::class, 'index'])
+        ->name('admin.shifts.index');
+
+    Route::get('/admin/shifts/{user}/edit', [\App\Http\Controllers\Admin\ShiftSettingController::class, 'edit'])
+        ->name('admin.shifts.edit');
+
+    Route::put('/admin/shifts/{user}', [\App\Http\Controllers\Admin\ShiftSettingController::class, 'update'])
+        ->name('admin.shifts.update');
+
+    // Override per tanggal (tukeran shift)
+    Route::post('/admin/shifts/{user}/override', [\App\Http\Controllers\Admin\ShiftSettingController::class, 'storeOverride'])
+        ->name('admin.shifts.override.store');
+
+    Route::delete('/admin/shifts/override/{override}', [\App\Http\Controllers\Admin\ShiftSettingController::class, 'deleteOverride'])
+        ->name('admin.shifts.override.delete');
+
     // Shortcut "Akun Saya" -> edit user yang sedang login
     Route::get('/admin/account', function () {
         return redirect()->route('admin.cashiers.edit', auth()->user());

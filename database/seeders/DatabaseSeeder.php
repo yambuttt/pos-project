@@ -17,5 +17,6 @@ class DatabaseSeeder extends Seeder
     {
         $this->call(UsersRoleSeeder::class);
         $this->call(DummyPurchaseSeeder::class);
+        $this->call(\Database\Seeders\ShiftSeeder::class);
     }
 }
