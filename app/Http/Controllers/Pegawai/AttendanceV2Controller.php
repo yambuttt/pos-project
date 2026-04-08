@@ -18,11 +18,34 @@ class AttendanceV2Controller extends Controller
     {
         $today = now()->toDateString();
         $attendance = Attendance::where('user_id', auth()->id())->where('date', $today)->first();
-        $shiftSvc = app(\App\Services\ShiftResolverService::class);
-        $winIn = $shiftSvc->getWindow(auth()->user(), 'in', now());
-        $winOut = $shiftSvc->getWindow(auth()->user(), 'out', now());
 
-        return view('dashboard.pegawai.attendance_v2', compact('attendance', 'winIn', 'winOut'));
+        $svc = app(\App\Services\ShiftResolverService::class);
+        $winIn = $svc->getWindow(auth()->user(), 'in', now());
+        $winOut = $svc->getWindow(auth()->user(), 'out', now());
+
+        // buat UX client-side yang lebih stabil: pakai "server time offset"
+        $serverNowMs = now()->timestamp * 1000;
+
+        $ui = [
+            'shift_name' => $winIn['shift']->name,
+            'shift_code' => $winIn['shift']->code,
+            'server_now_ms' => $serverNowMs,
+
+            'in' => [
+                'from_ms' => $winIn['from']->timestamp * 1000,
+                'to_ms' => $winIn['to']->timestamp * 1000,
+                'start_ms' => $winIn['start']->timestamp * 1000,
+                'end_ms' => $winIn['end']->timestamp * 1000,
+            ],
+            'out' => [
+                'from_ms' => $winOut['from']->timestamp * 1000,
+                'to_ms' => $winOut['to']->timestamp * 1000,
+                'start_ms' => $winOut['start']->timestamp * 1000,
+                'end_ms' => $winOut['end']->timestamp * 1000,
+            ],
+        ];
+
+        return view('dashboard.pegawai.attendance_v2', compact('attendance', 'ui'));
     }
 
     // dipanggil saat page load: cek device hash, kalau belum ada => buat pending

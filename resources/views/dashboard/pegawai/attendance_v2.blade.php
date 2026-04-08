@@ -15,6 +15,40 @@
     </div>
   </div>
 
+  <div class="mt-5 rounded-[26px] border border-white/20 bg-white/10 p-6 backdrop-blur-2xl sm:p-7">
+    <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div>
+        <div class="text-sm font-semibold">Shift Hari Ini</div>
+        <div class="mt-1 text-xs text-white/70">
+          {{ $ui['shift_name'] ?? '-' }}
+        </div>
+      </div>
+
+      <div class="flex flex-wrap gap-2 text-xs">
+        <span class="rounded-full border border-white/10 bg-white/[0.03] px-3 py-1 text-white/80">
+          Check-in: <b id="uiInRange">-</b>
+        </span>
+        <span class="rounded-full border border-white/10 bg-white/[0.03] px-3 py-1 text-white/80">
+          Check-out: <b id="uiOutRange">-</b>
+        </span>
+        <span class="rounded-full border border-white/10 bg-white/[0.03] px-3 py-1 text-white/70">
+          Sekarang: <b id="uiNow">-</b>
+        </span>
+      </div>
+    </div>
+
+    <div class="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+      <div class="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+        <div class="text-xs text-white/60">Status Check-in</div>
+        <div id="uiInStatus" class="mt-1 text-sm text-white/85">-</div>
+      </div>
+      <div class="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+        <div class="text-xs text-white/60">Status Check-out</div>
+        <div id="uiOutStatus" class="mt-1 text-sm text-white/85">-</div>
+      </div>
+    </div>
+  </div>
+
   <div class="mt-5 grid grid-cols-1 gap-5 xl:grid-cols-[1.1fr_.9fr]">
     <div class="rounded-[26px] border border-white/20 bg-white/10 p-6 backdrop-blur-2xl sm:p-7">
       <div class="text-sm font-semibold">1) Verifikasi Device & Lokasi</div>
@@ -170,6 +204,54 @@
     const faceOverlay = document.getElementById('faceOverlay');
     const faceHint = document.getElementById('faceHint');
 
+    const UI = @json($ui);
+
+    const serverOffsetMs = (UI?.server_now_ms || Date.now()) - Date.now();
+    function serverNowMs() {
+      return Date.now() + serverOffsetMs;
+    }
+
+    function fmtHHMM(ms) {
+      const d = new Date(ms);
+      const hh = String(d.getHours()).padStart(2, '0');
+      const mm = String(d.getMinutes()).padStart(2, '0');
+      return `${hh}:${mm}`;
+    }
+
+    function fmtRange(fromMs, toMs) {
+      return `${fmtHHMM(fromMs)} - ${fmtHHMM(toMs)}`;
+    }
+
+    function formatCountdown(msLeft) {
+      if (msLeft <= 0) return '0s';
+      const s = Math.floor(msLeft / 1000);
+      const h = Math.floor(s / 3600);
+      const m = Math.floor((s % 3600) / 60);
+      const sec = s % 60;
+      if (h > 0) return `${h}j ${m}m`;
+      if (m > 0) return `${m}m ${sec}s`;
+      return `${sec}s`;
+    }
+
+    function inWindow(mode) {
+      const now = serverNowMs();
+      const w = mode === 'in' ? UI.in : UI.out;
+      return now >= w.from_ms && now <= w.to_ms;
+    }
+
+    function windowStatus(mode) {
+      const now = serverNowMs();
+      const w = mode === 'in' ? UI.in : UI.out;
+
+      if (now < w.from_ms) {
+        return { state: 'before', text: `Dibuka dalam ${formatCountdown(w.from_ms - now)} (mulai ${fmtHHMM(w.from_ms)})` };
+      }
+      if (now > w.to_ms) {
+        return { state: 'after', text: `Ditutup (maks ${fmtHHMM(w.to_ms)})` };
+      }
+      return { state: 'open', text: `Sedang dibuka • Ditutup dalam ${formatCountdown(w.to_ms - now)}` };
+    }
+
     function setGate(msg) { gateStatus.textContent = "Status: " + msg; }
     function setScan(msg) { scanStatus.textContent = "Status: " + msg; }
     function setCamStatus(msg) { camStatus.textContent = msg; }
@@ -222,20 +304,33 @@
 
       if (!gateOk) return;
 
+      // sudah selesai semua
       if (HAS_CHECKIN && HAS_CHECKOUT) {
         setScan("kamu sudah check-in & check-out hari ini.");
         return;
       }
 
+      // CHECK-OUT: hanya kalau sudah check-in, belum checkout, DAN window out sedang open
       if (HAS_CHECKIN && !HAS_CHECKOUT) {
-        btnCheckOut.disabled = false;
-        setScan("silakan tekan Check-out untuk scan QR checkout.");
+        if (inWindow('out')) {
+          btnCheckOut.disabled = false;
+          setScan("silakan tekan Check-out untuk scan QR checkout.");
+        } else {
+          btnCheckOut.disabled = true;
+          setScan("check-out belum dibuka / sudah ditutup (lihat info shift di atas).");
+        }
         return;
       }
 
+      // CHECK-IN: hanya kalau belum check-in DAN window in sedang open
       if (!HAS_CHECKIN) {
-        btnCheckIn.disabled = false;
-        setScan("silakan tekan Check-in untuk scan QR checkin.");
+        if (inWindow('in')) {
+          btnCheckIn.disabled = false;
+          setScan("silakan tekan Check-in untuk scan QR checkin.");
+        } else {
+          btnCheckIn.disabled = true;
+          setScan("check-in belum dibuka / sudah ditutup (lihat info shift di atas).");
+        }
         return;
       }
     }
@@ -822,5 +917,28 @@
     btnCheckOut.addEventListener("click", () => { if (!btnCheckOut.disabled) startQrScanner("out"); });
 
     setButtonsAfterGate();
+    const uiInRange = document.getElementById('uiInRange');
+    const uiOutRange = document.getElementById('uiOutRange');
+    const uiNow = document.getElementById('uiNow');
+    const uiInStatus = document.getElementById('uiInStatus');
+    const uiOutStatus = document.getElementById('uiOutStatus');
+
+    function refreshShiftUi() {
+      if (uiInRange) uiInRange.textContent = fmtRange(UI.in.from_ms, UI.in.to_ms);
+      if (uiOutRange) uiOutRange.textContent = fmtRange(UI.out.from_ms, UI.out.to_ms);
+      if (uiNow) uiNow.textContent = fmtHHMM(serverNowMs());
+
+      const sIn = windowStatus('in');
+      const sOut = windowStatus('out');
+
+      if (uiInStatus) uiInStatus.textContent = sIn.text;
+      if (uiOutStatus) uiOutStatus.textContent = sOut.text;
+
+      // penting: tombol bisa berubah saat jam berubah
+      setButtonsAfterGate();
+    }
+
+    refreshShiftUi();
+    setInterval(refreshShiftUi, 1000);
   </script>
 @endsection
