@@ -541,8 +541,50 @@
     // ---------- QR FLOW ----------
     async function startQrScanner(mode) {
       if (busy) return;
-      if (!gateOk) { setScan("verifikasi device & lokasi dulu."); return; }
 
+      // gate harus OK dulu
+      if (!gateOk) {
+        setScan("verifikasi device & lokasi dulu.");
+        return;
+      }
+
+      // cegah kalau tombol harusnya disabled (double safety)
+      if (mode === 'in' && btnCheckIn.disabled) {
+        setScan("Check-in tidak tersedia saat ini (di luar jam shift).");
+        return;
+      }
+      if (mode === 'out' && btnCheckOut.disabled) {
+        setScan("Check-out tidak tersedia saat ini (di luar jam shift).");
+        return;
+      }
+
+      // blocker berdasarkan window shift (hard check)
+      if (mode === 'in' && !inWindow('in')) {
+        const s = windowStatus('in');
+        setScan("Check-in belum bisa: " + s.text);
+        return;
+      }
+      if (mode === 'out' && !inWindow('out')) {
+        const s = windowStatus('out');
+        setScan("Check-out belum bisa: " + s.text);
+        return;
+      }
+
+      // aturan logical attendance
+      if (mode === 'out' && !HAS_CHECKIN) {
+        setScan("Kamu belum check-in, jadi tidak bisa check-out.");
+        return;
+      }
+      if (mode === 'in' && HAS_CHECKIN) {
+        setScan("Kamu sudah check-in hari ini.");
+        return;
+      }
+      if (mode === 'out' && HAS_CHECKOUT) {
+        setScan("Kamu sudah check-out hari ini.");
+        return;
+      }
+
+      // === lanjut flow lama ===
       busy = true;
       currentMode = mode;
       scannedToken = null;

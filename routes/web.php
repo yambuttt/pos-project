@@ -171,6 +171,9 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::delete('/admin/shifts/override/{override}', [\App\Http\Controllers\Admin\ShiftSettingController::class, 'deleteOverride'])
         ->name('admin.shifts.override.delete');
 
+    Route::get('/admin/shifts/{user}/calendar', [\App\Http\Controllers\Admin\ShiftSettingController::class, 'calendar'])
+        ->name('admin.shifts.calendar');
+
     // Shortcut "Akun Saya" -> edit user yang sedang login
     Route::get('/admin/account', function () {
         return redirect()->route('admin.cashiers.edit', auth()->user());

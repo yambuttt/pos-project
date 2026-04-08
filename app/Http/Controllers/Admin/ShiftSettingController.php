@@ -10,6 +10,7 @@ use App\Models\UserShiftRotation;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
+
 class ShiftSettingController extends Controller
 {
     public function index(Request $request)
@@ -21,7 +22,7 @@ class ShiftSettingController extends Controller
             ->when($q !== '', function ($qq) use ($q) {
                 $qq->where(function ($x) use ($q) {
                     $x->where('name', 'like', "%{$q}%")
-                      ->orWhere('email', 'like', "%{$q}%");
+                        ->orWhere('email', 'like', "%{$q}%");
                 });
             })
             ->orderBy('name')
@@ -136,5 +137,79 @@ class ShiftSettingController extends Controller
     {
         $override->delete();
         return back()->with('ok', 'Override dihapus.');
+    }
+
+    public function calendar(\Illuminate\Http\Request $request, \App\Models\User $user)
+    {
+        abort_unless($user->role === 'pegawai', 404);
+
+        $data = $request->validate([
+            'start' => ['required', 'date'],
+            'end' => ['required', 'date'],
+        ]);
+
+        $start = \Carbon\Carbon::parse($data['start'])->startOfDay();
+        $end = \Carbon\Carbon::parse($data['end'])->startOfDay();
+
+        $svc = app(\App\Services\ShiftResolverService::class);
+
+        // ambil semua override dalam range biar hemat query
+        $overrides = \App\Models\UserShiftOverride::query()
+            ->where('user_id', $user->id)
+            ->whereBetween('date', [$start->toDateString(), $end->toDateString()])
+            ->where('status', 'approved')
+            ->get()
+            ->keyBy(fn($x) => $x->date->toDateString());
+
+        $events = [];
+
+        // FullCalendar minta end exclusive, jadi kita iterasi sampai < end
+        for ($d = $start->copy(); $d->lt($end); $d->addDay()) {
+            $dateStr = $d->toDateString();
+
+            // resolve shift harian (override menang otomatis di service,
+            // tapi kita pakai $overrides untuk label "Override")
+            $shift = $svc->resolveShiftForDate($user, $d);
+
+            $isOverride = isset($overrides[$dateStr]);
+
+            // start/end waktu shift utk event calendar
+            $tz = config('app.timezone', 'Asia/Jakarta');
+            $shiftStart = \Carbon\Carbon::parse($dateStr . ' ' . $shift->start_time, $tz);
+            $shiftEnd = \Carbon\Carbon::parse($dateStr . ' ' . $shift->end_time, $tz);
+            if ($shiftEnd->lte($shiftStart))
+                $shiftEnd->addDay();
+
+            // warna per shift
+            $color = $shift->code === 'A' ? '#22c55e' : '#f59e0b'; // hijau / kuning (boleh kamu ubah)
+            $textColor = '#0b0b0b';
+
+            // override -> lebih “tegas”
+            if ($isOverride) {
+                $color = '#ef4444'; // merah
+                $textColor = '#ffffff';
+            }
+
+            $title = ($isOverride ? 'OVR ' : '') . "Shift {$shift->code} ({$shift->start_time}–{$shift->end_time})";
+
+            $events[] = [
+                'id' => $dateStr,
+                'title' => $title,
+                'start' => $shiftStart->toIso8601String(),
+                'end' => $shiftEnd->toIso8601String(),
+                'allDay' => false,
+                'backgroundColor' => $color,
+                'borderColor' => $color,
+                'textColor' => $textColor,
+                'extendedProps' => [
+                    'shift_code' => $shift->code,
+                    'shift_name' => $shift->name,
+                    'is_override' => $isOverride,
+                    'override_reason' => $isOverride ? ($overrides[$dateStr]->reason ?? null) : null,
+                ],
+            ];
+        }
+
+        return response()->json($events);
     }
 }
