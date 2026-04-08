@@ -84,7 +84,8 @@
                     $isAttendanceQr = request()->routeIs('admin.attendance.qr*');
                     $isAttendanceDevices = request()->routeIs('admin.attendance.devices*');
                     $isAttendanceHistory = request()->routeIs('admin.attendance.history*');
-                    $isUserGroup = $isUsers || $isAttendanceQr || $isAttendanceDevices || $isAttendanceHistory;
+                    $isAttendanceExceptions = request()->routeIs('admin.attendance.exception_requests*');
+                    $isUserGroup = $isUsers || $isAttendanceQr || $isAttendanceDevices || $isAttendanceHistory || $isAttendanceExceptions;
 
                     $isWastes = request()->routeIs('admin.wastes.*');
                     $isOpnames = request()->routeIs('admin.opnames.*');
@@ -295,6 +296,16 @@
                                         <span class="sidebar-label hidden text-sm font-medium text-white/90">Kelola
                                             User</span>
                                     </a>
+                                    <a href="{{ route('admin.attendance.exception_requests') }}"
+                                        class="relative flex items-center gap-3 rounded-xl px-3 py-2.5 transition
+   {{ $isAttendanceExceptions ? 'bg-yellow-500/10 border border-yellow-500/25' : 'border gold-border bg-white/[0.02] hover:bg-white/[0.05]' }}">
+                                        @if ($isAttendanceExceptions)
+                                            <span
+                                                class="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r bg-yellow-500"></span>
+                                        @endif
+                                        <span class="sidebar-label hidden text-sm font-medium text-white/90">Pengajuan
+                                            Absensi</span>
+                                    </a>
 
                                     <a href="{{ route('admin.attendance.qr') }}"
                                         class="relative flex items-center gap-3 rounded-xl px-3 py-2.5 transition
@@ -460,6 +471,11 @@
                             <a href="{{ route('admin.cashiers.index') }}"
                                 class="mt-1 block rounded-xl px-3 py-2 {{ $isUsers ? 'bg-yellow-500/12' : 'hover:bg-white/[0.05]' }}">
                                 Kelola User
+                            </a>
+
+                            <a href="{{ route('admin.attendance.exception_requests') }}"
+                                class="mt-1 block rounded-xl px-3 py-2 {{ $isAttendanceExceptions ? 'bg-yellow-500/12' : 'hover:bg-white/[0.05]' }}">
+                                Pengajuan Absensi
                             </a>
 
                             <a href="{{ route('admin.attendance.qr') }}"

@@ -81,6 +81,181 @@ class AttendanceV2Controller extends Controller
 
         return response()->json(['ok' => true, 'status' => 'approved']);
     }
+
+    public function lookupDeviceOwner(Request $request)
+    {
+        $data = $request->validate([
+            'device_hash' => ['required', 'string', 'size:64'],
+            'device_name' => ['nullable', 'string', 'max:80'],
+            'lat' => ['required', 'numeric'],
+            'lng' => ['required', 'numeric'],
+        ]);
+
+        // geofence tetap wajib
+        if (!$this->isWithinRestaurant((float) $data['lat'], (float) $data['lng'])) {
+            return response()->json([
+                'ok' => false,
+                'status' => 'out_of_area',
+                'message' => 'Lokasi di luar area restoran.',
+            ], 403);
+        }
+
+        $device = \App\Models\EmployeeDevice::with('user')
+            ->where('device_hash', $data['device_hash'])
+            ->whereNull('revoked_at')
+            ->first();
+
+        if (!$device) {
+            return response()->json([
+                'ok' => false,
+                'status' => 'not_registered',
+                'message' => 'Device ini tidak terdaftar sebagai device absensi manapun.',
+            ], 422);
+        }
+
+        if ((int) $device->user_id === (int) auth()->id()) {
+            return response()->json([
+                'ok' => false,
+                'status' => 'same_user',
+                'message' => 'Device ini milik kamu. Gunakan Absensi Normal.',
+            ], 422);
+        }
+
+        // kalau device owner belum approved, jangan boleh dipakai untuk darurat (biar tidak jadi celah)
+        if (!$device->approved_at) {
+            return response()->json([
+                'ok' => false,
+                'status' => 'owner_device_not_approved',
+                'message' => 'Device ini belum di-approve admin (milik pegawai lain). Tidak bisa digunakan.',
+            ], 422);
+        }
+
+        return response()->json([
+            'ok' => true,
+            'status' => 'ok',
+            'owner' => [
+                'user_id' => $device->user_id,
+                'name' => $device->user?->name,
+                'email' => $device->user?->email,
+                'device_name' => $device->device_name,
+            ],
+        ]);
+    }
+
+    public function submitException(Request $request)
+    {
+        $data = $request->validate([
+            'mode' => ['required', 'in:in,out'],
+            'qr_token' => ['required', 'string'],
+            'device_hash' => ['required', 'string', 'size:64'],
+            'lat' => ['required', 'numeric'],
+            'lng' => ['required', 'numeric'],
+            'selfie' => ['required', 'image', 'max:4096'],
+            'reason' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        // device owner harus ada & bukan user ini
+        $ownerDevice = \App\Models\EmployeeDevice::with('user')
+            ->where('device_hash', $data['device_hash'])
+            ->whereNull('revoked_at')
+            ->first();
+
+        if (!$ownerDevice) {
+            return response()->json(['ok' => false, 'message' => 'Device ini tidak terdaftar.'], 422);
+        }
+
+        if ((int) $ownerDevice->user_id === (int) auth()->id()) {
+            return response()->json(['ok' => false, 'message' => 'Device ini milik kamu. Gunakan Absensi Normal.'], 422);
+        }
+
+        if (!$ownerDevice->approved_at) {
+            return response()->json(['ok' => false, 'message' => 'Device pemilik belum di-approve admin.'], 422);
+        }
+
+        // geofence wajib
+        if (!$this->isWithinRestaurant((float) $data['lat'], (float) $data['lng'])) {
+            return response()->json(['ok' => false, 'message' => 'Lokasi di luar area restoran.'], 403);
+        }
+
+        // validasi QR (TANPA consume used_at, consume di admin approve)
+        $qr = \App\Models\AttendanceQrToken::where('token', $data['qr_token'])->first();
+        if (!$qr) {
+            return response()->json(['ok' => false, 'message' => 'QR tidak valid.'], 422);
+        }
+        if ($qr->mode !== $data['mode']) {
+            return response()->json(['ok' => false, 'message' => 'QR salah mode.'], 422);
+        }
+        if (!$qr->expires_at || now()->gte($qr->expires_at)) {
+            return response()->json(['ok' => false, 'message' => 'QR sudah expired.'], 422);
+        }
+        if ($qr->used_at) {
+            return response()->json(['ok' => false, 'message' => 'QR sudah digunakan.'], 422);
+        }
+
+        // aturan check-in/out mengikuti attendance existing
+        $today = now()->toDateString();
+        $att = \App\Models\Attendance::where('user_id', auth()->id())->where('date', $today)->first();
+
+        if ($data['mode'] === 'in') {
+            if ($att?->check_in_at) {
+                return response()->json(['ok' => false, 'message' => 'Kamu sudah check-in hari ini.'], 422);
+            }
+        } else {
+            if (!$att?->check_in_at) {
+                return response()->json(['ok' => false, 'message' => 'Kamu belum check-in.'], 422);
+            }
+            if ($att?->check_out_at) {
+                return response()->json(['ok' => false, 'message' => 'Kamu sudah check-out hari ini.'], 422);
+            }
+        }
+
+        // cegah spam request pending
+        $pendingExists = \App\Models\AttendanceExceptionRequest::query()
+            ->where('user_id', auth()->id())
+            ->where('attendance_date', $today)
+            ->where('mode', $data['mode'])
+            ->where('status', 'pending')
+            ->exists();
+
+        if ($pendingExists) {
+            return response()->json(['ok' => false, 'message' => 'Pengajuan masih pending. Tunggu persetujuan admin.'], 422);
+        }
+
+        $now = now();
+
+        // selfie + watermark (pakai method yang sudah ada)
+        $path = $this->storeSelfieWithWatermark(
+            $request->file('selfie'),
+            $data['mode'],
+            $today,
+            (float) $data['lat'],
+            (float) $data['lng'],
+            $now
+        );
+
+        \App\Models\AttendanceExceptionRequest::create([
+            'user_id' => auth()->id(),
+            'attendance_date' => $today,
+            'mode' => $data['mode'],
+            'device_hash' => $data['device_hash'],
+            'device_owner_device_id' => $ownerDevice->id,
+            'device_owner_user_id' => $ownerDevice->user_id,
+            'device_name' => $ownerDevice->device_name,
+            'user_agent' => substr((string) $request->userAgent(), 0, 180),
+            'lat' => $data['lat'],
+            'lng' => $data['lng'],
+            'attendance_qr_token_id' => $qr->id,
+            'photo_path' => $path,
+            'reason' => $data['reason'] ?? null,
+            'status' => 'pending',
+        ]);
+
+        return response()->json([
+            'ok' => true,
+            'message' => 'Pengajuan absensi via device pegawai lain berhasil dikirim dan menunggu persetujuan admin.',
+            'device_owner' => $ownerDevice->user?->name,
+        ]);
+    }
     private function storeSelfieWithWatermark(
         UploadedFile $file,
         string $mode,

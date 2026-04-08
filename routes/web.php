@@ -130,7 +130,7 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
 
     Route::get('/admin/attendance/devices', [EmployeeDeviceController::class, 'index'])->name('admin.attendance.devices');
     Route::post('/admin/attendance/devices/{device}/rename', [EmployeeDeviceController::class, 'rename'])
-    ->name('admin.attendance.devices.rename');
+        ->name('admin.attendance.devices.rename');
     Route::post('/admin/attendance/devices/{device}/approve', [EmployeeDeviceController::class, 'approve'])->name('admin.attendance.devices.approve');
     Route::post('/admin/attendance/devices/{device}/revoke', [EmployeeDeviceController::class, 'revoke'])->name('admin.attendance.devices.revoke');
     Route::post('/admin/attendance/users/{user}/reset-devices', [EmployeeDeviceController::class, 'resetUserDevices'])->name('admin.attendance.users.reset_devices');
@@ -206,4 +206,12 @@ Route::prefix('pegawai')->name('pegawai.')->middleware(['auth', 'role:pegawai'])
 
     Route::get('/absensi/photo/{attendance}/{type}', [PegawaiAttendancePhotoController::class, 'show'])
         ->name('attendance.photo');
+
+    // lookup pemilik device (mode darurat)
+    Route::post('/absensi/device/lookup', [AttendanceV2Controller::class, 'lookupDeviceOwner'])
+        ->name('attendance.device.lookup');
+
+    // submit absensi darurat (pakai device lain -> pending approval admin)
+    Route::post('/absensi/submit-exception', [AttendanceV2Controller::class, 'submitException'])
+        ->name('attendance.submit-exception');
 });

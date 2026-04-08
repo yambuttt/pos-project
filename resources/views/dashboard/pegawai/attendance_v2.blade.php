@@ -23,9 +23,26 @@
       </div>
 
       <div class="mt-4 flex flex-wrap gap-2">
-        <button id="btnInit" class="rounded-xl bg-emerald-600/80 px-4 py-2 text-sm font-semibold hover:bg-emerald-500/80">
-          Mulai Verifikasi
+        <button id="btnInitNormal"
+          class="rounded-xl bg-emerald-600/80 px-4 py-2 text-sm font-semibold hover:bg-emerald-500/80">
+          Verifikasi Normal
         </button>
+
+        <button id="btnInitException"
+          class="rounded-xl border border-white/20 bg-white/10 px-4 py-2 text-sm font-semibold hover:bg-white/15">
+          Pakai Device Lain (Darurat)
+        </button>
+      </div>
+
+      <div id="exceptionReasonWrap" class="mt-4 hidden">
+        <div class="text-xs text-white/70">Alasan (opsional)</div>
+        <textarea id="exceptionReason" rows="3"
+          class="mt-2 w-full rounded-2xl border border-white/15 bg-white/[0.04] px-3 py-2 text-sm text-white placeholder:text-white/40 outline-none focus:border-yellow-500/35"
+          placeholder="Contoh: HP rusak / lupa membawa HP. Mengajukan absensi darurat."></textarea>
+
+        <div class="mt-2 text-xs text-white/50">
+          Pengajuan akan masuk ke admin untuk persetujuan. Sistem akan mencatat device ini milik pegawai siapa.
+        </div>
       </div>
 
       <div id="gateStatus" class="mt-3 text-sm text-white/80">Status: belum verifikasi.</div>
@@ -127,10 +144,15 @@
     let busy = false;
     let currentMode = null;      // 'in'/'out'
     let scannedToken = null;
+    let flow = null; // 'normal' | 'exception'
+    let exceptionOwner = null; // info pemilik device
 
     const gateStatus = document.getElementById('gateStatus');
     const scanStatus = document.getElementById('scanStatus');
-    const btnInit = document.getElementById('btnInit');
+    const btnInitNormal = document.getElementById('btnInitNormal');
+    const btnInitException = document.getElementById('btnInitException');
+    const exceptionReasonWrap = document.getElementById('exceptionReasonWrap');
+    const exceptionReason = document.getElementById('exceptionReason');
     const btnCheckIn = document.getElementById('btnCheckIn');
     const btnCheckOut = document.getElementById('btnCheckOut');
 
@@ -342,9 +364,77 @@
         gateOk = true;
         setGate("device OK + lokasi OK ✅");
         setButtonsAfterGate();
+        flow = 'normal';
+        exceptionOwner = null;
+        exceptionReasonWrap.classList.add('hidden');
 
       } catch (e) {
         gateOk = false;
+        setGate("gagal ambil lokasi. aktifkan GPS & izin lokasi.");
+        setScan("menunggu verifikasi.");
+        setButtonsAfterGate();
+      } finally {
+        busy = false;
+      }
+    }
+
+    async function initExceptionGate() {
+      if (busy) return;
+      busy = true;
+
+      try {
+        setGate("mengambil fingerprint device...");
+        deviceHash = await sha256Hex(buildFingerprint());
+
+        setGate("cek lokasi...");
+        geo = await getGeo();
+
+        setGate("cek device milik siapa...");
+        const deviceName = await detectDeviceNameAsync();
+
+        const res = await fetch("{{ route('pegawai.attendance.device.lookup') }}", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "X-CSRF-TOKEN": csrf },
+          body: JSON.stringify({
+            device_hash: deviceHash,
+            device_name: deviceName,
+            lat: geo.lat,
+            lng: geo.lng
+          })
+        });
+
+        const json = await res.json().catch(() => ({}));
+
+        if (!res.ok) {
+          gateOk = false;
+          flow = null;
+          exceptionOwner = null;
+          exceptionReasonWrap.classList.add('hidden');
+
+          setGate(json.message || "device tidak valid untuk darurat.");
+          setScan("mode darurat tidak bisa dipakai.");
+          setButtonsAfterGate();
+          return;
+        }
+
+        // sukses
+        flow = 'exception';
+        exceptionOwner = json.owner || null;
+        gateOk = true;
+
+        exceptionReasonWrap.classList.remove('hidden');
+
+        const ownerName = exceptionOwner?.name || 'Pegawai lain';
+        setGate(`MODE DARURAT ✅ device milik: ${ownerName}`);
+        setScan("silakan tekan Check-in / Check-out untuk scan QR (pengajuan akan menunggu admin).");
+        setButtonsAfterGate();
+
+      } catch (e) {
+        gateOk = false;
+        flow = null;
+        exceptionOwner = null;
+        exceptionReasonWrap.classList.add('hidden');
+
         setGate("gagal ambil lokasi. aktifkan GPS & izin lokasi.");
         setScan("menunggu verifikasi.");
         setButtonsAfterGate();
@@ -689,7 +779,14 @@
         fd.append("lng", geo.lng);
         fd.append("selfie", selfieBlob, "selfie.jpg");
 
-        const res = await fetch("{{ route('pegawai.attendance.submit') }}", {
+        let url = "{{ route('pegawai.attendance.submit') }}";
+
+        if (flow === 'exception') {
+          url = "{{ route('pegawai.attendance.submit-exception') }}";
+          fd.append("reason", (exceptionReason?.value || "").trim());
+        }
+
+        const res = await fetch(url, {
           method: "POST",
           headers: { "X-CSRF-TOKEN": csrf },
           body: fd
@@ -703,6 +800,14 @@
           return false;
         }
 
+        // mode darurat: tampilkan info sukses & tidak auto reload cepat
+        if (flow === 'exception') {
+          setScan(json.message || "Pengajuan terkirim.");
+          setCamStatus(json.message || "Pengajuan terkirim.");
+          setTimeout(() => window.location.reload(), 1200);
+          return true;
+        }
+
         return true;
       } catch (e) {
         setScan("error submit: " + (e?.message || "unknown"));
@@ -710,9 +815,9 @@
         return false;
       }
     }
-
     // EVENTS
-    btnInit.addEventListener("click", initGate);
+    btnInitNormal.addEventListener("click", () => { flow = null; initGate(); });
+    btnInitException.addEventListener("click", () => { flow = null; initExceptionGate(); });
     btnCheckIn.addEventListener("click", () => { if (!btnCheckIn.disabled) startQrScanner("in"); });
     btnCheckOut.addEventListener("click", () => { if (!btnCheckOut.disabled) startQrScanner("out"); });
 
