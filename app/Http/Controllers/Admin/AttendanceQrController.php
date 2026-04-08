@@ -41,14 +41,25 @@ class AttendanceQrController extends Controller
             'mode' => ['required', 'in:in,out'],
         ]);
 
-        $ttl = (int) config('attendance.qr_ttl_seconds', 15);
+        // konsisten dengan ttl utama
+        $ttl = (int) config('attendance.qr_ttl_seconds', 60);
 
-        // (Opsional tapi recommended) matikan token lama yang belum dipakai untuk mode ini
-        AttendanceQrToken::where('mode', $data['mode'])
+        // ✅ kalau masih ada token aktif (belum dipakai & belum expired), kembalikan token yang sama
+        $existing = AttendanceQrToken::query()
+            ->where('mode', $data['mode'])
             ->whereNull('used_at')
             ->where('expires_at', '>', now())
-            ->update(['expires_at' => now()]);
+            ->orderByDesc('id')
+            ->first();
 
+        if ($existing) {
+            return response()->json([
+                'token' => $existing->token,
+                'expires_in' => now()->diffInSeconds($existing->expires_at, false),
+            ]);
+        }
+
+        // ✅ baru bikin token baru kalau memang sudah tidak ada token aktif
         $token = AttendanceQrToken::create([
             'token' => hash('sha256', \Illuminate\Support\Str::random(64) . microtime(true)),
             'mode' => $data['mode'],

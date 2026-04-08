@@ -33,8 +33,8 @@
                 @csrf
                 <input type="hidden" name="mode" value="in">
                 <!-- <button class="rounded-xl bg-yellow-500 px-4 py-2 text-sm font-semibold text-black hover:bg-yellow-400">
-                    Regenerate QR Check-in
-                </button> -->
+                            Regenerate QR Check-in
+                        </button> -->
             </form>
         </div>
 
@@ -53,8 +53,8 @@
                 @csrf
                 <input type="hidden" name="mode" value="out">
                 <!-- <button class="rounded-xl bg-yellow-500 px-4 py-2 text-sm font-semibold text-black hover:bg-yellow-400">
-                    Regenerate QR Check-out
-                </button> -->
+                            Regenerate QR Check-out
+                        </button> -->
             </form>
         </div>
     </div>
@@ -106,8 +106,8 @@
         }
 
         // refresh tiap 10-20 detik sesuai config ttl (ambil dari backend? simplest: interval 10)
-        setInterval(() => refreshQr('in'), 10000);
-        setInterval(() => refreshQr('out'), 10000);
+        setInterval(() => refreshQr('in'), 1000);
+        setInterval(() => refreshQr('out'), 1000);
 
         // initial render
         refreshQr('in');
