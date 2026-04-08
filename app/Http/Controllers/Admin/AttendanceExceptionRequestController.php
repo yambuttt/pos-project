@@ -29,53 +29,43 @@ class AttendanceExceptionRequestController extends Controller
         return view('dashboard.admin.attendance_qr.exception_requests', compact('items', 'status'));
     }
 
-    public function approve(AttendanceExceptionRequest $req)
+    public function approve(\App\Models\AttendanceExceptionRequest $req)
     {
         if ($req->status !== 'pending') {
             return back()->with('ok', 'Pengajuan sudah diproses.');
         }
 
         try {
-            DB::transaction(function () use ($req) {
+            \DB::transaction(function () use ($req) {
+                $qrId = $req->attendance_qr_token_id;
 
-                // Lock QR token, pastikan masih valid & belum dipakai
-                $qr = AttendanceQrToken::where('id', $req->attendance_qr_token_id)
-                    ->lockForUpdate()
-                    ->first();
-
-                if (!$qr) {
-                    throw new \RuntimeException('QR token tidak ditemukan.');
+                if (!$qrId) {
+                    throw new \RuntimeException('QR token tidak tersimpan pada pengajuan.');
                 }
 
-                if ($qr->mode !== $req->mode) {
-                    throw new \RuntimeException('QR token salah mode.');
-                }
-
-                if (!$qr->expires_at || now()->gte($qr->expires_at)) {
-                    throw new \RuntimeException('QR token sudah expired.');
-                }
-
-                if ($qr->used_at) {
-                    throw new \RuntimeException('QR token sudah digunakan.');
-                }
-
-                // Attendance row
-                $attendance = Attendance::firstOrCreate(
-                    ['user_id' => $req->user_id, 'date' => $req->attendance_date->toDateString()],
-                    ['ip' => null, 'device' => $req->user_agent]
+                // attendance row (1 row per user per date)
+                $attendance = \App\Models\Attendance::firstOrCreate(
+                    [
+                        'user_id' => $req->user_id,
+                        'date' => $req->attendance_date->toDateString(),
+                    ],
+                    [
+                        'ip' => null,
+                        'device' => $req->user_agent,
+                    ]
                 );
 
-                // Validasi state
                 if ($req->mode === 'in') {
                     if ($attendance->check_in_at) {
                         throw new \RuntimeException('Pegawai sudah check-in.');
                     }
 
+                    // ✅ jam mengikuti waktu pegawai mengajukan (bukan waktu admin approve)
                     $attendance->check_in_at = $req->created_at;
                     $attendance->check_in_lat = $req->lat;
                     $attendance->check_in_lng = $req->lng;
                     $attendance->check_in_photo_path = $req->photo_path;
-                    $attendance->check_in_qr_id = $qr->id;
+                    $attendance->check_in_qr_id = $qrId;
                 } else {
                     if (!$attendance->check_in_at) {
                         throw new \RuntimeException('Pegawai belum check-in.');
@@ -88,20 +78,15 @@ class AttendanceExceptionRequestController extends Controller
                     $attendance->check_out_lat = $req->lat;
                     $attendance->check_out_lng = $req->lng;
                     $attendance->check_out_photo_path = $req->photo_path;
-                    $attendance->check_out_qr_id = $qr->id;
+                    $attendance->check_out_qr_id = $qrId;
                 }
 
-                // Tetap simpan hash device yang dipakai (milik orang lain)
+                // catat device yang dipakai (milik orang lain)
                 $attendance->device_hash = $req->device_hash;
                 $attendance->device = $req->device_name ?: $req->user_agent;
                 $attendance->save();
 
-                // Consume QR
-                $qr->used_at = now();
-                $qr->used_by = $req->user_id;
-                $qr->save();
-
-                // Update request
+                // update status request
                 $req->update([
                     'status' => 'approved',
                     'reviewed_by' => auth()->id(),
@@ -114,7 +99,6 @@ class AttendanceExceptionRequestController extends Controller
             return back()->with('error', $e->getMessage());
         }
     }
-
     public function reject(Request $request, AttendanceExceptionRequest $req)
     {
         if ($req->status !== 'pending') {

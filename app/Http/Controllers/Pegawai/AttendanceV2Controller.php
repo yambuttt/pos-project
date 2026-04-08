@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\UploadedFile;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class AttendanceV2Controller extends Controller
 {
@@ -154,7 +155,12 @@ class AttendanceV2Controller extends Controller
             'reason' => ['nullable', 'string', 'max:500'],
         ]);
 
-        // device owner harus ada & bukan user ini
+        // 1) geofence wajib
+        if (!$this->isWithinRestaurant((float) $data['lat'], (float) $data['lng'])) {
+            return response()->json(['ok' => false, 'message' => 'Lokasi di luar area restoran.'], 403);
+        }
+
+        // 2) device owner harus ada & bukan user ini
         $ownerDevice = \App\Models\EmployeeDevice::with('user')
             ->where('device_hash', $data['device_hash'])
             ->whereNull('revoked_at')
@@ -168,33 +174,17 @@ class AttendanceV2Controller extends Controller
             return response()->json(['ok' => false, 'message' => 'Device ini milik kamu. Gunakan Absensi Normal.'], 422);
         }
 
+        // Owner device harus sudah approved (biar tidak jadi celah)
         if (!$ownerDevice->approved_at) {
             return response()->json(['ok' => false, 'message' => 'Device pemilik belum di-approve admin.'], 422);
         }
 
-        // geofence wajib
-        if (!$this->isWithinRestaurant((float) $data['lat'], (float) $data['lng'])) {
-            return response()->json(['ok' => false, 'message' => 'Lokasi di luar area restoran.'], 403);
-        }
-
-        // validasi QR (TANPA consume used_at, consume di admin approve)
-        $qr = \App\Models\AttendanceQrToken::where('token', $data['qr_token'])->first();
-        if (!$qr) {
-            return response()->json(['ok' => false, 'message' => 'QR tidak valid.'], 422);
-        }
-        if ($qr->mode !== $data['mode']) {
-            return response()->json(['ok' => false, 'message' => 'QR salah mode.'], 422);
-        }
-        if (!$qr->expires_at || now()->gte($qr->expires_at)) {
-            return response()->json(['ok' => false, 'message' => 'QR sudah expired.'], 422);
-        }
-        if ($qr->used_at) {
-            return response()->json(['ok' => false, 'message' => 'QR sudah digunakan.'], 422);
-        }
-
-        // aturan check-in/out mengikuti attendance existing
         $today = now()->toDateString();
-        $att = \App\Models\Attendance::where('user_id', auth()->id())->where('date', $today)->first();
+
+        // 3) aturan check-in/out mengikuti attendance existing
+        $att = \App\Models\Attendance::where('user_id', auth()->id())
+            ->where('date', $today)
+            ->first();
 
         if ($data['mode'] === 'in') {
             if ($att?->check_in_at) {
@@ -209,7 +199,7 @@ class AttendanceV2Controller extends Controller
             }
         }
 
-        // cegah spam request pending
+        // 4) cegah spam pengajuan pending
         $pendingExists = \App\Models\AttendanceExceptionRequest::query()
             ->where('user_id', auth()->id())
             ->where('attendance_date', $today)
@@ -221,9 +211,42 @@ class AttendanceV2Controller extends Controller
             return response()->json(['ok' => false, 'message' => 'Pengajuan masih pending. Tunggu persetujuan admin.'], 422);
         }
 
+        // 5) VALIDASI QR + LOCK & CONSUME SAAT SUBMIT (ini kunci agar admin bisa approve kapan saja)
+        $qrId = null;
+
+        try {
+            DB::transaction(function () use ($data, &$qrId) {
+                $qr = \App\Models\AttendanceQrToken::where('token', $data['qr_token'])
+                    ->lockForUpdate()
+                    ->first();
+
+                if (!$qr) {
+                    throw new \RuntimeException('QR tidak valid.');
+                }
+                if ($qr->mode !== $data['mode']) {
+                    throw new \RuntimeException('QR salah mode.');
+                }
+                if (!$qr->expires_at || now()->gte($qr->expires_at)) {
+                    throw new \RuntimeException('QR token sudah expired.');
+                }
+                if ($qr->used_at) {
+                    throw new \RuntimeException('QR sudah digunakan.');
+                }
+
+                // ✅ consume SEKARANG (bukan saat admin approve)
+                $qr->used_at = now();
+                $qr->used_by = auth()->id();
+                $qr->save();
+
+                $qrId = $qr->id;
+            });
+        } catch (\RuntimeException $e) {
+            return response()->json(['ok' => false, 'message' => $e->getMessage()], 422);
+        }
+
+        // 6) simpan selfie + watermark (pakai timestamp konsisten)
         $now = now();
 
-        // selfie + watermark (pakai method yang sudah ada)
         $path = $this->storeSelfieWithWatermark(
             $request->file('selfie'),
             $data['mode'],
@@ -233,19 +256,24 @@ class AttendanceV2Controller extends Controller
             $now
         );
 
+        // 7) create pengajuan pending
         \App\Models\AttendanceExceptionRequest::create([
             'user_id' => auth()->id(),
             'attendance_date' => $today,
             'mode' => $data['mode'],
+
             'device_hash' => $data['device_hash'],
             'device_owner_device_id' => $ownerDevice->id,
             'device_owner_user_id' => $ownerDevice->user_id,
             'device_name' => $ownerDevice->device_name,
             'user_agent' => substr((string) $request->userAgent(), 0, 180),
+
             'lat' => $data['lat'],
             'lng' => $data['lng'],
-            'attendance_qr_token_id' => $qr->id,
+
+            'attendance_qr_token_id' => $qrId,
             'photo_path' => $path,
+
             'reason' => $data['reason'] ?? null,
             'status' => 'pending',
         ]);
