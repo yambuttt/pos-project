@@ -143,6 +143,14 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/admin/users/{user}/edit', [CashierController::class, 'edit'])->name('admin.cashiers.edit');
     Route::put('/admin/users/{user}', [CashierController::class, 'update'])->name('admin.cashiers.update');
     Route::delete('/admin/users/{user}', [CashierController::class, 'destroy'])->name('admin.cashiers.destroy');
+        Route::get('/admin/attendance/exception-requests', [\App\Http\Controllers\Admin\AttendanceExceptionRequestController::class, 'index'])
+        ->name('admin.attendance.exception_requests');
+
+    Route::post('/admin/attendance/exception-requests/{req}/approve', [\App\Http\Controllers\Admin\AttendanceExceptionRequestController::class, 'approve'])
+        ->name('admin.attendance.exception_requests.approve');
+
+    Route::post('/admin/attendance/exception-requests/{req}/reject', [\App\Http\Controllers\Admin\AttendanceExceptionRequestController::class, 'reject'])
+        ->name('admin.attendance.exception_requests.reject');
 
     // Shortcut "Akun Saya" -> edit user yang sedang login
     Route::get('/admin/account', function () {
