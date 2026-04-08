@@ -8,6 +8,7 @@ use App\Models\AttendanceExceptionRequest;
 use App\Models\AttendanceQrToken;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class AttendanceExceptionRequestController extends Controller
 {
@@ -132,5 +133,23 @@ class AttendanceExceptionRequestController extends Controller
         ]);
 
         return back()->with('ok', 'Pengajuan ditolak.');
+    }
+
+    public function photo(\App\Models\AttendanceExceptionRequest $req)
+    {
+        $path = $req->photo_path;
+
+        if (!$path) {
+            abort(404);
+        }
+
+        // Samakan seperti AttendancePhotoController: stream via Laravel
+        $disk = Storage::disk('local');
+
+        if (!$disk->exists($path)) {
+            abort(404);
+        }
+
+        return $disk->response($path);
     }
 }
