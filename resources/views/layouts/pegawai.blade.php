@@ -70,6 +70,7 @@
           $isAbsensi = request()->routeIs('pegawai.attendance');
           $isHistory = request()->routeIs('pegawai.attendance.history*');
           $isSchedule = request()->routeIs('pegawai.schedule*');
+          $isLeave = request()->routeIs('pegawai.leave.*');
         @endphp
 
         <!-- DESKTOP SIDEBAR -->
@@ -121,6 +122,14 @@
                   <span class="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r bg-yellow-500"></span>
                 @endif
                 <span class="font-medium text-white/90">Jadwal Kerja</span>
+              </a>
+              <a href="{{ route('pegawai.leave.index') }}"
+                class="relative flex items-center gap-3 rounded-xl px-3 py-3 transition
+   {{ $isLeave ? 'bg-yellow-500/12 border border-yellow-500/30' : 'border gold-border bg-white/[0.02] hover:bg-white/[0.05]' }}">
+                @if($isLeave)
+                  <span class="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r bg-yellow-500"></span>
+                @endif
+                <span class="font-medium text-white/90">Cuti / Sakit</span>
               </a>
             </nav>
 
@@ -190,10 +199,14 @@
       <a href="{{ route('pegawai.attendance.history') }}"
         class="block rounded-xl px-3 py-3 {{ $isHistory ? 'bg-yellow-500/12 border border-yellow-500/30' : 'border gold-border bg-white/[0.02]' }}">Riwayat
         Absensi</a>
-      <a href="{{ route('pegawai.schedule') }}"
-        class="block rounded-xl px-3 py-3 {{ $isSchedule ? 'bg-yellow-500/12 border border-yellow-500/30' : 'border gold-border bg-white/[0.02]' }}">
-        Jadwal Kerja
-      </a>
+        <a href="{{ route('pegawai.schedule') }}"
+          class="block rounded-xl px-3 py-3 {{ $isSchedule ? 'bg-yellow-500/12 border border-yellow-500/30' : 'border gold-border bg-white/[0.02]' }}">
+          Jadwal Kerja
+        </a>
+        <a href="{{ route('pegawai.leave.index') }}"
+          class="block rounded-xl px-3 py-3 {{ $isLeave ? 'bg-yellow-500/12 border border-yellow-500/30' : 'border gold-border bg-white/[0.02]' }}">
+          Cuti / Sakit
+        </a>
     </nav>
 
     <div class="mt-6 rounded-2xl border gold-border bg-white/[0.03] p-4">

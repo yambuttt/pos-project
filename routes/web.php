@@ -174,6 +174,18 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('/admin/shifts/{user}/calendar', [\App\Http\Controllers\Admin\ShiftSettingController::class, 'calendar'])
         ->name('admin.shifts.calendar');
 
+    Route::get('/admin/leave-requests', [\App\Http\Controllers\Admin\LeaveRequestAdminController::class, 'index'])
+        ->name('admin.leave_requests.index');
+
+    Route::post('/admin/leave-requests/{leave}/approve', [\App\Http\Controllers\Admin\LeaveRequestAdminController::class, 'approve'])
+        ->name('admin.leave_requests.approve');
+
+    Route::post('/admin/leave-requests/{leave}/reject', [\App\Http\Controllers\Admin\LeaveRequestAdminController::class, 'reject'])
+        ->name('admin.leave_requests.reject');
+
+    Route::get('/admin/leave-requests/{leave}/doctor-note', [\App\Http\Controllers\Admin\LeaveRequestAdminController::class, 'doctorNote'])
+        ->name('admin.leave_requests.doctor_note');
+
     // Shortcut "Akun Saya" -> edit user yang sedang login
     Route::get('/admin/account', function () {
         return redirect()->route('admin.cashiers.edit', auth()->user());
@@ -250,5 +262,11 @@ Route::prefix('pegawai')->name('pegawai.')->middleware(['auth', 'role:pegawai'])
 
     Route::get('/jadwal/calendar', [\App\Http\Controllers\Pegawai\ShiftScheduleController::class, 'calendar'])
         ->name('schedule.calendar');
+
+    Route::get('/izin', [\App\Http\Controllers\Pegawai\LeaveRequestController::class, 'index'])
+        ->name('leave.index');
+
+    Route::post('/izin', [\App\Http\Controllers\Pegawai\LeaveRequestController::class, 'store'])
+        ->name('leave.store');
 
 });
