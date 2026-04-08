@@ -244,4 +244,10 @@ Route::prefix('pegawai')->name('pegawai.')->middleware(['auth', 'role:pegawai'])
     // submit absensi darurat (pakai device lain -> pending approval admin)
     Route::post('/absensi/submit-exception', [AttendanceV2Controller::class, 'submitException'])
         ->name('attendance.submit-exception');
+
+    Route::get('/jadwal', [\App\Http\Controllers\Pegawai\ShiftScheduleController::class, 'index'])
+        ->name('pegawai.schedule');
+
+    Route::get('/jadwal/calendar', [\App\Http\Controllers\Pegawai\ShiftScheduleController::class, 'calendar'])
+        ->name('pegawai.schedule.calendar');
 });

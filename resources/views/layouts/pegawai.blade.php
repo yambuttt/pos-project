@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="id" class="overflow-x-hidden">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -7,8 +8,14 @@
   @vite(['resources/css/app.css', 'resources/js/app.js'])
 
   <style>
-    html { scroll-behavior: smooth; }
-    * { box-sizing: border-box; }
+    html {
+      scroll-behavior: smooth;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       overflow-x: hidden;
       background:
@@ -16,28 +23,44 @@
         radial-gradient(circle at bottom right, rgba(234, 179, 8, .06), transparent 24%),
         linear-gradient(180deg, #030303 0%, #090909 100%);
     }
+
     .shell {
       background: linear-gradient(180deg, rgba(255, 255, 255, .01), rgba(255, 255, 255, .00));
     }
+
     .panel-dark {
       background: rgba(16, 16, 16, 0.86);
       backdrop-filter: blur(12px);
     }
+
     .panel-soft {
       background: rgba(255, 255, 255, .03);
       backdrop-filter: blur(10px);
     }
-    .gold-border { border-color: rgba(234, 179, 8, 0.16); }
-    .gold-border-strong { border-color: rgba(234, 179, 8, 0.30); }
-    .gold-text { color: rgb(234 179 8); }
+
+    .gold-border {
+      border-color: rgba(234, 179, 8, 0.16);
+    }
+
+    .gold-border-strong {
+      border-color: rgba(234, 179, 8, 0.30);
+    }
+
+    .gold-text {
+      color: rgb(234 179 8);
+    }
   </style>
 </head>
 
 <body class="min-h-screen text-white">
   <div class="relative min-h-screen overflow-hidden">
     <!-- ambient -->
-    <div class="pointer-events-none absolute -left-24 top-0 h-[380px] w-[380px] rounded-full bg-yellow-500/10 blur-[120px]"></div>
-    <div class="pointer-events-none absolute bottom-0 right-0 h-[440px] w-[440px] rounded-full bg-yellow-400/8 blur-[140px]"></div>
+    <div
+      class="pointer-events-none absolute -left-24 top-0 h-[380px] w-[380px] rounded-full bg-yellow-500/10 blur-[120px]">
+    </div>
+    <div
+      class="pointer-events-none absolute bottom-0 right-0 h-[440px] w-[440px] rounded-full bg-yellow-400/8 blur-[140px]">
+    </div>
 
     <div class="relative min-h-screen shell">
       <div class="flex min-h-screen w-full">
@@ -46,10 +69,12 @@
           $isDash = request()->routeIs('pegawai.dashboard');
           $isAbsensi = request()->routeIs('pegawai.attendance');
           $isHistory = request()->routeIs('pegawai.attendance.history*');
+          $isSchedule = request()->routeIs('pegawai.schedule*');
         @endphp
 
         <!-- DESKTOP SIDEBAR -->
-        <aside class="panel-dark gold-border relative m-4 hidden h-[calc(100vh-2rem)] w-64 shrink-0 overflow-y-auto rounded-[28px] border shadow-[0_20px_60px_rgba(0,0,0,.35)] lg:block">
+        <aside
+          class="panel-dark gold-border relative m-4 hidden h-[calc(100vh-2rem)] w-64 shrink-0 overflow-y-auto rounded-[28px] border shadow-[0_20px_60px_rgba(0,0,0,.35)] lg:block">
           <div class="flex h-full flex-col p-4">
             <div class="flex items-center justify-between">
               <div>
@@ -63,7 +88,7 @@
 
             <nav class="mt-6 space-y-2 text-sm">
               <a href="{{ route('pegawai.dashboard') }}"
-                 class="relative flex items-center gap-3 rounded-xl px-3 py-3 transition
+                class="relative flex items-center gap-3 rounded-xl px-3 py-3 transition
                  {{ $isDash ? 'bg-yellow-500/12 border border-yellow-500/30' : 'border gold-border bg-white/[0.02] hover:bg-white/[0.05]' }}">
                 @if($isDash)
                   <span class="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r bg-yellow-500"></span>
@@ -72,7 +97,7 @@
               </a>
 
               <a href="{{ route('pegawai.attendance') }}"
-                 class="relative flex items-center gap-3 rounded-xl px-3 py-3 transition
+                class="relative flex items-center gap-3 rounded-xl px-3 py-3 transition
                  {{ $isAbsensi ? 'bg-yellow-500/12 border border-yellow-500/30' : 'border gold-border bg-white/[0.02] hover:bg-white/[0.05]' }}">
                 @if($isAbsensi)
                   <span class="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r bg-yellow-500"></span>
@@ -81,12 +106,21 @@
               </a>
 
               <a href="{{ route('pegawai.attendance.history') }}"
-                 class="relative flex items-center gap-3 rounded-xl px-3 py-3 transition
+                class="relative flex items-center gap-3 rounded-xl px-3 py-3 transition
                  {{ $isHistory ? 'bg-yellow-500/12 border border-yellow-500/30' : 'border gold-border bg-white/[0.02] hover:bg-white/[0.05]' }}">
                 @if($isHistory)
                   <span class="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r bg-yellow-500"></span>
                 @endif
                 <span class="font-medium text-white/90">Riwayat Absensi</span>
+              </a>
+
+              <a href="{{ route('pegawai.schedule') }}"
+                class="relative flex items-center gap-3 rounded-xl px-3 py-3 transition
+   {{ $isSchedule ? 'bg-yellow-500/12 border border-yellow-500/30' : 'border gold-border bg-white/[0.02] hover:bg-white/[0.05]' }}">
+                @if($isSchedule)
+                  <span class="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r bg-yellow-500"></span>
+                @endif
+                <span class="font-medium text-white/90">Jadwal Kerja</span>
               </a>
             </nav>
 
@@ -99,7 +133,8 @@
             <div class="mt-auto pt-5">
               <form method="POST" action="{{ route('logout') }}">
                 @csrf
-                <button class="w-full rounded-xl bg-yellow-500 px-4 py-3 text-sm font-semibold text-black hover:bg-yellow-400">
+                <button
+                  class="w-full rounded-xl bg-yellow-500 px-4 py-3 text-sm font-semibold text-black hover:bg-yellow-400">
                   Logout
                 </button>
               </form>
@@ -116,11 +151,12 @@
             </button>
 
             <div class="rounded-2xl border border-yellow-500/16 bg-white/[0.03] px-4 py-3 backdrop-blur-xl">
-              <div class="text-xs uppercase tracking-[0.18em] text-yellow-500">@yield('page_label','Pegawai')</div>
-              <div class="text-sm font-semibold text-white">@yield('page_title','Dashboard')</div>
+              <div class="text-xs uppercase tracking-[0.18em] text-yellow-500">@yield('page_label', 'Pegawai')</div>
+              <div class="text-sm font-semibold text-white">@yield('page_title', 'Dashboard')</div>
             </div>
 
-            <div class="hidden sm:flex items-center gap-2 rounded-2xl border border-yellow-500/16 bg-white/[0.03] px-4 py-2 text-sm text-white/85 backdrop-blur-xl">
+            <div
+              class="hidden sm:flex items-center gap-2 rounded-2xl border border-yellow-500/16 bg-white/[0.03] px-4 py-2 text-sm text-white/85 backdrop-blur-xl">
               {{ auth()->user()->name ?? 'Pegawai' }} • <span class="text-white/50">{{ now()->format('d M Y') }}</span>
             </div>
           </div>
@@ -135,19 +171,29 @@
 
   <!-- MOBILE DRAWER -->
   <div id="pegawaiSidebarOverlay" class="fixed inset-0 z-[60] hidden bg-black/60 lg:hidden"></div>
-  <aside id="pegawaiSidebarMobile" class="panel-dark gold-border fixed left-0 top-0 z-[61] hidden h-full w-[82%] max-w-[320px] border-r p-4 lg:hidden">
+  <aside id="pegawaiSidebarMobile"
+    class="panel-dark gold-border fixed left-0 top-0 z-[61] hidden h-full w-[82%] max-w-[320px] border-r p-4 lg:hidden">
     <div class="flex items-center justify-between">
       <div>
         <div class="text-xs uppercase tracking-[0.22em] text-yellow-500">Pegawai Panel</div>
         <div class="text-sm font-semibold text-white">Ayo Renne</div>
       </div>
-      <button id="closePegawaiSidebar" type="button" class="rounded-xl border gold-border bg-white/[0.04] px-3 py-2 hover:bg-white/[0.08]">✕</button>
+      <button id="closePegawaiSidebar" type="button"
+        class="rounded-xl border gold-border bg-white/[0.04] px-3 py-2 hover:bg-white/[0.08]">✕</button>
     </div>
 
     <nav class="mt-5 space-y-2 text-sm">
-      <a href="{{ route('pegawai.dashboard') }}" class="block rounded-xl px-3 py-3 {{ $isDash ? 'bg-yellow-500/12 border border-yellow-500/30' : 'border gold-border bg-white/[0.02]' }}">Dashboard</a>
-      <a href="{{ route('pegawai.attendance') }}" class="block rounded-xl px-3 py-3 {{ $isAbsensi ? 'bg-yellow-500/12 border border-yellow-500/30' : 'border gold-border bg-white/[0.02]' }}">Absensi</a>
-      <a href="{{ route('pegawai.attendance.history') }}" class="block rounded-xl px-3 py-3 {{ $isHistory ? 'bg-yellow-500/12 border border-yellow-500/30' : 'border gold-border bg-white/[0.02]' }}">Riwayat Absensi</a>
+      <a href="{{ route('pegawai.dashboard') }}"
+        class="block rounded-xl px-3 py-3 {{ $isDash ? 'bg-yellow-500/12 border border-yellow-500/30' : 'border gold-border bg-white/[0.02]' }}">Dashboard</a>
+      <a href="{{ route('pegawai.attendance') }}"
+        class="block rounded-xl px-3 py-3 {{ $isAbsensi ? 'bg-yellow-500/12 border border-yellow-500/30' : 'border gold-border bg-white/[0.02]' }}">Absensi</a>
+      <a href="{{ route('pegawai.attendance.history') }}"
+        class="block rounded-xl px-3 py-3 {{ $isHistory ? 'bg-yellow-500/12 border border-yellow-500/30' : 'border gold-border bg-white/[0.02]' }}">Riwayat
+        Absensi</a>
+      <a href="{{ route('pegawai.schedule') }}"
+        class="block rounded-xl px-3 py-3 {{ $isSchedule ? 'bg-yellow-500/12 border border-yellow-500/30' : 'border gold-border bg-white/[0.02]' }}">
+        Jadwal Kerja
+      </a>
     </nav>
 
     <div class="mt-6 rounded-2xl border gold-border bg-white/[0.03] p-4">
@@ -159,7 +205,8 @@
     <div class="mt-auto pt-5">
       <form method="POST" action="{{ route('logout') }}">
         @csrf
-        <button class="w-full rounded-xl bg-yellow-500 px-4 py-3 text-sm font-semibold text-black hover:bg-yellow-400">Logout</button>
+        <button
+          class="w-full rounded-xl bg-yellow-500 px-4 py-3 text-sm font-semibold text-black hover:bg-yellow-400">Logout</button>
       </form>
     </div>
   </aside>
@@ -189,4 +236,5 @@
     })();
   </script>
 </body>
+
 </html>
