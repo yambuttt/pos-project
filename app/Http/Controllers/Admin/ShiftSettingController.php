@@ -190,7 +190,7 @@ class ShiftSettingController extends Controller
                 $textColor = '#ffffff';
             }
 
-            $title = ($isOverride ? 'OVR ' : '') . "Shift {$shift->code} ({$shift->start_time}–{$shift->end_time})";
+            $title = ($isOverride ? 'OVR ' : '') . "{$shift->code} {$shift->start_time}-{$shift->end_time}";
 
             $events[] = [
                 'id' => $dateStr,

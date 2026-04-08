@@ -195,33 +195,31 @@
                         @endforelse
                     </div>
                 </div>
-
-                <div class="mt-5 rounded-[26px] border border-white/20 bg-white/10 p-5 backdrop-blur-2xl sm:p-7">
-                    <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                        <div>
-                            <div class="text-sm font-semibold">Kalender Shift</div>
-                            <div class="mt-1 text-xs text-white/70">
-                                Menampilkan shift harian. Label merah = override.
-                            </div>
-                        </div>
-
-                        <div class="flex flex-wrap gap-2 text-xs">
-                            <span class="rounded-full border border-white/10 bg-white/[0.03] px-3 py-1 text-white/80">Shift
-                                A</span>
-                            <span class="rounded-full border border-white/10 bg-white/[0.03] px-3 py-1 text-white/80">Shift
-                                B</span>
-                            <span
-                                class="rounded-full border border-white/10 bg-white/[0.03] px-3 py-1 text-white/80">Override</span>
-                        </div>
-                    </div>
-
-                    <div class="mt-4 rounded-2xl border border-white/10 bg-white/[0.03] p-3">
-                        <div id="shiftCalendar" class="text-white"></div>
-                    </div>
-
-                    <div id="shiftCalHint" class="mt-3 text-xs text-white/70"></div>
-                </div>
             </div>
+
+            {{-- FULL WIDTH CALENDAR --}}
+<div class="mt-6 rounded-[26px] border border-white/20 bg-white/10 p-5 backdrop-blur-2xl sm:p-7">
+  <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+    <div>
+      <div class="text-sm font-semibold">Kalender Shift</div>
+      <div class="mt-1 text-xs text-white/70">
+        Shift harian otomatis. Label merah = Override.
+      </div>
+    </div>
+
+    <div class="flex flex-wrap gap-2 text-xs">
+      <span class="rounded-full border border-white/10 bg-white/[0.03] px-3 py-1 text-white/80">A = 10:00–19:00</span>
+      <span class="rounded-full border border-white/10 bg-white/[0.03] px-3 py-1 text-white/80">B = 13:00–22:00</span>
+      <span class="rounded-full border border-white/10 bg-white/[0.03] px-3 py-1 text-white/80">Override</span>
+    </div>
+  </div>
+
+  <div class="mt-4 rounded-2xl border border-white/10 bg-white/[0.03] p-3">
+    <div id="shiftCalendar"></div>
+  </div>
+
+  <div id="shiftCalHint" class="mt-3 text-sm text-white/80"></div>
+</div>
         </div>
     </div>
 
@@ -266,6 +264,8 @@
       // styling compact biar seperti label
       eventDisplay: 'block',
       dayMaxEvents: true,
+      height: 720,
+aspectRatio: 1.6,
 
       // fetch events dari endpoint kita
       events: function(fetchInfo, successCallback, failureCallback) {
@@ -295,26 +295,58 @@
 </script>
 
 <style>
-  /* Biar match tema gelap kamu */
   .fc {
     --fc-border-color: rgba(255,255,255,.10);
     --fc-page-bg-color: transparent;
     --fc-neutral-bg-color: rgba(255,255,255,.02);
-    --fc-today-bg-color: rgba(234,179,8,.08);
-    color: rgba(255,255,255,.88);
+    --fc-today-bg-color: rgba(234,179,8,.10);
+    color: rgba(255,255,255,.90);
   }
-  .fc .fc-toolbar-title { font-weight: 700; color: #fff; }
-  .fc .fc-button { background: rgba(255,255,255,.06); border: 1px solid rgba(234,179,8,.18); }
+
+  .fc .fc-toolbar-title {
+    font-weight: 800;
+    color: #fff;
+    font-size: 18px;
+  }
+
+  .fc .fc-button {
+    background: rgba(255,255,255,.06);
+    border: 1px solid rgba(234,179,8,.18);
+    color: rgba(255,255,255,.9);
+    border-radius: 12px;
+    padding: 6px 10px;
+  }
   .fc .fc-button:hover { background: rgba(255,255,255,.10); }
   .fc .fc-button-primary:not(:disabled).fc-button-active {
     background: rgba(234,179,8,.22);
     border-color: rgba(234,179,8,.35);
   }
-  .fc .fc-daygrid-event {
-    border-radius: 10px;
-    padding: 2px 6px;
-    font-size: 11px;
+
+  .fc .fc-col-header-cell-cushion {
+    color: rgba(255,255,255,.85);
     font-weight: 700;
+    font-size: 12px;
+  }
+
+  .fc .fc-daygrid-day-number {
+    color: rgba(255,255,255,.75);
+    font-weight: 700;
+    padding: 6px;
+  }
+
+  /* Event label */
+  .fc .fc-daygrid-event {
+    border-radius: 999px;
+    padding: 3px 8px;
+    font-size: 12px;
+    font-weight: 800;
+    line-height: 1.2;
+    margin: 3px 4px;
+  }
+
+  /* Biar kotak tanggal agak lega */
+  .fc .fc-daygrid-day-frame {
+    min-height: 88px;
   }
 </style>
 @endsection
