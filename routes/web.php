@@ -246,8 +246,9 @@ Route::prefix('pegawai')->name('pegawai.')->middleware(['auth', 'role:pegawai'])
         ->name('attendance.submit-exception');
 
     Route::get('/jadwal', [\App\Http\Controllers\Pegawai\ShiftScheduleController::class, 'index'])
-        ->name('pegawai.schedule');
+        ->name('schedule');
 
     Route::get('/jadwal/calendar', [\App\Http\Controllers\Pegawai\ShiftScheduleController::class, 'calendar'])
-        ->name('pegawai.schedule.calendar');
+        ->name('schedule.calendar');
+
 });
