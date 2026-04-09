@@ -156,14 +156,14 @@ class ShiftSettingController extends Controller
         $tz = config('app.timezone', 'Asia/Jakarta');
         $now = now($tz);
 
-        // Attendance range
+        // 1) Attendance map
         $attMap = \App\Models\Attendance::query()
             ->where('user_id', $user->id)
             ->whereBetween('date', [$start->toDateString(), $end->copy()->subDay()->toDateString()])
             ->get()
             ->keyBy(fn($a) => (string) $a->date);
 
-        // Leave approved overlap range (cuti/sakit)
+        // 2) Leave approved overlap range (cuti/sakit) -> expand per tanggal
         $leaveRows = \App\Models\LeaveRequest::query()
             ->where('user_id', $user->id)
             ->where('status', 'approved')
@@ -183,11 +183,18 @@ class ShiftSettingController extends Controller
             }
         }
 
-        // Override shift
+        // 3) Override shift
         $overrides = \App\Models\UserShiftOverride::query()
             ->where('user_id', $user->id)
             ->whereBetween('date', [$start->toDateString(), $end->toDateString()])
             ->where('status', 'approved')
+            ->get()
+            ->keyBy(fn($x) => $x->date->toDateString());
+
+        // 4) ✅ Checkout correction requests
+        $ccMap = \App\Models\CheckoutCorrectionRequest::query()
+            ->where('user_id', $user->id)
+            ->whereBetween('date', [$start->toDateString(), $end->copy()->subDay()->toDateString()])
             ->get()
             ->keyBy(fn($x) => $x->date->toDateString());
 
@@ -196,8 +203,8 @@ class ShiftSettingController extends Controller
         for ($d = $start->copy(); $d->lt($end); $d->addDay()) {
             $dateStr = $d->toDateString();
 
+            // resolve shift harian (fixed/rotation/override)
             $shift = $svc->resolveShiftForDate($user, $d);
-
             $isOverride = isset($overrides[$dateStr]);
 
             $shiftStart = \Carbon\Carbon::parse($dateStr . ' ' . $shift->start_time, $tz);
@@ -205,37 +212,80 @@ class ShiftSettingController extends Controller
             if ($shiftEnd->lte($shiftStart))
                 $shiftEnd->addDay();
 
-            // batas akhir check-in
+            // window check-in/out (ikut telat approved)
             $wIn = $svc->getWindow($user, 'in', $shiftStart);
-            $checkInTo = $wIn['to'];
+            $wOut = $svc->getWindow($user, 'out', $shiftStart);
 
-            // status
+            $checkInTo = $wIn['to'];
+            $checkOutTo = $wOut['to'];
+
+            // status default
             $status = 'SCHEDULE';
             $statusReason = null;
 
+            // 1) CUTI/SAKIT menang paling atas
             if (isset($leaveMap[$dateStr])) {
                 $t = $leaveMap[$dateStr]['type'];
                 $status = ($t === 'sakit') ? 'SAKIT' : 'CUTI';
                 $statusReason = $leaveMap[$dateStr]['reason'] ?? null;
             } else {
                 $att = $attMap[$dateStr] ?? null;
-                if ($att && $att->check_in_at) {
-                    $status = 'HADIR';
-                } else {
+
+                // 2) Tidak ada check-in -> ALPHA jika lewat batas check-in
+                if (!$att || !$att->check_in_at) {
                     if ($dateStr < $now->toDateString()) {
                         $status = 'ALPHA';
                     } elseif ($dateStr === $now->toDateString() && $now->gt($checkInTo)) {
                         $status = 'ALPHA';
+                    } else {
+                        $status = 'SCHEDULE';
+                    }
+                } else {
+                    // 3) Ada check-in
+                    if ($att->check_out_at) {
+                        $status = 'HADIR';
+                    } else {
+                        // 4) check-in ada, checkout belum ada
+                        $cc = $ccMap[$dateStr] ?? null;
+
+                        if ($cc && $cc->status === 'rejected') {
+                            // ✅ sesuai kebijakan: reject koreksi checkout => dianggap ALPHA
+                            $status = 'ALPHA';
+                            $statusReason = $cc->review_note ?? 'Koreksi checkout ditolak';
+                        } else {
+                            // pending koreksi => INCOMPLETE
+                            if ($cc && $cc->status === 'pending') {
+                                $status = 'INCOMPLETE';
+                                $statusReason = 'Menunggu persetujuan koreksi checkout';
+                            } else {
+                                // belum ajukan koreksi: tentukan ONGOING / INCOMPLETE berdasarkan batas checkout
+                                if ($dateStr < $now->toDateString()) {
+                                    $status = 'INCOMPLETE';
+                                    $statusReason = 'Checkout tidak dilakukan';
+                                } elseif ($dateStr === $now->toDateString()) {
+                                    if ($now->gt($checkOutTo)) {
+                                        $status = 'INCOMPLETE';
+                                        $statusReason = 'Checkout tidak dilakukan';
+                                    } else {
+                                        $status = 'ONGOING';
+                                    }
+                                } else {
+                                    $status = 'ONGOING';
+                                }
+                            }
+                        }
                     }
                 }
             }
 
-            // title pendek
+            // title ringkas
             $title = ($isOverride ? 'OVR ' : '') . "{$shift->code} {$shift->start_time}-{$shift->end_time}";
-            if ($status !== 'SCHEDULE')
+            if ($status !== 'SCHEDULE' && $status !== 'ONGOING')
                 $title .= " • {$status}";
+            if ($status === 'ONGOING')
+                $title .= " • ON";
 
-            // warna (status dominan)
+            // warna
             $bg = ($shift->code === 'A') ? '#22c55e' : '#f59e0b';
             $text = '#0b0b0b';
 
@@ -255,7 +305,16 @@ class ShiftSettingController extends Controller
                 $bg = '#ef4444';
                 $text = '#ffffff';
             }
+            if ($status === 'INCOMPLETE') {
+                $bg = '#fbbf24';
+                $text = '#0b0b0b';
+            } // amber
+            if ($status === 'ONGOING') {
+                $bg = '#14b8a6';
+                $text = '#0b0b0b';
+            } // teal
 
+            // override shift (hanya kalau tidak ada status khusus)
             if ($isOverride && $status === 'SCHEDULE') {
                 $bg = '#f472b6';
                 $text = '#0b0b0b';

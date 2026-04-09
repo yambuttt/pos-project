@@ -280,5 +280,7 @@ Route::prefix('pegawai')->name('pegawai.')->middleware(['auth', 'role:pegawai'])
         ->name('leave.store');
     Route::post('/absensi/late-request', [\App\Http\Controllers\Pegawai\LateRequestController::class, 'store'])
         ->name('attendance.late_request');
+    Route::post('/absensi/checkout-correction', [\App\Http\Controllers\Pegawai\CheckoutCorrectionController::class, 'store'])
+        ->name('attendance.checkout_correction');
 
 });

@@ -71,6 +71,11 @@
           Ajukan Telat
         </button>
         <div id="lateReqMsg" class="mt-2 text-xs text-white/70"></div>
+        <button id="btnCheckoutCorrection"
+          class="rounded-xl border border-white/20 bg-white/10 px-4 py-2 text-sm font-semibold hover:bg-white/15">
+          Ajukan Koreksi Checkout
+        </button>
+        <div id="ccMsg" class="mt-2 text-xs text-white/70"></div>
       </div>
 
       <div id="exceptionReasonWrap" class="mt-4 hidden">
@@ -205,10 +210,95 @@
     </div>
   </div>
 
+  <div id="ccModal" class="fixed inset-0 z-[60] hidden items-center justify-center bg-black/70 p-4">
+    <div class="w-full max-w-md rounded-[24px] border border-white/15 bg-[#121212]/95 p-5">
+      <div class="flex items-start justify-between gap-3">
+        <div>
+          <div class="text-sm font-semibold text-white">Koreksi Checkout</div>
+          <div class="mt-1 text-xs text-white/60">Ajukan jika kamu lupa checkout. Admin akan approve/reject.</div>
+        </div>
+        <button id="ccClose"
+          class="rounded-xl border border-white/15 bg-white/[0.04] px-3 py-2 text-xs text-white/85 hover:bg-white/[0.08]">
+          Tutup
+        </button>
+      </div>
+
+      <div class="mt-4 space-y-3">
+        <div>
+          <label class="text-xs text-white/70">Alasan</label>
+          <textarea id="ccReason" rows="3"
+            class="mt-2 w-full rounded-xl border border-white/15 bg-white/[0.04] px-3 py-2 text-sm text-white placeholder:text-white/40 outline-none focus:border-yellow-500/35"
+            placeholder="Contoh: lupa checkout karena buru-buru..."></textarea>
+        </div>
+
+        <button id="ccSubmit"
+          class="w-full rounded-xl bg-yellow-500 px-4 py-2 text-sm font-semibold text-black hover:bg-yellow-400">
+          Kirim Pengajuan
+        </button>
+
+        <div id="ccErr" class="text-xs text-red-200"></div>
+        <div id="ccOk" class="text-xs text-emerald-200"></div>
+      </div>
+    </div>
+  </div>
+
   <script src="https://unpkg.com/html5-qrcode"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
+  <script>const btnCheckoutCorrection = document.getElementById('btnCheckoutCorrection');
+    const ccModal = document.getElementById('ccModal');
+    const ccClose = document.getElementById('ccClose');
+    const ccReason = document.getElementById('ccReason');
+    const ccSubmit = document.getElementById('ccSubmit');
+    const ccErr = document.getElementById('ccErr');
+    const ccOk = document.getElementById('ccOk');
+    const ccMsg = document.getElementById('ccMsg');
+
+    function openCcModal() {
+      ccErr.textContent = '';
+      ccOk.textContent = '';
+      ccReason.value = '';
+      ccModal.classList.remove('hidden');
+      ccModal.classList.add('flex');
+    }
+    function closeCcModal() {
+      ccModal.classList.add('hidden');
+      ccModal.classList.remove('flex');
+    }
+
+    btnCheckoutCorrection?.addEventListener('click', openCcModal);
+    ccClose?.addEventListener('click', closeCcModal);
+    ccModal?.addEventListener('click', (e) => { if (e.target === ccModal) closeCcModal(); });
+
+    ccSubmit?.addEventListener('click', async () => {
+      ccErr.textContent = '';
+      ccOk.textContent = '';
+
+      const reason = (ccReason.value || '').trim();
+      if (!reason) {
+        ccErr.textContent = 'Alasan wajib diisi.';
+        return;
+      }
+
+      const res = await fetch("{{ route('pegawai.attendance.checkout_correction') }}", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-CSRF-TOKEN": csrf },
+        body: JSON.stringify({ reason })
+      });
+
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        ccErr.textContent = json.message || 'Gagal mengirim pengajuan.';
+        return;
+      }
+
+      ccOk.textContent = json.message || 'Pengajuan terkirim.';
+      if (ccMsg) ccMsg.textContent = ccOk.textContent;
+
+      setTimeout(() => closeCcModal(), 700);
+    });
+  </script>
   <script>
     const lateModal = document.getElementById('lateModal');
     const btnLateRequest = document.getElementById('btnLateRequest');
