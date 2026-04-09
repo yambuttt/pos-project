@@ -149,11 +149,41 @@ class ShiftSettingController extends Controller
         ]);
 
         $start = \Carbon\Carbon::parse($data['start'])->startOfDay();
-        $end = \Carbon\Carbon::parse($data['end'])->startOfDay();
+        $end = \Carbon\Carbon::parse($data['end'])->startOfDay(); // end exclusive
 
         $svc = app(\App\Services\ShiftResolverService::class);
 
-        // ambil semua override dalam range biar hemat query
+        $tz = config('app.timezone', 'Asia/Jakarta');
+        $now = now($tz);
+
+        // Attendance range
+        $attMap = \App\Models\Attendance::query()
+            ->where('user_id', $user->id)
+            ->whereBetween('date', [$start->toDateString(), $end->copy()->subDay()->toDateString()])
+            ->get()
+            ->keyBy(fn($a) => (string) $a->date);
+
+        // Leave approved overlap range (cuti/sakit)
+        $leaveRows = \App\Models\LeaveRequest::query()
+            ->where('user_id', $user->id)
+            ->where('status', 'approved')
+            ->whereDate('start_date', '<=', $end->toDateString())
+            ->whereDate('end_date', '>=', $start->toDateString())
+            ->get();
+
+        $leaveMap = [];
+        foreach ($leaveRows as $lr) {
+            $d1 = $lr->start_date->copy();
+            $d2 = $lr->end_date->copy();
+            for ($d = $d1; $d->lte($d2); $d->addDay()) {
+                $leaveMap[$d->toDateString()] = [
+                    'type' => $lr->type,
+                    'reason' => $lr->reason,
+                ];
+            }
+        }
+
+        // Override shift
         $overrides = \App\Models\UserShiftOverride::query()
             ->where('user_id', $user->id)
             ->whereBetween('date', [$start->toDateString(), $end->toDateString()])
@@ -163,34 +193,72 @@ class ShiftSettingController extends Controller
 
         $events = [];
 
-        // FullCalendar minta end exclusive, jadi kita iterasi sampai < end
         for ($d = $start->copy(); $d->lt($end); $d->addDay()) {
             $dateStr = $d->toDateString();
 
-            // resolve shift harian (override menang otomatis di service,
-            // tapi kita pakai $overrides untuk label "Override")
             $shift = $svc->resolveShiftForDate($user, $d);
 
             $isOverride = isset($overrides[$dateStr]);
 
-            // start/end waktu shift utk event calendar
-            $tz = config('app.timezone', 'Asia/Jakarta');
             $shiftStart = \Carbon\Carbon::parse($dateStr . ' ' . $shift->start_time, $tz);
             $shiftEnd = \Carbon\Carbon::parse($dateStr . ' ' . $shift->end_time, $tz);
             if ($shiftEnd->lte($shiftStart))
                 $shiftEnd->addDay();
 
-            // warna per shift
-            $color = $shift->code === 'A' ? '#22c55e' : '#f59e0b'; // hijau / kuning (boleh kamu ubah)
-            $textColor = '#0b0b0b';
+            // batas akhir check-in
+            $checkInTo = $shiftStart->copy()->addMinutes((int) $shift->checkin_late_minutes);
 
-            // override -> lebih “tegas”
-            if ($isOverride) {
-                $color = '#ef4444'; // merah
-                $textColor = '#ffffff';
+            // status
+            $status = 'SCHEDULE';
+            $statusReason = null;
+
+            if (isset($leaveMap[$dateStr])) {
+                $t = $leaveMap[$dateStr]['type'];
+                $status = ($t === 'sakit') ? 'SAKIT' : 'CUTI';
+                $statusReason = $leaveMap[$dateStr]['reason'] ?? null;
+            } else {
+                $att = $attMap[$dateStr] ?? null;
+                if ($att && $att->check_in_at) {
+                    $status = 'HADIR';
+                } else {
+                    if ($dateStr < $now->toDateString()) {
+                        $status = 'ALPHA';
+                    } elseif ($dateStr === $now->toDateString() && $now->gt($checkInTo)) {
+                        $status = 'ALPHA';
+                    }
+                }
             }
 
+            // title pendek
             $title = ($isOverride ? 'OVR ' : '') . "{$shift->code} {$shift->start_time}-{$shift->end_time}";
+            if ($status !== 'SCHEDULE')
+                $title .= " • {$status}";
+
+            // warna (status dominan)
+            $bg = ($shift->code === 'A') ? '#22c55e' : '#f59e0b';
+            $text = '#0b0b0b';
+
+            if ($status === 'HADIR') {
+                $bg = '#3b82f6';
+                $text = '#ffffff';
+            }
+            if ($status === 'ALPHA') {
+                $bg = '#6b7280';
+                $text = '#ffffff';
+            }
+            if ($status === 'CUTI') {
+                $bg = '#a855f7';
+                $text = '#ffffff';
+            }
+            if ($status === 'SAKIT') {
+                $bg = '#ef4444';
+                $text = '#ffffff';
+            }
+
+            if ($isOverride && $status === 'SCHEDULE') {
+                $bg = '#f472b6';
+                $text = '#0b0b0b';
+            }
 
             $events[] = [
                 'id' => $dateStr,
@@ -198,12 +266,14 @@ class ShiftSettingController extends Controller
                 'start' => $shiftStart->toIso8601String(),
                 'end' => $shiftEnd->toIso8601String(),
                 'allDay' => false,
-                'backgroundColor' => $color,
-                'borderColor' => $color,
-                'textColor' => $textColor,
+                'backgroundColor' => $bg,
+                'borderColor' => $bg,
+                'textColor' => $text,
                 'extendedProps' => [
                     'shift_code' => $shift->code,
                     'shift_name' => $shift->name,
+                    'status' => $status,
+                    'status_reason' => $statusReason,
                     'is_override' => $isOverride,
                     'override_reason' => $isOverride ? ($overrides[$dateStr]->reason ?? null) : null,
                 ],

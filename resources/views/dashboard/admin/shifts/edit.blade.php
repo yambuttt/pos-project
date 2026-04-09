@@ -207,11 +207,16 @@
       </div>
     </div>
 
-    <div class="flex flex-wrap gap-2 text-xs">
-      <span class="rounded-full border border-white/10 bg-white/[0.03] px-3 py-1 text-white/80">A = 10:00–19:00</span>
-      <span class="rounded-full border border-white/10 bg-white/[0.03] px-3 py-1 text-white/80">B = 13:00–22:00</span>
-      <span class="rounded-full border border-white/10 bg-white/[0.03] px-3 py-1 text-white/80">Override</span>
-    </div>
+<div class="flex flex-wrap gap-2 text-[11px] sm:text-xs">
+  <span class="rounded-full px-3 py-1 font-semibold text-black" style="background:#22c55e">Shift A (10–19)</span>
+  <span class="rounded-full px-3 py-1 font-semibold text-black" style="background:#f59e0b">Shift B (13–22)</span>
+
+  <span class="rounded-full px-3 py-1 font-semibold text-white" style="background:#3b82f6">HADIR</span>
+  <span class="rounded-full px-3 py-1 font-semibold text-white" style="background:#6b7280">ALPHA</span>
+  <span class="rounded-full px-3 py-1 font-semibold text-white" style="background:#a855f7">CUTI</span>
+  <span class="rounded-full px-3 py-1 font-semibold text-white" style="background:#ef4444">SAKIT</span>
+  <span class="rounded-full px-3 py-1 font-semibold text-black" style="background:#f472b6">OVR</span>
+</div>
   </div>
 
   <div class="mt-4 rounded-2xl border border-white/10 bg-white/[0.03] p-3">
@@ -287,6 +292,24 @@ aspectRatio: 1.6,
 
         if (hint) hint.textContent = msg;
       }
+      eventContent: function(arg) {
+  const p = arg.event.extendedProps || {};
+  const status = p.status || '';
+  const shiftCode = p.shift_code || '';
+
+  const shortMap = { HADIR:'H', ALPHA:'A', CUTI:'C', SAKIT:'S', SCHEDULE:'' };
+  const shortStatus = shortMap[status] ?? '';
+
+  const isMobile = window.matchMedia('(max-width: 640px)').matches;
+  let text = arg.event.title;
+
+  if (isMobile) {
+    text = shortStatus ? `${shiftCode} ${shortStatus}` : `${shiftCode}`;
+    if (p.is_override) text = `OVR ${text}`;
+  }
+
+  return { html: `<div class="fc-pill">${text}</div>` };
+}
     });
 
     calendar.render();
@@ -347,6 +370,11 @@ aspectRatio: 1.6,
   .fc .fc-daygrid-day-frame {
     min-height: 88px;
   }
+  .fc-pill{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+@media (max-width:640px){
+  .fc .fc-daygrid-event{ padding:2px 6px; font-size:11px; margin:2px 2px; }
+  .fc .fc-daygrid-day-frame{ min-height:72px; }
+}
 </style>
 
 
