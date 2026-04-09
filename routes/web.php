@@ -193,6 +193,8 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
 
     Route::post('/admin/late-requests/{req}/reject', [\App\Http\Controllers\Admin\LateRequestAdminController::class, 'reject'])
         ->name('admin.late_requests.reject');
+    Route::get('/admin/late-requests/{req}/evidence', [\App\Http\Controllers\Admin\LateRequestAdminController::class, 'evidence'])
+        ->name('admin.late_requests.evidence');
 
     // Shortcut "Akun Saya" -> edit user yang sedang login
     Route::get('/admin/account', function () {

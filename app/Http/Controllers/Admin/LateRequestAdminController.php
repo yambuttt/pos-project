@@ -17,7 +17,8 @@ class LateRequestAdminController extends Controller
             ->with(['user', 'reviewer'])
             ->latest();
 
-        if ($status !== 'all') $q->where('status', $status);
+        if ($status !== 'all')
+            $q->where('status', $status);
 
         $items = $q->paginate(20)->withQueryString();
 
@@ -26,7 +27,8 @@ class LateRequestAdminController extends Controller
 
     public function approve(Request $request, LateAttendanceRequest $req)
     {
-        if ($req->status !== 'pending') return back()->with('ok', 'Pengajuan sudah diproses.');
+        if ($req->status !== 'pending')
+            return back()->with('ok', 'Pengajuan sudah diproses.');
 
         // default: approve sampai shiftStart + 120 menit (contoh jam 12:00)
         $tz = config('app.timezone', 'Asia/Jakarta');
@@ -37,8 +39,16 @@ class LateRequestAdminController extends Controller
         $shiftStart = \Carbon\Carbon::parse($dateStr . ' ' . $shift->start_time, $tz);
 
         $maxLateMinutes = 120;
-        $allowedUntil = $shiftStart->copy()->addMinutes($maxLateMinutes)->format('H:i:s');
+        // kalau pegawai minta jam X, admin set allowed_until_time = min(X, cap)
+        $requested = $req->requested_until_time
+            ? \Carbon\Carbon::parse($dateStr . ' ' . $req->requested_until_time, $tz)
+            : $shiftStart->copy()->addMinutes(120);
 
+        $cap = $shiftStart->copy()->addMinutes(120);
+        if ($requested->gt($cap))
+            $requested = $cap;
+
+        $allowedUntil = $requested->format('H:i:s');
         $req->update([
             'status' => 'approved',
             'allowed_until_time' => $allowedUntil,
@@ -46,12 +56,13 @@ class LateRequestAdminController extends Controller
             'reviewed_at' => now(),
         ]);
 
-        return back()->with('ok', 'Pengajuan telat disetujui ✅ (maks check-in sampai ' . substr($allowedUntil,0,5) . ')');
+        return back()->with('ok', 'Pengajuan telat disetujui ✅ (maks check-in sampai ' . substr($allowedUntil, 0, 5) . ')');
     }
 
     public function reject(Request $request, LateAttendanceRequest $req)
     {
-        if ($req->status !== 'pending') return back()->with('ok', 'Pengajuan sudah diproses.');
+        if ($req->status !== 'pending')
+            return back()->with('ok', 'Pengajuan sudah diproses.');
 
         $data = $request->validate([
             'review_note' => ['nullable', 'string', 'max:500'],
@@ -65,5 +76,18 @@ class LateRequestAdminController extends Controller
         ]);
 
         return back()->with('ok', 'Pengajuan telat ditolak.');
+    }
+
+    public function evidence(\App\Models\LateAttendanceRequest $req)
+    {
+        if (!$req->evidence_path)
+            abort(404);
+
+        $disk = \Illuminate\Support\Facades\Storage::disk('local');
+
+        if (!$disk->exists($req->evidence_path))
+            abort(404);
+
+        return $disk->response($req->evidence_path);
     }
 }

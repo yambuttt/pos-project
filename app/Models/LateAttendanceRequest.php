@@ -15,6 +15,8 @@ class LateAttendanceRequest extends Model
         'reviewed_by',
         'reviewed_at',
         'review_note',
+        'requested_until_time',
+        'evidence_path',
     ];
 
     protected $casts = [
@@ -22,6 +24,12 @@ class LateAttendanceRequest extends Model
         'reviewed_at' => 'datetime',
     ];
 
-    public function user() { return $this->belongsTo(User::class); }
-    public function reviewer() { return $this->belongsTo(User::class, 'reviewed_by'); }
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+    public function reviewer()
+    {
+        return $this->belongsTo(User::class, 'reviewed_by');
+    }
 }

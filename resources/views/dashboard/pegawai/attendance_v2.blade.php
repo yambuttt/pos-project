@@ -66,13 +66,10 @@
           class="rounded-xl border border-white/20 bg-white/10 px-4 py-2 text-sm font-semibold hover:bg-white/15">
           Pakai Device Lain (Darurat)
         </button>
-        <div class="mt-3 flex flex-wrap gap-2">
-          <button id="btnLateRequest"
-            class="rounded-xl border border-white/20 bg-white/10 px-4 py-2 text-sm font-semibold hover:bg-white/15">
-            Ajukan Telat
-          </button>
-        </div>
-
+        <button id="btnLateRequest"
+          class="rounded-xl border border-white/20 bg-white/10 px-4 py-2 text-sm font-semibold hover:bg-white/15">
+          Ajukan Telat
+        </button>
         <div id="lateReqMsg" class="mt-2 text-xs text-white/70"></div>
       </div>
 
@@ -158,31 +155,150 @@
     </div>
   </div>
 
+  <div id="lateModal" class="fixed inset-0 z-[60] hidden items-center justify-center bg-black/70 p-4">
+    <div class="w-full max-w-md rounded-[24px] border border-white/15 bg-[#121212]/95 p-5">
+      <div class="flex items-start justify-between gap-3">
+        <div>
+          <div class="text-sm font-semibold text-white">Pengajuan Telat</div>
+          <div class="mt-1 text-xs text-white/60">
+            Isi batas maksimal check-in & alasan. (Opsional) upload bukti.
+          </div>
+        </div>
+        <button id="lateClose"
+          class="rounded-xl border border-white/15 bg-white/[0.04] px-3 py-2 text-xs text-white/85 hover:bg-white/[0.08]">
+          Tutup
+        </button>
+      </div>
+
+      <div class="mt-4 space-y-3">
+        <div>
+          <label class="text-xs text-white/70">Maksimal check-in sampai</label>
+          <select id="lateUntil"
+            class="mt-2 w-full rounded-xl border border-white/15 bg-white/[0.04] px-3 py-2 text-sm text-white outline-none focus:border-yellow-500/35">
+            <option value="">- pilih -</option>
+          </select>
+          <div class="mt-1 text-[11px] text-white/50">Opsi otomatis dibatasi sampai max telat (mis. 12:00).</div>
+        </div>
+
+        <div>
+          <label class="text-xs text-white/70">Alasan</label>
+          <textarea id="lateReason" rows="3"
+            class="mt-2 w-full rounded-xl border border-white/15 bg-white/[0.04] px-3 py-2 text-sm text-white placeholder:text-white/40 outline-none focus:border-yellow-500/35"
+            placeholder="Contoh: macet, ada urusan mendadak, dll."></textarea>
+        </div>
+
+        <div>
+          <label class="text-xs text-white/70">Bukti foto (opsional)</label>
+          <input id="lateEvidence" type="file" accept="image/*"
+            class="mt-2 w-full rounded-xl border border-white/15 bg-white/[0.04] px-3 py-2 text-sm text-white outline-none" />
+          <div class="mt-1 text-[11px] text-white/50">Max 4MB.</div>
+        </div>
+
+        <button id="lateSubmit"
+          class="w-full rounded-xl bg-yellow-500 px-4 py-2 text-sm font-semibold text-black hover:bg-yellow-400">
+          Kirim Pengajuan
+        </button>
+
+        <div id="lateErr" class="text-xs text-red-200"></div>
+        <div id="lateOk" class="text-xs text-emerald-200"></div>
+      </div>
+    </div>
+  </div>
+
   <script src="https://unpkg.com/html5-qrcode"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
   <script>
+    const lateModal = document.getElementById('lateModal');
     const btnLateRequest = document.getElementById('btnLateRequest');
+    const lateClose = document.getElementById('lateClose');
+    const lateUntil = document.getElementById('lateUntil');
+    const lateReason = document.getElementById('lateReason');
+    const lateEvidence = document.getElementById('lateEvidence');
+    const lateSubmit = document.getElementById('lateSubmit');
+    const lateErr = document.getElementById('lateErr');
+    const lateOk = document.getElementById('lateOk');
     const lateReqMsg = document.getElementById('lateReqMsg');
 
-    btnLateRequest?.addEventListener('click', async () => {
-      const reason = prompt("Alasan telat (opsional):") || "";
+    function openLateModal() {
+      lateErr.textContent = '';
+      lateOk.textContent = '';
+      lateReason.value = '';
+      if (lateEvidence) lateEvidence.value = '';
+      buildLateOptions(); // isi pilihan jam
+      lateModal.classList.remove('hidden');
+      lateModal.classList.add('flex');
+    }
 
-      const res = await fetch("{{ route('pegawai.attendance.late_request') }}", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "X-CSRF-TOKEN": csrf },
-        body: JSON.stringify({ reason })
-      });
+    function closeLateModal() {
+      lateModal.classList.add('hidden');
+      lateModal.classList.remove('flex');
+    }
 
-      const json = await res.json().catch(() => ({}));
+    // buat opsi jam: tiap 30 menit, dari start shift sampai max +120
+    function buildLateOptions() {
+      // ambil shift info dari UI yang kamu kirim ke blade (sudah ada UI.in.start_ms)
+      // start shift = UI.in.start_ms
+      const start = new Date(UI.in.start_ms);
+      const max = new Date(UI.in.start_ms + 120 * 60 * 1000); // +120 menit
 
-      if (!res.ok) {
-        if (lateReqMsg) lateReqMsg.textContent = json.message || "Gagal mengajukan telat.";
+      // clear
+      lateUntil.innerHTML = `<option value="">- pilih -</option>`;
+
+      // langkah 30 menit
+      const stepMs = 30 * 60 * 1000;
+
+      for (let t = start.getTime(); t <= max.getTime(); t += stepMs) {
+        const d = new Date(t);
+        const hh = String(d.getHours()).padStart(2, '0');
+        const mm = String(d.getMinutes()).padStart(2, '0');
+        const val = `${hh}:${mm}`;
+        const opt = document.createElement('option');
+        opt.value = val;
+        opt.textContent = val;
+        lateUntil.appendChild(opt);
+      }
+    }
+
+    btnLateRequest?.addEventListener('click', openLateModal);
+    lateClose?.addEventListener('click', closeLateModal);
+    lateModal?.addEventListener('click', (e) => { if (e.target === lateModal) closeLateModal(); });
+
+    lateSubmit?.addEventListener('click', async () => {
+      lateErr.textContent = '';
+      lateOk.textContent = '';
+
+      if (!lateUntil.value) {
+        lateErr.textContent = 'Pilih maksimal check-in terlebih dahulu.';
         return;
       }
 
-      if (lateReqMsg) lateReqMsg.textContent = json.message || "Pengajuan telat terkirim.";
+      const fd = new FormData();
+      fd.append('requested_until_time', lateUntil.value);
+      fd.append('reason', (lateReason.value || '').trim());
+      if (lateEvidence && lateEvidence.files && lateEvidence.files[0]) {
+        fd.append('evidence', lateEvidence.files[0]);
+      }
+
+      const res = await fetch("{{ route('pegawai.attendance.late_request') }}", {
+        method: "POST",
+        headers: { "X-CSRF-TOKEN": csrf },
+        body: fd
+      });
+
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        lateErr.textContent = json.message || 'Gagal mengirim pengajuan.';
+        return;
+      }
+
+      lateOk.textContent = json.message || 'Pengajuan terkirim.';
+      if (lateReqMsg) lateReqMsg.textContent = lateOk.textContent;
+
+      setTimeout(() => {
+        closeLateModal();
+      }, 700);
     });
   </script>
 
