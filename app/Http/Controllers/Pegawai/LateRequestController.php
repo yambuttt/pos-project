@@ -26,11 +26,12 @@ class LateRequestController extends Controller
 
         $shiftStart = \Carbon\Carbon::parse($dateStr . ' ' . $shift->start_time, $tz);
 
-        // ✅ hanya bisa ajukan telat kalau memang sudah lewat jam mulai shift (sudah telat)
-        if ($now->lt($shiftStart)) {
+
+// ✅ RULE BARU: Pengajuan telat hanya boleh SEBELUM jam mulai shift
+        if ($now->gte($shiftStart)) {
             return response()->json([
                 'ok' => false,
-                'message' => 'Belum telat. Pengajuan telat hanya bisa diajukan setelah jam mulai shift.',
+                'message' => 'Pengajuan telat ditutup karena sudah melewati jam mulai shift.',
             ], 422);
         }
 

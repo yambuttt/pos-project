@@ -262,12 +262,13 @@
     }
 
     function canRequestLate() {
+      // rule baru: hanya boleh sebelum start shift
       const now = serverNowMs();
-      const start = UI.in.start_ms;                 // jam mulai shift
-      const cap = UI.in.start_ms + 120 * 60 * 1000;     // +120 menit
+      const start = UI.in.start_ms;
 
-      // hanya boleh ajukan jika sudah lewat start (telat) tapi belum lewat cap
-      return now >= start && now <= cap;
+      // optional: batasi hanya dalam window check-in awal
+      const from = UI.in.from_ms; // ini = start - 120 menit (sesuai config shift)
+      return now >= from && now < start;
     }
 
     function syncLateButton() {
@@ -279,13 +280,15 @@
       btnLateRequest.classList.toggle('opacity-50', !ok);
       btnLateRequest.classList.toggle('cursor-not-allowed', !ok);
 
-      if (!ok && lateReqMsg) {
+      if (!lateReqMsg) return;
+
+      if (!ok) {
         const now = serverNowMs();
         const start = UI.in.start_ms;
-        const cap = UI.in.start_ms + 120 * 60 * 1000;
-
-        if (now < start) lateReqMsg.textContent = 'Pengajuan telat bisa diajukan setelah jam mulai shift.';
-        else lateReqMsg.textContent = 'Pengajuan telat sudah ditutup. Kamu sudah lewat batas maksimal telat.';
+        if (now >= start) lateReqMsg.textContent = 'Pengajuan telat ditutup karena sudah melewati jam mulai shift.';
+        else lateReqMsg.textContent = 'Pengajuan telat belum dibuka.';
+      } else {
+        lateReqMsg.textContent = '';
       }
     }
 
