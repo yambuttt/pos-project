@@ -8,7 +8,7 @@ use App\Models\UserShiftOverride;
 use App\Models\UserShiftRotation;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
-
+use App\Models\LateAttendanceRequest;
 class ShiftResolverService
 {
     public function resolveShiftForDate(User $user, Carbon $date): Shift
@@ -25,7 +25,8 @@ class ShiftResolverService
 
         if ($ov) {
             $shift = Shift::find($ov->shift_id);
-            if ($shift) return $shift;
+            if ($shift)
+                return $shift;
         }
 
         // 2) rotation kalau user pakai scheme rotation
@@ -38,19 +39,22 @@ class ShiftResolverService
 
             if ($rot) {
                 $shift = $this->resolveFromRotation($rot, $date);
-                if ($shift) return $shift;
+                if ($shift)
+                    return $shift;
             }
         }
 
         // 3) fallback ke default_shift_id
         if ($user->default_shift_id) {
             $shift = Shift::find($user->default_shift_id);
-            if ($shift) return $shift;
+            if ($shift)
+                return $shift;
         }
 
         // terakhir: fallback ke shift A jika ada (biar tidak blank)
         $shiftA = Shift::where('code', 'A')->first();
-        if ($shiftA) return $shiftA;
+        if ($shiftA)
+            return $shiftA;
 
         throw new \RuntimeException('Shift belum tersedia. Jalankan seeder shift.');
     }
@@ -58,14 +62,16 @@ class ShiftResolverService
     protected function resolveFromRotation(UserShiftRotation $rot, Carbon $date): ?Shift
     {
         $firstShift = Shift::find($rot->first_shift_id);
-        if (!$firstShift) return null;
+        if (!$firstShift)
+            return null;
 
         // shift lain = A<->B (asumsi cuma 2 shift)
         $otherShift = Shift::where('id', '!=', $firstShift->id)
             ->orderBy('id', 'asc')
             ->first();
 
-        if (!$otherShift) return $firstShift;
+        if (!$otherShift)
+            return $firstShift;
 
         $start = Carbon::parse($rot->start_date)->startOfDay();
         $d = $date->copy()->startOfDay();
@@ -110,7 +116,7 @@ class ShiftResolverService
         $dateStr = $now->toDateString();
 
         $start = Carbon::parse($dateStr . ' ' . $shift->start_time, $tz);
-        $end   = Carbon::parse($dateStr . ' ' . $shift->end_time, $tz);
+        $end = Carbon::parse($dateStr . ' ' . $shift->end_time, $tz);
 
         // support kalau suatu saat ada shift melewati midnight
         if ($end->lte($start)) {
@@ -119,14 +125,37 @@ class ShiftResolverService
 
         if ($mode === 'in') {
             $from = $start->copy()->subMinutes((int) $shift->checkin_early_minutes);
-            $to   = $start->copy()->addMinutes((int) $shift->checkin_late_minutes);
+            $to = $start->copy()->addMinutes((int) $shift->checkin_late_minutes); // normal: mentok jam start
+
+            // ✅ EXTEND kalau ada pengajuan telat APPROVED untuk hari itu
+            $late = LateAttendanceRequest::query()
+                ->where('user_id', $user->id)
+                ->whereDate('date', $start->toDateString())
+                ->where('status', 'approved')
+                ->first();
+
+            if ($late && $late->allowed_until_time) {
+                $lateTo = \Carbon\Carbon::parse(
+                    $start->toDateString() . ' ' . $late->allowed_until_time,
+                    $tz
+                );
+
+                // ✅ cap maksimum telat 120 menit dari start shift (jam 12 kalau shift A jam 10)
+                $cap = $start->copy()->addMinutes(120);
+                if ($lateTo->gt($cap))
+                    $lateTo = $cap;
+
+                // extend batas check-in kalau lebih besar dari normal
+                if ($lateTo->gt($to))
+                    $to = $lateTo;
+            }
 
             return compact('shift', 'start', 'end', 'from', 'to');
         }
 
         if ($mode === 'out') {
             $from = $end->copy()->subMinutes((int) $shift->checkout_early_minutes);
-            $to   = $end->copy()->addMinutes((int) $shift->checkout_late_minutes);
+            $to = $end->copy()->addMinutes((int) $shift->checkout_late_minutes);
 
             return compact('shift', 'start', 'end', 'from', 'to');
         }

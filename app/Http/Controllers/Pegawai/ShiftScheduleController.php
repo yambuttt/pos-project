@@ -86,7 +86,8 @@ class ShiftScheduleController extends Controller
                 $shiftEnd->addDay();
 
             // Hitung batas akhir check-in hari itu = "to" dari window in
-            $checkInTo = $shiftStart->copy()->addMinutes((int) $shift->checkin_late_minutes);
+            $wIn = $svc->getWindow($user, 'in', $shiftStart);
+            $checkInTo = $wIn['to'];
 
             // Tentukan status kehadiran
             $status = 'SCHEDULE'; // default untuk future/ belum dievaluasi

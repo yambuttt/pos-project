@@ -66,6 +66,14 @@
           class="rounded-xl border border-white/20 bg-white/10 px-4 py-2 text-sm font-semibold hover:bg-white/15">
           Pakai Device Lain (Darurat)
         </button>
+        <div class="mt-3 flex flex-wrap gap-2">
+          <button id="btnLateRequest"
+            class="rounded-xl border border-white/20 bg-white/10 px-4 py-2 text-sm font-semibold hover:bg-white/15">
+            Ajukan Telat
+          </button>
+        </div>
+
+        <div id="lateReqMsg" class="mt-2 text-xs text-white/70"></div>
       </div>
 
       <div id="exceptionReasonWrap" class="mt-4 hidden">
@@ -154,6 +162,29 @@
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
+  <script>
+    const btnLateRequest = document.getElementById('btnLateRequest');
+    const lateReqMsg = document.getElementById('lateReqMsg');
+
+    btnLateRequest?.addEventListener('click', async () => {
+      const reason = prompt("Alasan telat (opsional):") || "";
+
+      const res = await fetch("{{ route('pegawai.attendance.late_request') }}", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-CSRF-TOKEN": csrf },
+        body: JSON.stringify({ reason })
+      });
+
+      const json = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        if (lateReqMsg) lateReqMsg.textContent = json.message || "Gagal mengajukan telat.";
+        return;
+      }
+
+      if (lateReqMsg) lateReqMsg.textContent = json.message || "Pengajuan telat terkirim.";
+    });
+  </script>
 
   <script>
     const csrf = document.querySelector('meta[name="csrf-token"]').content;

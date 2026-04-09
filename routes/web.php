@@ -185,6 +185,14 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
 
     Route::get('/admin/leave-requests/{leave}/doctor-note', [\App\Http\Controllers\Admin\LeaveRequestAdminController::class, 'doctorNote'])
         ->name('admin.leave_requests.doctor_note');
+    Route::get('/admin/late-requests', [\App\Http\Controllers\Admin\LateRequestAdminController::class, 'index'])
+        ->name('admin.late_requests.index');
+
+    Route::post('/admin/late-requests/{req}/approve', [\App\Http\Controllers\Admin\LateRequestAdminController::class, 'approve'])
+        ->name('admin.late_requests.approve');
+
+    Route::post('/admin/late-requests/{req}/reject', [\App\Http\Controllers\Admin\LateRequestAdminController::class, 'reject'])
+        ->name('admin.late_requests.reject');
 
     // Shortcut "Akun Saya" -> edit user yang sedang login
     Route::get('/admin/account', function () {
@@ -268,5 +276,7 @@ Route::prefix('pegawai')->name('pegawai.')->middleware(['auth', 'role:pegawai'])
 
     Route::post('/izin', [\App\Http\Controllers\Pegawai\LeaveRequestController::class, 'store'])
         ->name('leave.store');
+    Route::post('/absensi/late-request', [\App\Http\Controllers\Pegawai\LateRequestController::class, 'store'])
+        ->name('attendance.late_request');
 
 });

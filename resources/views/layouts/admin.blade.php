@@ -87,7 +87,8 @@
                     $isAttendanceExceptions = request()->routeIs('admin.attendance.exception_requests*');
                     $isShiftSettings = request()->routeIs('admin.shifts.*');
                     $isLeaveRequests = request()->routeIs('admin.leave_requests.*');
-                    $isUserGroup = $isUsers || $isAttendanceQr || $isAttendanceDevices || $isAttendanceHistory || $isAttendanceExceptions || $isShiftSettings || $isLeaveRequests;
+                    $isLateRequests = request()->routeIs('admin.late_requests.*');
+                    $isUserGroup = $isUsers || $isAttendanceQr || $isAttendanceDevices || $isAttendanceHistory || $isAttendanceExceptions || $isShiftSettings || $isLeaveRequests || $isLateRequests;
 
                     $isWastes = request()->routeIs('admin.wastes.*');
                     $isOpnames = request()->routeIs('admin.opnames.*');
@@ -308,6 +309,16 @@
                                         <span class="sidebar-label hidden text-sm font-medium text-white/90">Pengajuan
                                             Absensi</span>
                                     </a>
+                                    <a href="{{ route('admin.late_requests.index') }}"
+                                        class="relative flex items-center gap-3 rounded-xl px-3 py-2.5 transition
+  {{ $isLateRequests ? 'bg-yellow-500/10 border border-yellow-500/25' : 'border gold-border bg-white/[0.02] hover:bg-white/[0.05]' }}">
+                                        @if ($isLateRequests)
+                                            <span
+                                                class="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r bg-yellow-500"></span>
+                                        @endif
+                                        <span class="sidebar-label hidden text-sm font-medium text-white/90">Pengajuan
+                                            Telat</span>
+                                    </a>
                                     <a href="{{ route('admin.shifts.index') }}"
                                         class="relative flex items-center gap-3 rounded-xl px-3 py-2.5 transition
    {{ $isShiftSettings ? 'bg-yellow-500/10 border border-yellow-500/25' : 'border gold-border bg-white/[0.02] hover:bg-white/[0.05]' }}">
@@ -357,7 +368,8 @@
                                             <span
                                                 class="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r bg-yellow-500"></span>
                                         @endif
-                                        <span class="sidebar-label hidden text-sm font-medium text-white/90">Permintaan Cuti</span>
+                                        <span class="sidebar-label hidden text-sm font-medium text-white/90">Permintaan
+                                            Cuti</span>
                                     </a>
 
                                 </div>
@@ -498,6 +510,10 @@
                             <a href="{{ route('admin.attendance.exception_requests') }}"
                                 class="mt-1 block rounded-xl px-3 py-2 {{ $isAttendanceExceptions ? 'bg-yellow-500/12' : 'hover:bg-white/[0.05]' }}">
                                 Pengajuan Absensi
+                            </a>
+                            <a href="{{ route('admin.late_requests.index') }}"
+                                class="mt-1 block rounded-xl px-3 py-2 {{ $isLateRequests ? 'bg-yellow-500/12' : 'hover:bg-white/[0.05]' }}">
+                                Pengajuan Telat
                             </a>
 
                             <a href="{{ route('admin.shifts.index') }}"

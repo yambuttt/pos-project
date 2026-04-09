@@ -206,7 +206,8 @@ class ShiftSettingController extends Controller
                 $shiftEnd->addDay();
 
             // batas akhir check-in
-            $checkInTo = $shiftStart->copy()->addMinutes((int) $shift->checkin_late_minutes);
+            $wIn = $svc->getWindow($user, 'in', $shiftStart);
+            $checkInTo = $wIn['to'];
 
             // status
             $status = 'SCHEDULE';
