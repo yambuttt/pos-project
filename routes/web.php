@@ -195,6 +195,14 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
         ->name('admin.late_requests.reject');
     Route::get('/admin/late-requests/{req}/evidence', [\App\Http\Controllers\Admin\LateRequestAdminController::class, 'evidence'])
         ->name('admin.late_requests.evidence');
+    Route::get('/admin/checkout-corrections', [\App\Http\Controllers\Admin\CheckoutCorrectionAdminController::class, 'index'])
+        ->name('admin.checkout_corrections.index');
+
+    Route::post('/admin/checkout-corrections/{req}/approve', [\App\Http\Controllers\Admin\CheckoutCorrectionAdminController::class, 'approve'])
+        ->name('admin.checkout_corrections.approve');
+
+    Route::post('/admin/checkout-corrections/{req}/reject', [\App\Http\Controllers\Admin\CheckoutCorrectionAdminController::class, 'reject'])
+        ->name('admin.checkout_corrections.reject');
 
     // Shortcut "Akun Saya" -> edit user yang sedang login
     Route::get('/admin/account', function () {
