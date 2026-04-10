@@ -88,7 +88,8 @@
                     $isShiftSettings = request()->routeIs('admin.shifts.*');
                     $isLeaveRequests = request()->routeIs('admin.leave_requests.*');
                     $isLateRequests = request()->routeIs('admin.late_requests.*');
-                    $isUserGroup = $isUsers || $isAttendanceQr || $isAttendanceDevices || $isAttendanceHistory || $isAttendanceExceptions || $isShiftSettings || $isLeaveRequests || $isLateRequests;
+                    $isCheckoutCorrections = request()->routeIs('admin.checkout_corrections.*');
+                    $isUserGroup = $isUsers || $isAttendanceQr || $isAttendanceDevices || $isAttendanceHistory || $isAttendanceExceptions || $isShiftSettings || $isLeaveRequests || $isLateRequests || $isCheckoutCorrections;
 
                     $isWastes = request()->routeIs('admin.wastes.*');
                     $isOpnames = request()->routeIs('admin.opnames.*');
@@ -319,6 +320,16 @@
                                         <span class="sidebar-label hidden text-sm font-medium text-white/90">Pengajuan
                                             Telat</span>
                                     </a>
+                                    <a href="{{ route('admin.checkout_corrections.index') }}"
+                                        class="relative flex items-center gap-3 rounded-xl px-3 py-2.5 transition
+   {{ $isCheckoutCorrections ? 'bg-yellow-500/10 border border-yellow-500/25' : 'border gold-border bg-white/[0.02] hover:bg-white/[0.05]' }}">
+                                        @if ($isCheckoutCorrections)
+                                            <span
+                                                class="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r bg-yellow-500"></span>
+                                        @endif
+                                        <span class="sidebar-label hidden text-sm font-medium text-white/90">Koreksi
+                                            Checkout</span>
+                                    </a>
                                     <a href="{{ route('admin.shifts.index') }}"
                                         class="relative flex items-center gap-3 rounded-xl px-3 py-2.5 transition
    {{ $isShiftSettings ? 'bg-yellow-500/10 border border-yellow-500/25' : 'border gold-border bg-white/[0.02] hover:bg-white/[0.05]' }}">
@@ -514,6 +525,10 @@
                             <a href="{{ route('admin.late_requests.index') }}"
                                 class="mt-1 block rounded-xl px-3 py-2 {{ $isLateRequests ? 'bg-yellow-500/12' : 'hover:bg-white/[0.05]' }}">
                                 Pengajuan Telat
+                            </a>
+                            <a href="{{ route('admin.checkout_corrections.index') }}"
+                                class="mt-1 block rounded-xl px-3 py-2 {{ $isCheckoutCorrections ? 'bg-yellow-500/12' : 'hover:bg-white/[0.05]' }}">
+                                Koreksi Checkout
                             </a>
 
                             <a href="{{ route('admin.shifts.index') }}"
