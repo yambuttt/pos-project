@@ -12,60 +12,86 @@ class CheckoutCorrectionAdminController extends Controller
 {
     public function index(Request $request)
     {
-        $status = $request->query('status','pending'); // pending/approved/rejected/all
+        $status = $request->query('status', 'pending'); // pending/approved/rejected/all
 
         $q = CheckoutCorrectionRequest::query()
-            ->with(['user','reviewer'])
+            ->with(['user', 'reviewer'])
             ->latest();
 
-        if ($status !== 'all') $q->where('status', $status);
+        if ($status !== 'all')
+            $q->where('status', $status);
 
         $items = $q->paginate(20)->withQueryString();
 
-        return view('dashboard.admin.checkout_corrections.index', compact('items','status'));
+        return view('dashboard.admin.checkout_corrections.index', compact('items', 'status'));
     }
 
-    public function approve(CheckoutCorrectionRequest $req)
+    public function approve(\App\Models\CheckoutCorrectionRequest $req)
     {
-        if ($req->status !== 'pending') return back()->with('ok','Sudah diproses.');
+        if ($req->status !== 'pending') {
+            return back()->with('ok', 'Sudah diproses.');
+        }
 
-        // isi checkout = jam selesai shift (end shift)
-        $svc = app(ShiftResolverService::class);
-        $tz = config('app.timezone','Asia/Jakarta');
+        $tz = config('app.timezone', 'Asia/Jakarta');
+        $svc = app(\App\Services\ShiftResolverService::class);
 
-        $dateStr = $req->date->toDateString();
-        $shift = $svc->resolveShiftForDate($req->user, $req->date);
-        $end = \Carbon\Carbon::parse($dateStr.' '.$shift->end_time, $tz);
-        $start = \Carbon\Carbon::parse($dateStr.' '.$shift->start_time, $tz);
-        if ($end->lte($start)) $end->addDay();
+        return \DB::transaction(function () use ($req, $svc, $tz) {
+            $dateStr = $req->date->toDateString();
 
-        $att = Attendance::query()
-            ->where('user_id', $req->user_id)
-            ->where('date', $dateStr)
-            ->first();
+            // Cari attendance hari itu
+            $att = \App\Models\Attendance::query()
+                ->where('user_id', $req->user_id)
+                ->where('date', $dateStr)
+                ->first();
 
-        if (!$att || !$att->check_in_at) return back()->with('error','Attendance/check-in tidak ditemukan.');
-        if ($att->check_out_at) return back()->with('ok','Sudah checkout, tidak perlu koreksi.');
+            if (!$att || !$att->check_in_at) {
+                return back()->with('error', 'Attendance/check-in tidak ditemukan untuk tanggal ' . $dateStr);
+            }
 
-        $att->update([
-            'check_out_at' => $end, // jam selesai shift
-        ]);
+            if ($att->check_out_at) {
+                // kalau sudah checkout, anggap selesai
+                $req->forceFill([
+                    'status' => 'approved',
+                    'reviewed_by' => auth()->id(),
+                    'reviewed_at' => now(),
+                ])->save();
 
-        $req->update([
-            'status' => 'approved',
-            'reviewed_by' => auth()->id(),
-            'reviewed_at' => now(),
-        ]);
+                return back()->with('ok', 'Sudah ada checkout, koreksi ditandai approved.');
+            }
 
-        return back()->with('ok','Koreksi checkout disetujui ✅ Checkout diisi jam selesai shift.');
+            // Hitung jam selesai shift (end)
+            $shift = $svc->resolveShiftForDate($req->user, $req->date);
+
+            $shiftStart = \Carbon\Carbon::parse($dateStr . ' ' . $shift->start_time, $tz);
+            $shiftEnd = \Carbon\Carbon::parse($dateStr . ' ' . $shift->end_time, $tz);
+
+            // kalau end melewati midnight
+            if ($shiftEnd->lte($shiftStart))
+                $shiftEnd->addDay();
+
+            // ✅ PAKSA simpan (agar tidak kena fillable/guarded)
+            $att->forceFill([
+                'check_out_at' => $shiftEnd,
+            ])->save();
+
+            // Tandai request approved setelah attendance sukses tersimpan
+            $req->forceFill([
+                'status' => 'approved',
+                'reviewed_by' => auth()->id(),
+                'reviewed_at' => now(),
+            ])->save();
+
+            return back()->with('ok', 'Koreksi checkout disetujui ✅ Checkout diisi jam selesai shift.');
+        });
     }
 
     public function reject(Request $request, CheckoutCorrectionRequest $req)
     {
-        if ($req->status !== 'pending') return back()->with('ok','Sudah diproses.');
+        if ($req->status !== 'pending')
+            return back()->with('ok', 'Sudah diproses.');
 
         $data = $request->validate([
-            'review_note' => ['nullable','string','max:500'],
+            'review_note' => ['nullable', 'string', 'max:500'],
         ]);
 
         $req->update([
@@ -75,6 +101,6 @@ class CheckoutCorrectionAdminController extends Controller
             'review_note' => $data['review_note'] ?? null,
         ]);
 
-        return back()->with('ok','Koreksi checkout ditolak. Status hari itu akan dihitung ALPHA.');
+        return back()->with('ok', 'Koreksi checkout ditolak. Status hari itu akan dihitung ALPHA.');
     }
 }
