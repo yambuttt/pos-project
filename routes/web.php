@@ -299,6 +299,6 @@ Route::prefix('pegawai')->name('pegawai.')->middleware(['auth', 'role:pegawai'])
     Route::post('/absensi/checkout-correction', [\App\Http\Controllers\Pegawai\CheckoutCorrectionController::class, 'store'])
         ->name('attendance.checkout_correction');
     Route::post('/absensi/overtime-request', [\App\Http\Controllers\Pegawai\OvertimeRequestController::class, 'store'])
-        ->name('pegawai.attendance.overtime_request');
+        ->name('attendance.overtime_request');
 
 });
