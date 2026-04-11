@@ -157,6 +157,31 @@ class ShiftResolverService
             $from = $end->copy()->subMinutes((int) $shift->checkout_early_minutes);
             $to = $end->copy()->addMinutes((int) $shift->checkout_late_minutes);
 
+            // ✅ Kalau telat approved, geser JAM MULAI & JAM AKHIR checkout sebesar menit telat
+            $late = LateAttendanceRequest::query()
+                ->where('user_id', $user->id)
+                ->whereDate('date', $start->toDateString())
+                ->where('status', 'approved')
+                ->first();
+
+            if ($late && $late->allowed_until_time) {
+                // hitung menit telat dari start shift -> allowed_until_time
+                $lateTo = \Carbon\Carbon::parse($start->toDateString() . ' ' . $late->allowed_until_time, $tz);
+
+                // menit telat minimal 0, maksimal 120 (sesuai cap telat kamu)
+                $lateMinutes = $start->diffInMinutes($lateTo, false);
+                if ($lateMinutes < 0)
+                    $lateMinutes = 0;
+                if ($lateMinutes > 120)
+                    $lateMinutes = 120;
+
+                if ($lateMinutes > 0) {
+                    // ✅ geser window checkout
+                    $from = $from->copy()->addMinutes($lateMinutes);
+                    $to = $to->copy()->addMinutes($lateMinutes);
+                }
+            }
+
             return compact('shift', 'start', 'end', 'from', 'to');
         }
 
