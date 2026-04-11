@@ -76,6 +76,11 @@
           Ajukan Koreksi Checkout
         </button>
         <div id="ccMsg" class="mt-2 text-xs text-white/70"></div>
+        <button id="btnOvertime"
+          class="rounded-xl border border-white/20 bg-white/10 px-4 py-2 text-sm font-semibold hover:bg-white/15">
+          Ajukan Lembur
+        </button>
+        <div id="otMsg" class="mt-2 text-xs text-white/70"></div>
       </div>
 
       <div id="exceptionReasonWrap" class="mt-4 hidden">
@@ -242,10 +247,123 @@
     </div>
   </div>
 
+  <div id="otModal" class="fixed inset-0 z-[60] hidden items-center justify-center bg-black/70 p-4">
+    <div class="w-full max-w-md rounded-[24px] border border-white/15 bg-[#121212]/95 p-5">
+      <div class="flex items-start justify-between gap-3">
+        <div>
+          <div class="text-sm font-semibold text-white">Pengajuan Lembur</div>
+          <div class="mt-1 text-xs text-white/60">Pilih kelipatan 60 menit. Wajib sudah check-in.</div>
+        </div>
+        <button id="otClose"
+          class="rounded-xl border border-white/15 bg-white/[0.04] px-3 py-2 text-xs text-white/85 hover:bg-white/[0.08]">Tutup</button>
+      </div>
+
+      <div class="mt-4 space-y-3">
+        <div>
+          <label class="text-xs text-white/70">Durasi lembur</label>
+          <select id="otMinutes"
+            class="mt-2 w-full rounded-xl border border-white/15 bg-white/[0.04] px-3 py-2 text-sm text-white outline-none focus:border-yellow-500/35">
+            <option value="">- pilih -</option>
+            <option value="60">60 menit</option>
+            <option value="120">120 menit</option>
+            <option value="180">180 menit</option>
+          </select>
+          <div id="otPreview" class="mt-2 text-[11px] text-white/60"></div>
+        </div>
+
+        <div>
+          <label class="text-xs text-white/70">Alasan (opsional)</label>
+          <textarea id="otReason" rows="3"
+            class="mt-2 w-full rounded-xl border border-white/15 bg-white/[0.04] px-3 py-2 text-sm text-white placeholder:text-white/40 outline-none focus:border-yellow-500/35"
+            placeholder="Contoh: tutup kasir, bersih-bersih, stok opname..."></textarea>
+        </div>
+
+        <button id="otSubmit"
+          class="w-full rounded-xl bg-yellow-500 px-4 py-2 text-sm font-semibold text-black hover:bg-yellow-400">
+          Kirim Pengajuan
+        </button>
+
+        <div id="otErr" class="text-xs text-red-200"></div>
+        <div id="otOk" class="text-xs text-emerald-200"></div>
+      </div>
+    </div>
+  </div>
+
   <script src="https://unpkg.com/html5-qrcode"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
+  <script>
+    const btnOvertime = document.getElementById('btnOvertime');
+    const otModal = document.getElementById('otModal');
+    const otClose = document.getElementById('otClose');
+    const otMinutes = document.getElementById('otMinutes');
+    const otReason = document.getElementById('otReason');
+    const otSubmit = document.getElementById('otSubmit');
+    const otErr = document.getElementById('otErr');
+    const otOk = document.getElementById('otOk');
+    const otMsg = document.getElementById('otMsg');
+    const otPreview = document.getElementById('otPreview');
+
+    function openOt() { otErr.textContent = ''; otOk.textContent = ''; otReason.value = ''; otMinutes.value = ''; otPreview.textContent = ''; otModal.classList.remove('hidden'); otModal.classList.add('flex'); }
+    function closeOt() { otModal.classList.add('hidden'); otModal.classList.remove('flex'); }
+
+    function canOvertime() {
+      // harus sudah check-in dan belum checkout
+      return HAS_CHECKIN && !HAS_CHECKOUT;
+    }
+
+    function syncOvertimeButton() {
+      if (!btnOvertime) return;
+      const ok = canOvertime();
+      btnOvertime.disabled = !ok;
+      btnOvertime.classList.toggle('opacity-50', !ok);
+      btnOvertime.classList.toggle('cursor-not-allowed', !ok);
+      if (otMsg) otMsg.textContent = ok ? '' : 'Ajukan lembur hanya bisa setelah check-in dan sebelum checkout.';
+    }
+
+    btnOvertime?.addEventListener('click', () => {
+      if (!canOvertime()) { syncOvertimeButton(); return; }
+      openOt();
+    });
+    otClose?.addEventListener('click', closeOt);
+    otModal?.addEventListener('click', (e) => { if (e.target === otModal) closeOt(); });
+
+    otMinutes?.addEventListener('change', () => {
+      if (!otMinutes.value) { otPreview.textContent = ''; return; }
+      const mins = parseInt(otMinutes.value, 10);
+      // preview: checkout mulai = UI.out.from_ms + mins (karena window checkout digeser)
+      const startCheckout = new Date(UI.out.from_ms + mins * 60 * 1000);
+      const hh = String(startCheckout.getHours()).padStart(2, '0');
+      const mm = String(startCheckout.getMinutes()).padStart(2, '0');
+      otPreview.textContent = `Jika disetujui, checkout baru dibuka mulai ${hh}:${mm}.`;
+    });
+
+    otSubmit?.addEventListener('click', async () => {
+      otErr.textContent = ''; otOk.textContent = '';
+      if (!otMinutes.value) { otErr.textContent = 'Pilih durasi lembur.'; return; }
+
+      const fd = new FormData();
+      fd.append('minutes', otMinutes.value);
+      fd.append('reason', (otReason.value || '').trim());
+
+      const res = await fetch("{{ route('pegawai.attendance.overtime_request') }}", {
+        method: "POST",
+        headers: { "X-CSRF-TOKEN": csrf },
+        body: fd
+      });
+
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) { otErr.textContent = json.message || 'Gagal mengirim.'; return; }
+
+      otOk.textContent = json.message || 'Pengajuan terkirim.';
+      if (otMsg) otMsg.textContent = otOk.textContent;
+      setTimeout(() => closeOt(), 700);
+    });
+
+    // panggil di refreshShiftUi() biar ikut update state
+    // tambahkan: syncOvertimeButton();
+  </script>
   <script>const btnCheckoutCorrection = document.getElementById('btnCheckoutCorrection');
     const ccModal = document.getElementById('ccModal');
     const ccClose = document.getElementById('ccClose');
@@ -1254,6 +1372,7 @@
       // penting: tombol bisa berubah saat jam berubah
       setButtonsAfterGate();
       syncLateButton();
+      syncOvertimeButton();
     }
 
     refreshShiftUi();

@@ -203,6 +203,14 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
 
     Route::post('/admin/checkout-corrections/{req}/reject', [\App\Http\Controllers\Admin\CheckoutCorrectionAdminController::class, 'reject'])
         ->name('admin.checkout_corrections.reject');
+    Route::get('/admin/overtime-requests', [\App\Http\Controllers\Admin\OvertimeRequestAdminController::class, 'index'])
+        ->name('admin.overtime_requests.index');
+
+    Route::post('/admin/overtime-requests/{req}/approve', [\App\Http\Controllers\Admin\OvertimeRequestAdminController::class, 'approve'])
+        ->name('admin.overtime_requests.approve');
+
+    Route::post('/admin/overtime-requests/{req}/reject', [\App\Http\Controllers\Admin\OvertimeRequestAdminController::class, 'reject'])
+        ->name('admin.overtime_requests.reject');
 
     // Shortcut "Akun Saya" -> edit user yang sedang login
     Route::get('/admin/account', function () {
@@ -290,5 +298,7 @@ Route::prefix('pegawai')->name('pegawai.')->middleware(['auth', 'role:pegawai'])
         ->name('attendance.late_request');
     Route::post('/absensi/checkout-correction', [\App\Http\Controllers\Pegawai\CheckoutCorrectionController::class, 'store'])
         ->name('attendance.checkout_correction');
+    Route::post('/absensi/overtime-request', [\App\Http\Controllers\Pegawai\OvertimeRequestController::class, 'store'])
+        ->name('pegawai.attendance.overtime_request');
 
 });

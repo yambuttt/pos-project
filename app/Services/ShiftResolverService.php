@@ -9,6 +9,7 @@ use App\Models\UserShiftRotation;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use App\Models\LateAttendanceRequest;
+use App\Models\OvertimeRequest;
 class ShiftResolverService
 {
     public function resolveShiftForDate(User $user, Carbon $date): Shift
@@ -179,6 +180,24 @@ class ShiftResolverService
                     // ✅ geser window checkout
                     $from = $from->copy()->addMinutes($lateMinutes);
                     $to = $to->copy()->addMinutes($lateMinutes);
+                }
+            }
+            // ✅ tambahkan offset lembur (mulai & akhir checkout ikut mundur)
+            $overtime = OvertimeRequest::query()
+                ->where('user_id', $user->id)
+                ->whereDate('date', $start->toDateString())
+                ->where('status', 'approved')
+                ->first();
+
+            if ($overtime) {
+                $ot = (int) ($overtime->approved_minutes ?? $overtime->requested_minutes ?? 0);
+                // batasi kelipatan 60 yang diizinkan
+                if (!in_array($ot, [60, 120, 180], true))
+                    $ot = 0;
+
+                if ($ot > 0) {
+                    $from = $from->copy()->addMinutes($ot);
+                    $to = $to->copy()->addMinutes($ot);
                 }
             }
 

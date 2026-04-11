@@ -89,7 +89,8 @@
                     $isLeaveRequests = request()->routeIs('admin.leave_requests.*');
                     $isLateRequests = request()->routeIs('admin.late_requests.*');
                     $isCheckoutCorrections = request()->routeIs('admin.checkout_corrections.*');
-                    $isUserGroup = $isUsers || $isAttendanceQr || $isAttendanceDevices || $isAttendanceHistory || $isAttendanceExceptions || $isShiftSettings || $isLeaveRequests || $isLateRequests || $isCheckoutCorrections;
+                    $isOvertimeRequests = request()->routeIs('admin.overtime_requests.*');
+                    $isUserGroup = $isUsers || $isAttendanceQr || $isAttendanceDevices || $isAttendanceHistory || $isAttendanceExceptions || $isShiftSettings || $isLeaveRequests || $isLateRequests || $isCheckoutCorrections || $isOvertimeRequests;
 
                     $isWastes = request()->routeIs('admin.wastes.*');
                     $isOpnames = request()->routeIs('admin.opnames.*');
@@ -299,6 +300,16 @@
                                         @endif
                                         <span class="sidebar-label hidden text-sm font-medium text-white/90">Kelola
                                             User</span>
+                                    </a>
+                                    <a href="{{ route('admin.overtime_requests.index') }}"
+                                        class="relative flex items-center gap-3 rounded-xl px-3 py-2.5 transition
+   {{ $isOvertimeRequests ? 'bg-yellow-500/10 border border-yellow-500/25' : 'border gold-border bg-white/[0.02] hover:bg-white/[0.05]' }}">
+                                        @if ($isOvertimeRequests)
+                                            <span
+                                                class="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r bg-yellow-500"></span>
+                                        @endif
+                                        <span class="sidebar-label hidden text-sm font-medium text-white/90">Pengajuan
+                                            Lembur</span>
                                     </a>
                                     <a href="{{ route('admin.attendance.exception_requests') }}"
                                         class="relative flex items-center gap-3 rounded-xl px-3 py-2.5 transition
@@ -516,6 +527,10 @@
                             <a href="{{ route('admin.cashiers.index') }}"
                                 class="mt-1 block rounded-xl px-3 py-2 {{ $isUsers ? 'bg-yellow-500/12' : 'hover:bg-white/[0.05]' }}">
                                 Kelola User
+                            </a>
+                            <a href="{{ route('admin.overtime_requests.index') }}"
+                                class="mt-1 block rounded-xl px-3 py-2 {{ $isOvertimeRequests ? 'bg-yellow-500/12' : 'hover:bg-white/[0.05]' }}">
+                                Pengajuan Lembur
                             </a>
 
                             <a href="{{ route('admin.attendance.exception_requests') }}"
