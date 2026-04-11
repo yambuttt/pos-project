@@ -161,7 +161,12 @@ class ShiftSettingController extends Controller
             ->where('user_id', $user->id)
             ->whereBetween('date', [$start->toDateString(), $end->copy()->subDay()->toDateString()])
             ->get()
-            ->keyBy(fn($a) => (string) $a->date);
+            ->keyBy(function ($a) {
+                // aman untuk string/date/datetime
+                return $a->date instanceof \Carbon\Carbon
+                    ? $a->date->toDateString()
+                    : \Carbon\Carbon::parse($a->date)->toDateString();
+            });
 
         // 2) Leave approved overlap range (cuti/sakit) -> expand per tanggal
         $leaveRows = \App\Models\LeaveRequest::query()

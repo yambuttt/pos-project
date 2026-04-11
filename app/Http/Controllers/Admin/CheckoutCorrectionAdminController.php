@@ -38,25 +38,43 @@ class CheckoutCorrectionAdminController extends Controller
         return \DB::transaction(function () use ($req, $svc, $tz) {
             $dateStr = $req->date->toDateString();
 
-            // Cari attendance hari itu
+            // 1) Cari attendance berdasarkan kolom date (utama)
             $att = \App\Models\Attendance::query()
                 ->where('user_id', $req->user_id)
-                ->where('date', $dateStr)
+                ->whereDate('date', $dateStr)
                 ->first();
 
+            // 2) Fallback: kalau tidak ketemu, cari attendance berdasarkan check_in_at hari itu (kadang mismatch date)
+            if (!$att) {
+                $att = \App\Models\Attendance::query()
+                    ->where('user_id', $req->user_id)
+                    ->whereDate('check_in_at', $dateStr)
+                    ->orderByDesc('check_in_at')
+                    ->first();
+            }
+
+            // 3) Fallback terakhir: cari attendance paling baru yang belum checkout (untuk kasus date salah)
+            if (!$att) {
+                $att = \App\Models\Attendance::query()
+                    ->where('user_id', $req->user_id)
+                    ->whereNotNull('check_in_at')
+                    ->whereNull('check_out_at')
+                    ->orderByDesc('check_in_at')
+                    ->first();
+            }
+
             if (!$att || !$att->check_in_at) {
-                return back()->with('error', 'Attendance/check-in tidak ditemukan untuk tanggal ' . $dateStr);
+                return back()->with('error', 'Attendance/check-in tidak ditemukan untuk koreksi tanggal ' . $dateStr);
             }
 
             if ($att->check_out_at) {
-                // kalau sudah checkout, anggap selesai
                 $req->forceFill([
                     'status' => 'approved',
                     'reviewed_by' => auth()->id(),
                     'reviewed_at' => now(),
                 ])->save();
 
-                return back()->with('ok', 'Sudah ada checkout, koreksi ditandai approved.');
+                return back()->with('ok', 'Sudah ada checkout, request ditandai approved.');
             }
 
             // Hitung jam selesai shift (end)
@@ -64,17 +82,15 @@ class CheckoutCorrectionAdminController extends Controller
 
             $shiftStart = \Carbon\Carbon::parse($dateStr . ' ' . $shift->start_time, $tz);
             $shiftEnd = \Carbon\Carbon::parse($dateStr . ' ' . $shift->end_time, $tz);
-
-            // kalau end melewati midnight
             if ($shiftEnd->lte($shiftStart))
                 $shiftEnd->addDay();
 
-            // ✅ PAKSA simpan (agar tidak kena fillable/guarded)
+            // ✅ Set checkout + pastikan DATE-nya nyambung dengan tanggal request (biar kalender nemu)
             $att->forceFill([
+                'date' => $dateStr,
                 'check_out_at' => $shiftEnd,
             ])->save();
 
-            // Tandai request approved setelah attendance sukses tersimpan
             $req->forceFill([
                 'status' => 'approved',
                 'reviewed_by' => auth()->id(),
