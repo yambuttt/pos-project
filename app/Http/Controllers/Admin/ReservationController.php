@@ -24,60 +24,92 @@ class ReservationController extends Controller
             ->with('resource')
             ->when($q !== '', function ($qq) use ($q) {
                 $qq->where('code', 'like', "%$q%")
-                   ->orWhere('customer_name', 'like', "%$q%")
-                   ->orWhere('customer_phone', 'like', "%$q%");
+                    ->orWhere('customer_name', 'like', "%$q%")
+                    ->orWhere('customer_phone', 'like', "%$q%");
             })
             ->when($status !== '', fn($qq) => $qq->where('status', $status))
             ->orderBy('start_at', 'desc')
             ->paginate(15)
             ->withQueryString();
 
-        return view('dashboard.admin.reservations.index', compact('rows','q','status'));
+        return view('dashboard.admin.reservations.index', compact('rows', 'q', 'status'));
     }
 
     public function create()
     {
         $resources = ReservationResource::where('is_active', true)->orderBy('type')->orderBy('name')->get();
-        $products = Product::where('is_active', true)->orderBy('name')->get(['id','name','price']);
+        $products = Product::where('is_active', true)->orderBy('name')->get(['id', 'name', 'price']);
 
-        return view('dashboard.admin.reservations.create', compact('resources','products'));
+        return view('dashboard.admin.reservations.create', compact('resources', 'products'));
     }
 
     public function store(Request $request, ReservationInventoryService $inv)
     {
         $data = $request->validate([
-            'reservation_resource_id' => ['required','exists:reservation_resources,id'],
-            'customer_name' => ['required','string','max:120'],
-            'customer_phone' => ['nullable','string','max:30'],
-            'start_at' => ['required','date'],
-            'end_at' => ['required','date','after:start_at'],
-            'pax' => ['nullable','integer','min:1'],
-            'menu_type' => ['required','in:REGULAR,BUFFET'],
+            'reservation_resource_id' => ['required', 'exists:reservation_resources,id'],
+            'customer_name' => ['required', 'string', 'max:120'],
+            'customer_phone' => ['nullable', 'string', 'max:30'],
+            'start_at' => ['required', 'date'],
+            'end_at' => ['required', 'date', 'after:start_at'],
+            'pax' => ['nullable', 'integer', 'min:1'],
+            'menu_type' => ['required', 'in:REGULAR,BUFFET'],
 
             // REGULAR items
-            'items' => ['nullable','array'],
-            'items.*.product_id' => ['required_with:items','integer','exists:products,id'],
-            'items.*.qty' => ['required_with:items','integer','min:1'],
+            'items' => ['nullable', 'array'],
+            'items.*.product_id' => ['required_with:items', 'integer', 'exists:products,id'],
+            'items.*.qty' => ['required_with:items', 'integer', 'min:1'],
 
-            'rental_total' => ['nullable','integer','min:0'],
-            'notes' => ['nullable','string'],
+            'rental_total' => ['nullable', 'integer', 'min:0'],
+            'notes' => ['nullable', 'string'],
         ]);
 
         // generate code sederhana
         $code = 'RSV-' . now()->format('Ymd') . '-' . strtoupper(substr(bin2hex(random_bytes(3)), 0, 6));
-
         $dpRatio = (float) config('reservations.dp_ratio', 0.5);
 
         return DB::transaction(function () use ($data, $code, $dpRatio) {
+
+            // ============================================================
+            // (5) CEK BENTROK JADWAL RESOURCE + BUFFER
+            // ============================================================
+            $start = \Carbon\Carbon::parse($data['start_at']);
+            $end = \Carbon\Carbon::parse($data['end_at']);
+
+            /** @var \App\Models\ReservationResource $resource */
+            $resource = \App\Models\ReservationResource::lockForUpdate()
+                ->findOrFail($data['reservation_resource_id']);
+
+            $buffer = (int) ($resource->buffer_minutes ?? 0);
+
+            // kalau ada buffer, kita longgarkan window check
+            $startWithBuffer = $start->copy()->subMinutes($buffer);
+            $endWithBuffer = $end->copy()->addMinutes($buffer);
+
+            $conflict = \App\Models\Reservation::query()
+                ->where('reservation_resource_id', $resource->id)
+                ->whereIn('status', ['pending_dp', 'confirmed', 'checked_in']) // yang dianggap "aktif"
+                ->where(function ($q) use ($startWithBuffer, $endWithBuffer) {
+                    // overlap rule: start < existing_end AND end > existing_start
+                    $q->where('start_at', '<', $endWithBuffer)
+                        ->where('end_at', '>', $startWithBuffer);
+                })
+                ->lockForUpdate()
+                ->exists();
+
+            if ($conflict) {
+                throw new \RuntimeException('Jadwal bentrok: resource sudah dibooking di rentang waktu tersebut.');
+            }
+            // ============================================================
+
             $menuTotal = 0;
 
             $reservation = Reservation::create([
                 'code' => $code,
-                'reservation_resource_id' => $data['reservation_resource_id'],
+                'reservation_resource_id' => $resource->id,
                 'customer_name' => $data['customer_name'],
                 'customer_phone' => $data['customer_phone'] ?? null,
-                'start_at' => $data['start_at'],
-                'end_at' => $data['end_at'],
+                'start_at' => $start,
+                'end_at' => $end,
                 'pax' => $data['pax'] ?? null,
                 'menu_type' => $data['menu_type'],
                 'status' => 'pending_dp',
@@ -88,6 +120,10 @@ class ReservationController extends Controller
 
             if ($reservation->menu_type === 'REGULAR') {
                 $items = $data['items'] ?? [];
+
+                // buang baris item kosong (product_id kosong)
+                $items = array_values(array_filter($items, fn($it) => !empty($it['product_id'])));
+
                 if (count($items) === 0) {
                     throw new \RuntimeException('Menu REGULAR wajib pilih minimal 1 item.');
                 }
@@ -97,7 +133,12 @@ class ReservationController extends Controller
 
                 foreach ($items as $it) {
                     $p = $products[$it['product_id']] ?? null;
-                    if (!$p) continue;
+                    if (!$p) {
+                        throw new \RuntimeException("Produk tidak ditemukan (ID {$it['product_id']}).");
+                    }
+                    if (!$p->is_active) {
+                        throw new \RuntimeException("Produk '{$p->name}' sedang nonaktif.");
+                    }
 
                     $qty = (int) $it['qty'];
                     $unit = (int) $p->price;
@@ -134,7 +175,7 @@ class ReservationController extends Controller
 
     public function show(Reservation $reservation)
     {
-        $reservation->load(['resource','items','payments','locks.rawMaterial']);
+        $reservation->load(['resource', 'items', 'payments', 'locks.rawMaterial']);
         return view('dashboard.admin.reservations.show', compact('reservation'));
     }
 
@@ -145,13 +186,13 @@ class ReservationController extends Controller
     public function markDpPaid(Reservation $reservation, Request $request, ReservationInventoryService $inv)
     {
         $data = $request->validate([
-            'method' => ['required','in:CASH,QRIS,MIDTRANS'],
-            'amount' => ['required','integer','min:1'],
-            'reference' => ['nullable','string','max:120'],
+            'method' => ['required', 'in:CASH,QRIS,MIDTRANS'],
+            'amount' => ['required', 'integer', 'min:1'],
+            'reference' => ['nullable', 'string', 'max:120'],
         ]);
 
         return DB::transaction(function () use ($reservation, $data, $inv) {
-            if (!in_array($reservation->status, ['pending_dp','draft'], true)) {
+            if (!in_array($reservation->status, ['pending_dp', 'draft'], true)) {
                 throw new \RuntimeException('Status reservasi tidak valid untuk DP paid.');
             }
 
@@ -195,9 +236,9 @@ class ReservationController extends Controller
     public function checkout(Reservation $reservation, Request $request, ReservationInventoryService $inv)
     {
         $data = $request->validate([
-            'method' => ['required','in:CASH,QRIS'],
-            'amount' => ['required','integer','min:1'],
-            'reference' => ['nullable','string','max:120'],
+            'method' => ['required', 'in:CASH,QRIS'],
+            'amount' => ['required', 'integer', 'min:1'],
+            'reference' => ['nullable', 'string', 'max:120'],
         ]);
 
         return DB::transaction(function () use ($reservation, $data, $inv) {

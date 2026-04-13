@@ -148,7 +148,7 @@ class ReservationInventoryService
 
             InventoryMovement::create([
                 'raw_material_id' => $m->id,
-                'type' => 'reservation_lock',
+                'type' => 'reserve',
                 'qty_in' => 0,
                 'qty_out' => 0,
                 'reference_type' => Reservation::class,
@@ -193,7 +193,7 @@ class ReservationInventoryService
 
             InventoryMovement::create([
                 'raw_material_id' => $m->id,
-                'type' => 'reservation_release',
+                'type' => 'release',
                 'qty_in' => 0,
                 'qty_out' => 0,
                 'reference_type' => Reservation::class,
@@ -246,7 +246,7 @@ class ReservationInventoryService
 
             InventoryMovement::create([
                 'raw_material_id' => $m->id,
-                'type' => 'reservation_consume',
+                'type' => 'commit_paid',
                 'qty_in' => 0,
                 'qty_out' => $remaining,
                 'reference_type' => Reservation::class,
