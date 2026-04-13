@@ -152,4 +152,51 @@ class MidtransService
 
         return $instruction;
     }
+
+    public function chargeCustom(string $orderId, int $grossAmount, string $paymentMethod): array
+    {
+        $payload = [
+            'transaction_details' => [
+                'order_id' => $orderId,
+                'gross_amount' => (int) $grossAmount,
+            ],
+            'custom_expiry' => [
+                'expiry_duration' => $this->expiryMinutes,
+                'unit' => 'minute',
+            ],
+        ];
+
+        $payload = match ($paymentMethod) {
+            'qris' => array_merge($payload, [
+                'payment_type' => 'qris',
+                'qris' => [
+                    'acquirer' => $this->qrisAcquirer,
+                ],
+            ]),
+            'bca_va' => array_merge($payload, [
+                'payment_type' => 'bank_transfer',
+                'bank_transfer' => ['bank' => 'bca'],
+            ]),
+            'bni_va' => array_merge($payload, [
+                'payment_type' => 'bank_transfer',
+                'bank_transfer' => ['bank' => 'bni'],
+            ]),
+            'bri_va' => array_merge($payload, [
+                'payment_type' => 'bank_transfer',
+                'bank_transfer' => ['bank' => 'bri'],
+            ]),
+            'permata_va' => array_merge($payload, [
+                'payment_type' => 'bank_transfer',
+                'bank_transfer' => ['bank' => 'permata'],
+            ]),
+            default => throw new \RuntimeException('Metode pembayaran Midtrans tidak didukung.'),
+        };
+
+        return Http::withBasicAuth($this->serverKey, '')
+            ->acceptJson()
+            ->asJson()
+            ->post($this->baseUrl . '/v2/charge', $payload)
+            ->throw()
+            ->json();
+    }
 }

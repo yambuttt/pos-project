@@ -7,12 +7,26 @@ use Illuminate\Database\Eloquent\Model;
 class Reservation extends Model
 {
     protected $fillable = [
-        'code','reservation_resource_id','customer_name','customer_phone',
-        'start_at','end_at','pax','menu_type','status',
+        'code',
+        'reservation_resource_id',
+        'customer_name',
+        'customer_phone',
+        'start_at',
+        'end_at',
+        'pax',
+        'menu_type',
+        'status',
         'stock_snapshot_at',
-        'menu_total','rental_total','grand_total',
-        'dp_amount','paid_amount','dp_paid_at',
-        'checked_in_at','checked_out_at','notes','created_by',
+        'menu_total',
+        'rental_total',
+        'grand_total',
+        'dp_amount',
+        'paid_amount',
+        'dp_paid_at',
+        'checked_in_at',
+        'checked_out_at',
+        'notes',
+        'created_by',
     ];
 
     protected $casts = [
@@ -28,6 +42,8 @@ class Reservation extends Model
         'dp_amount' => 'int',
         'paid_amount' => 'int',
         'pax' => 'int',
+        'midtrans_response' => 'array',
+        'payment_expires_at' => 'datetime',
     ];
 
     public function resource()

@@ -30,7 +30,8 @@ class ReservationInventoryService
             ->unique()
             ->values();
 
-        if ($productIds->isEmpty()) return [];
+        if ($productIds->isEmpty())
+            return [];
 
         $products = Product::with('recipes.rawMaterial')
             ->whereIn('id', $productIds)
@@ -41,7 +42,8 @@ class ReservationInventoryService
         $needs = [];
 
         foreach ($reservation->items as $it) {
-            if ($it->item_type !== 'REGULAR_PRODUCT') continue;
+            if ($it->item_type !== 'REGULAR_PRODUCT')
+                continue;
 
             $p = $products[$it->item_id] ?? null;
             if (!$p || !$p->is_active) {
@@ -105,7 +107,7 @@ class ReservationInventoryService
             $msg = "Stok bahan kurang untuk RESERVASI (buffer min x{$mul}):\n";
             foreach ($insufficient as $x) {
                 $msg .= "- {$x['name']} ({$x['unit']}): butuh {$x['need']}, tersedia {$x['available']} "
-                      . "(stok {$x['stock']}, reserve {$x['reserved']}, min_effective {$x['min_effective']})\n";
+                    . "(stok {$x['stock']}, reserve {$x['reserved']}, min_effective {$x['min_effective']})\n";
             }
             throw new \RuntimeException($msg);
         }
@@ -116,18 +118,21 @@ class ReservationInventoryService
     /**
      * DP paid => lock (increase raw_material.reserved_stock) + record per reservation locks.
      */
-    public function lockForReservation(Reservation $reservation, int $userId): void
+    public function lockForReservation(Reservation $reservation, ?int $userId = null): void
     {
-        if ($reservation->menu_type !== 'REGULAR') return;
+        if ($reservation->menu_type !== 'REGULAR')
+            return;
         if ($reservation->status !== 'confirmed') {
             throw new \RuntimeException('Reservation harus status CONFIRMED untuk lock stok.');
         }
 
         // idempotent: kalau sudah ada lock rows, jangan lock dua kali
-        if ($reservation->locks()->exists()) return;
+        if ($reservation->locks()->exists())
+            return;
 
         $needs = $this->buildNeedsFromReservation($reservation);
-        if (empty($needs)) return;
+        if (empty($needs))
+            return;
 
         $materials = $this->lockAndValidateMaterialsForReservation($needs);
 
@@ -168,20 +173,23 @@ class ReservationInventoryService
      */
     public function releaseReservationLocks(Reservation $reservation, int $userId): void
     {
-        if ($reservation->menu_type !== 'REGULAR') return;
+        if ($reservation->menu_type !== 'REGULAR')
+            return;
 
         $reservation->loadMissing('locks.rawMaterial');
 
         foreach ($reservation->locks as $lock) {
             $m = $lock->rawMaterial;
-            if (!$m) continue;
+            if (!$m)
+                continue;
 
             $locked = (float) $lock->qty_locked;
             $released = (float) $lock->qty_released;
             $consumed = (float) $lock->qty_consumed;
 
             $remaining = max(0, $locked - $released - $consumed);
-            if ($remaining <= 0) continue;
+            if ($remaining <= 0)
+                continue;
 
             $m->update([
                 'reserved_stock' => max(0, (float) $m->reserved_stock - $remaining),
@@ -210,20 +218,23 @@ class ReservationInventoryService
      */
     public function consumeOnCheckout(Reservation $reservation, int $userId): void
     {
-        if ($reservation->menu_type !== 'REGULAR') return;
+        if ($reservation->menu_type !== 'REGULAR')
+            return;
 
         $reservation->loadMissing('locks.rawMaterial');
 
         foreach ($reservation->locks as $lock) {
             $m = $lock->rawMaterial;
-            if (!$m) continue;
+            if (!$m)
+                continue;
 
             $locked = (float) $lock->qty_locked;
             $released = (float) $lock->qty_released;
             $consumed = (float) $lock->qty_consumed;
 
             $remaining = max(0, $locked - $released - $consumed);
-            if ($remaining <= 0) continue;
+            if ($remaining <= 0)
+                continue;
 
             $stockOnHand = (float) $m->stock_on_hand;
             $reservedStock = (float) $m->reserved_stock;

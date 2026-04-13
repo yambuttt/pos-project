@@ -31,8 +31,17 @@ use App\Http\Controllers\Pegawai\AttendanceHistoryController as PegawaiAttendanc
 use App\Http\Controllers\Pegawai\AttendancePhotoController as PegawaiAttendancePhotoController;
 use App\Http\Controllers\Admin\ReservationController;
 use App\Http\Controllers\Admin\ReservationResourceController;
+use App\Http\Controllers\PublicReservationController;
+use App\Http\Controllers\PublicReservationPaymentController;
 
 
+Route::post('/reservasi/{reservation:code}/pay-dp', [PublicReservationPaymentController::class, 'payDp'])
+    ->name('public.reservations.pay_dp');
+Route::get('/reservasi/{reservation:code}/status', [PublicReservationPaymentController::class, 'status'])
+    ->name('public.reservations.status');
+Route::get('/reservasi', [PublicReservationController::class, 'create'])->name('public.reservations.create');
+Route::post('/reservasi', [PublicReservationController::class, 'store'])->name('public.reservations.store');
+Route::get('/reservasi/{reservation:code}', [PublicReservationController::class, 'show'])->name('public.reservations.show');
 Route::get('/landingtrial', [PublicMenuController::class, 'landingTrial'])->name('public.landingtrial');
 Route::get('/', [PublicMenuController::class, 'landingTrial'])->name('public.home');
 Route::get('/menu', [PublicMenuController::class, 'index'])->name('public.menu');

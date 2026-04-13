@@ -104,7 +104,7 @@ body {
             </nav>
 
             <div class="flex items-center gap-3">
-                <a href="#kontak"
+               <a href="{{ route('public.reservations.create') }}"
                     class="inline-flex items-center gap-2 rounded-xl bg-yellow-500 px-3 py-2.5 text-sm font-semibold text-black transition hover:bg-yellow-400 sm:px-5 sm:py-3">
                     <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                         <path
