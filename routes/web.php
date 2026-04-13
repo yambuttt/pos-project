@@ -35,6 +35,7 @@ use App\Http\Controllers\PublicReservationController;
 use App\Http\Controllers\PublicReservationPaymentController;
 
 
+
 Route::post('/reservasi/{reservation:code}/pay-dp', [PublicReservationPaymentController::class, 'payDp'])
     ->name('public.reservations.pay_dp');
 Route::get('/reservasi/{reservation:code}/status', [PublicReservationPaymentController::class, 'status'])
@@ -268,6 +269,14 @@ Route::prefix('kasir')->name('kasir.')->middleware(['auth', 'role:kasir'])->grou
 
     Route::post('/sales/confirm-pending-cash', [SaleController::class, 'confirmPendingCashOrder'])
         ->name('sales.confirm-pending-cash');
+    Route::get('/reservations', [\App\Http\Controllers\Kasir\ReservationController::class, 'index'])
+        ->name('reservations.index');
+    Route::get('/reservations/{reservation}', [\App\Http\Controllers\Kasir\ReservationController::class, 'show'])
+        ->name('reservations.show');
+    Route::post('/reservations/{reservation}/check-in', [\App\Http\Controllers\Kasir\ReservationController::class, 'checkIn'])
+        ->name('reservations.check_in');
+    Route::post('/reservations/{reservation}/checkout', [\App\Http\Controllers\Kasir\ReservationController::class, 'checkout'])
+        ->name('reservations.checkout');
 });
 
 

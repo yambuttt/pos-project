@@ -37,6 +37,7 @@
             $kCreate = request()->routeIs('kasir.sales.create');
             $kIndex = request()->routeIs('kasir.sales.index');
             $kReady = request()->routeIs('kasir.ready.*');
+            $kResv = request()->routeIs('kasir.reservations.*');
           @endphp
 
           <nav class="mt-5 space-y-2 text-sm">
@@ -45,6 +46,12 @@
               {{ $kDash ? 'bg-white/15 border border-white/15' : 'bg-white/5 border border-white/10 hover:bg-white/10' }}">
               Dashboard
               @if($kDash)<span class="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r bg-white"></span>@endif
+            </a>
+            <a href="{{ route('kasir.reservations.index') }}"
+              class="relative block rounded-xl px-4 py-3 transition
+              {{ $kResv ? 'bg-white/15 border border-white/15' : 'bg-white/5 border border-white/10 hover:bg-white/10' }}">
+              Reservasi
+              @if($kResv)<span class="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r bg-white"></span>@endif
             </a>
 
             <a href="{{ route('kasir.sales.create') }}"
@@ -97,6 +104,8 @@
           <div class="mt-4 space-y-2">
             <a href="{{ route('kasir.dashboard') }}"
               class="block rounded-xl border border-white/10 bg-white/5 px-4 py-3 hover:bg-white/10">Dashboard</a>
+            <a href="{{ route('kasir.reservations.index') }}"
+              class="block rounded-xl border border-white/10 bg-white/5 px-4 py-3 hover:bg-white/10">Reservasi</a>
             <a href="{{ route('kasir.sales.create') }}"
               class="block rounded-xl border border-white/10 bg-white/5 px-4 py-3 hover:bg-white/10">Transaksi Baru</a>
             <a href="{{ route('kasir.sales.index') }}"
