@@ -17,7 +17,54 @@ class ReservationInventoryService
     }
 
     /**
-     * Build needs raw_material_id => qtyNeed from reservation REGULAR items.
+     * Preview kekurangan stok untuk rule reservasi:
+     * available = stock_on_hand - reserved_stock - (min_stock * multiplier)
+     *
+     * @param array<int, float> $needs raw_material_id => qtyNeed
+     * @return array<int, array<string, mixed>>
+     */
+    public function previewInsufficientForReservation(array $needs): array
+    {
+        $rawIds = collect(array_keys($needs))->values();
+        if ($rawIds->isEmpty())
+            return [];
+
+        $materials = RawMaterial::whereIn('id', $rawIds)->get()->keyBy('id');
+
+        $mul = $this->multiplier();
+        $insufficient = [];
+
+        foreach ($needs as $rid => $qtyNeed) {
+            $m = $materials[$rid] ?? null;
+
+            $stockOnHand = (float) ($m?->stock_on_hand ?? 0);
+            $reservedStock = (float) ($m?->reserved_stock ?? 0);
+            $minStock = (float) ($m?->min_stock ?? 0);
+
+            $available = max(0, $stockOnHand - $reservedStock - ($minStock * $mul));
+
+            if ($available + 1e-9 < (float) $qtyNeed) {
+                $insufficient[] = [
+                    'raw_material_id' => (int) $rid,
+                    'name' => $m?->name ?? "Material#$rid",
+                    'unit' => $m?->unit ?? '',
+                    'need' => (float) $qtyNeed,
+                    'available' => $available,
+                    'stock' => $stockOnHand,
+                    'reserved' => $reservedStock,
+                    'min_effective' => $minStock * $mul,
+                ];
+            }
+        }
+
+        return $insufficient;
+    }
+
+    /**
+     * Build kebutuhan bahan baku dari reservation REGULAR items.
+     * Menggunakan relation Product->recipes (dan recipes->rawMaterial optional).
+     *
+     * @return array<int, float> raw_material_id => qtyNeed
      */
     public function buildNeedsFromReservation(Reservation $reservation): array
     {
@@ -49,7 +96,6 @@ class ReservationInventoryService
             if (!$p || !$p->is_active) {
                 throw new \RuntimeException("Produk tidak ditemukan / tidak aktif (ID {$it->item_id}).");
             }
-
             if ($p->recipes->count() === 0) {
                 throw new \RuntimeException("Produk '{$p->name}' belum punya resep.");
             }
@@ -66,12 +112,15 @@ class ReservationInventoryService
     }
 
     /**
-     * Validate stock with reservation buffer:
-     * available_for_reservation = stock_on_hand - reserved_stock - (min_stock * multiplier)
+     * Validasi stok + lockForUpdate material yang dibutuhkan.
+     * Rule reservasi:
+     * available = stock_on_hand - reserved_stock - (min_stock * multiplier)
      */
     public function lockAndValidateMaterialsForReservation(array $needs): Collection
     {
         $rawIds = collect(array_keys($needs))->values();
+        if ($rawIds->isEmpty())
+            return collect();
 
         $materials = RawMaterial::whereIn('id', $rawIds)
             ->lockForUpdate()
@@ -116,12 +165,16 @@ class ReservationInventoryService
     }
 
     /**
-     * DP paid => lock (increase raw_material.reserved_stock) + record per reservation locks.
+     * DP paid (CONFIRMED) => lock stok (increase raw_material.reserved_stock)
+     * + record per reservation locks.
+     *
+     * userId nullable (webhook) -> InventoryMovement.created_by bisa null
      */
     public function lockForReservation(Reservation $reservation, ?int $userId = null): void
     {
         if ($reservation->menu_type !== 'REGULAR')
             return;
+
         if ($reservation->status !== 'confirmed') {
             throw new \RuntimeException('Reservation harus status CONFIRMED untuk lock stok.');
         }
@@ -159,7 +212,7 @@ class ReservationInventoryService
                 'reference_type' => Reservation::class,
                 'reference_id' => $reservation->id,
                 'created_by' => $userId,
-                'note' => 'Lock for reservation ' . $reservation->code,
+                'note' => 'Reserve (lock) for reservation ' . $reservation->code,
             ]);
         }
 
@@ -170,8 +223,9 @@ class ReservationInventoryService
 
     /**
      * Cancel REGULAR => release all remaining lock back to reserved_stock pool.
+     * release = locked - released - consumed
      */
-    public function releaseReservationLocks(Reservation $reservation, int $userId): void
+    public function releaseReservationLocks(Reservation $reservation, ?int $userId = null): void
     {
         if ($reservation->menu_type !== 'REGULAR')
             return;
@@ -213,10 +267,11 @@ class ReservationInventoryService
     }
 
     /**
-     * Checkout => consume locked stock: stock_on_hand -= qty, reserved_stock -= qty
-     * (mirip commitPaid sale :contentReference[oaicite:3]{index=3})
+     * Checkout => consume locked stock:
+     * stock_on_hand -= qty, reserved_stock -= qty
+     * consume = locked - released - consumed
      */
-    public function consumeOnCheckout(Reservation $reservation, int $userId): void
+    public function consumeOnCheckout(Reservation $reservation, ?int $userId = null): void
     {
         if ($reservation->menu_type !== 'REGULAR')
             return;
@@ -263,7 +318,7 @@ class ReservationInventoryService
                 'reference_type' => Reservation::class,
                 'reference_id' => $reservation->id,
                 'created_by' => $userId,
-                'note' => 'Consume on reservation checkout ' . $reservation->code,
+                'note' => 'Commit/consume on reservation checkout ' . $reservation->code,
             ]);
         }
     }

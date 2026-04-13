@@ -113,5 +113,24 @@
         });
     }
 </script>
+<script>
+(async function poll() {
+  const currentStatus = "{{ $reservation->status }}";
+  if (currentStatus !== 'pending_dp') return;
+
+  async function tick() {
+    try {
+      const res = await fetch("{{ route('public.reservations.status', $reservation->code) }}");
+      const j = await res.json();
+      if (j.ok && j.status && j.status !== 'pending_dp') {
+        location.reload(); // atau update UI manual
+        return;
+      }
+    } catch (e) {}
+    setTimeout(tick, 4000);
+  }
+  tick();
+})();
+</script>
 
 </html>
