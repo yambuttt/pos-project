@@ -60,7 +60,6 @@ class CashierController extends Controller
             'name' => ['required', 'string', 'max:120'],
             'email' => ['required', 'email', 'max:190', 'unique:users,email,' . $user->id],
             'role' => ['required', 'in:admin,kasir,kitchen,pegawai'],
-            // password optional (boleh kosong)
             'password' => ['nullable', 'string', 'min:6', 'confirmed'],
         ]);
 

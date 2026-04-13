@@ -29,6 +29,8 @@ use App\Http\Controllers\Admin\AttendanceHistoryController;
 use App\Http\Controllers\Admin\AttendancePhotoController;
 use App\Http\Controllers\Pegawai\AttendanceHistoryController as PegawaiAttendanceHistoryController;
 use App\Http\Controllers\Pegawai\AttendancePhotoController as PegawaiAttendancePhotoController;
+use App\Http\Controllers\Admin\ReservationController;
+use App\Http\Controllers\Admin\ReservationResourceController;
 
 
 Route::get('/landingtrial', [PublicMenuController::class, 'landingTrial'])->name('public.landingtrial');
@@ -211,6 +213,23 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
 
     Route::post('/admin/overtime-requests/{req}/reject', [\App\Http\Controllers\Admin\OvertimeRequestAdminController::class, 'reject'])
         ->name('admin.overtime_requests.reject');
+
+    Route::get('/admin/reservation-resources', [ReservationResourceController::class, 'index'])->name('admin.reservation_resources.index');
+    Route::get('/admin/reservation-resources/create', [ReservationResourceController::class, 'create'])->name('admin.reservation_resources.create');
+    Route::post('/admin/reservation-resources', [ReservationResourceController::class, 'store'])->name('admin.reservation_resources.store');
+    Route::get('/admin/reservation-resources/{resource}/edit', [ReservationResourceController::class, 'edit'])->name('admin.reservation_resources.edit');
+    Route::put('/admin/reservation-resources/{resource}', [ReservationResourceController::class, 'update'])->name('admin.reservation_resources.update');
+    Route::delete('/admin/reservation-resources/{resource}', [ReservationResourceController::class, 'destroy'])->name('admin.reservation_resources.destroy');
+
+    Route::get('/admin/reservations', [ReservationController::class, 'index'])->name('admin.reservations.index');
+    Route::get('/admin/reservations/create', [ReservationController::class, 'create'])->name('admin.reservations.create');
+    Route::post('/admin/reservations', [ReservationController::class, 'store'])->name('admin.reservations.store');
+    Route::get('/admin/reservations/{reservation}', [ReservationController::class, 'show'])->name('admin.reservations.show');
+
+    Route::post('/admin/reservations/{reservation}/dp-paid', [ReservationController::class, 'markDpPaid'])->name('admin.reservations.dp_paid');
+    Route::post('/admin/reservations/{reservation}/check-in', [ReservationController::class, 'checkIn'])->name('admin.reservations.check_in');
+    Route::post('/admin/reservations/{reservation}/checkout', [ReservationController::class, 'checkout'])->name('admin.reservations.checkout');
+    Route::post('/admin/reservations/{reservation}/cancel', [ReservationController::class, 'cancel'])->name('admin.reservations.cancel');
 
     // Shortcut "Akun Saya" -> edit user yang sedang login
     Route::get('/admin/account', function () {
