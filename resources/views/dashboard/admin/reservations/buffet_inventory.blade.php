@@ -20,11 +20,13 @@
 
     @if(session('success'))
         <div class="mt-4 rounded-2xl border border-emerald-300/20 bg-emerald-500/10 px-4 py-3 text-sm">✅
-            {{ session('success') }}</div>
+            {{ session('success') }}
+        </div>
     @endif
     @if($errors->any())
         <div class="mt-4 rounded-2xl border border-red-300/20 bg-red-500/10 px-4 py-3 text-sm whitespace-pre-line">❌
-            {{ $errors->first() }}</div>
+            {{ $errors->first() }}
+        </div>
     @endif
 
     <div class="mt-5 grid grid-cols-1 gap-5 lg:grid-cols-[1fr_.95fr]">
@@ -58,6 +60,58 @@
                     </table>
                 </div>
             </div>
+
+            @if(!empty($needRows))
+                <div class="mb-6">
+                    <div class="font-semibold">Kebutuhan Bahan (Estimasi dari Paket + Recipe)</div>
+                    <div class="mt-3 overflow-hidden rounded-2xl border border-white/15">
+                        <div class="overflow-x-auto">
+                            <table class="w-full min-w-[950px] text-left text-sm">
+                                <thead class="bg-white/10 text-xs text-white/70">
+                                    <tr>
+                                        <th class="px-4 py-3">Bahan</th>
+                                        <th class="px-4 py-3">Unit</th>
+                                        <th class="px-4 py-3">Need</th>
+                                        <th class="px-4 py-3">In Buffet</th>
+                                        <th class="px-4 py-3">Remaining</th>
+                                        <th class="px-4 py-3">Main Stock</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-white/10">
+                                    @foreach($needRows as $n)
+                                        <tr class="hover:bg-white/5">
+                                            <td class="px-4 py-3 font-semibold">{{ $n['name'] }}</td>
+                                            <td class="px-4 py-3">{{ $n['unit'] }}</td>
+                                            <td class="px-4 py-3">
+                                                {{ rtrim(rtrim(number_format($n['need'], 2, '.', ''), '0'), '.') }}</td>
+                                            <td class="px-4 py-3">
+                                                {{ rtrim(rtrim(number_format($n['in_buffet'], 2, '.', ''), '0'), '.') }}
+                                            </td>
+
+                                            @if($n['remaining'] > 0)
+                                                <td class="px-4 py-3 font-semibold text-yellow-300">
+                                                    {{ rtrim(rtrim(number_format($n['remaining'], 2, '.', ''), '0'), '.') }}
+                                                </td>
+                                            @else
+                                                <td class="px-4 py-3 text-emerald-300 font-semibold">OK</td>
+                                            @endif
+
+                                            <td class="px-4 py-3">
+                                                {{ rtrim(rtrim(number_format($n['main_stock'], 2, '.', ''), '0'), '.') }}
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="mt-2 text-xs text-white/60">
+                        “Need” dihitung dari recipe produk di paket. “Remaining” = Need - stok buffet saat ini.
+                        Kamu bisa isi kekurangan lewat Belanja (Masuk Buffet) atau Transfer dari MAIN.
+                    </div>
+                </div>
+            @endif
 
             <div class="mt-6 font-semibold">Movements</div>
             <div class="mt-3 overflow-hidden rounded-2xl border border-white/15">
@@ -93,54 +147,6 @@
                 </div>
             </div>
         </div>
-        @if(!empty($needRows))
-            <div class="mb-6">
-                <div class="font-semibold">Kebutuhan Bahan (Estimasi dari Paket + Recipe)</div>
-                <div class="mt-3 overflow-hidden rounded-2xl border border-white/15">
-                    <div class="overflow-x-auto">
-                        <table class="w-full min-w-[950px] text-left text-sm">
-                            <thead class="bg-white/10 text-xs text-white/70">
-                                <tr>
-                                    <th class="px-4 py-3">Bahan</th>
-                                    <th class="px-4 py-3">Unit</th>
-                                    <th class="px-4 py-3">Need</th>
-                                    <th class="px-4 py-3">In Buffet</th>
-                                    <th class="px-4 py-3">Remaining</th>
-                                    <th class="px-4 py-3">Main Stock</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-white/10">
-                                @foreach($needRows as $n)
-                                    <tr class="hover:bg-white/5">
-                                        <td class="px-4 py-3 font-semibold">{{ $n['name'] }}</td>
-                                        <td class="px-4 py-3">{{ $n['unit'] }}</td>
-                                        <td class="px-4 py-3">{{ rtrim(rtrim(number_format($n['need'], 2, '.', ''), '0'), '.') }}</td>
-                                        <td class="px-4 py-3">{{ rtrim(rtrim(number_format($n['in_buffet'], 2, '.', ''), '0'), '.') }}
-                                        </td>
-
-                                        @if($n['remaining'] > 0)
-                                            <td class="px-4 py-3 font-semibold text-yellow-300">
-                                                {{ rtrim(rtrim(number_format($n['remaining'], 2, '.', ''), '0'), '.') }}
-                                            </td>
-                                        @else
-                                            <td class="px-4 py-3 text-emerald-300 font-semibold">OK</td>
-                                        @endif
-
-                                        <td class="px-4 py-3">{{ rtrim(rtrim(number_format($n['main_stock'], 2, '.', ''), '0'), '.') }}
-                                        </td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <div class="mt-2 text-xs text-white/60">
-                    “Need” dihitung dari recipe produk di paket. “Remaining” = Need - stok buffet saat ini.
-                    Kamu bisa isi kekurangan lewat Belanja (Masuk Buffet) atau Transfer dari MAIN.
-                </div>
-            </div>
-        @endif
 
         <div class="rounded-[26px] border border-white/20 bg-white/10 p-5 backdrop-blur-2xl sm:p-6 space-y-5">
             <div class="font-semibold">Aksi Buffet Inventory</div>
