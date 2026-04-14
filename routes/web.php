@@ -316,6 +316,8 @@ Route::prefix('kasir')->name('kasir.')->middleware(['auth', 'role:kasir'])->grou
         ->name('reservations.check_in');
     Route::post('/reservations/{reservation}/checkout', [\App\Http\Controllers\Kasir\ReservationController::class, 'checkout'])
         ->name('reservations.checkout');
+    Route::get('/reservations/{reservation}/status', [\App\Http\Controllers\Kasir\ReservationController::class, 'status'])
+        ->name('reservations.status');
 });
 
 

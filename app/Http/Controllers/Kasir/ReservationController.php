@@ -149,4 +149,15 @@ class ReservationController extends Controller
             return back()->with('success', 'QRIS Midtrans dibuat. Silakan scan QR untuk pelunasan.');
         });
     }
+
+    public function status(\App\Models\Reservation $reservation)
+    {
+        // minimal data yang dibutuhkan untuk polling
+        return response()->json([
+            'status' => $reservation->status,
+            'paid_amount' => (int) $reservation->paid_amount,
+            'grand_total' => (int) $reservation->grand_total,
+            'midtrans_transaction_status' => $reservation->midtrans_transaction_status,
+        ]);
+    }
 }
