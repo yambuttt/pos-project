@@ -35,11 +35,16 @@ use App\Http\Controllers\PublicReservationController;
 use App\Http\Controllers\PublicReservationPaymentController;
 
 
-
+Route::get('/reservasi/products', [\App\Http\Controllers\PublicReservationController::class, 'products'])
+  ->name('public.reservations.products');
 Route::post('/reservasi/{reservation:code}/pay-dp', [PublicReservationPaymentController::class, 'payDp'])
     ->name('public.reservations.pay_dp');
 Route::get('/reservasi/{reservation:code}/status', [PublicReservationPaymentController::class, 'status'])
     ->name('public.reservations.status');
+Route::get('/reservasi/availability', [\App\Http\Controllers\PublicReservationController::class, 'availability'])
+    ->name('public.reservations.availability');
+Route::get('/reservasi/availability-range', [\App\Http\Controllers\PublicReservationController::class, 'availabilityRange'])
+    ->name('public.reservations.availability_range');
 Route::get('/reservasi', [PublicReservationController::class, 'create'])->name('public.reservations.create');
 Route::post('/reservasi', [PublicReservationController::class, 'store'])->name('public.reservations.store');
 Route::get('/reservasi/{reservation:code}', [PublicReservationController::class, 'show'])->name('public.reservations.show');
