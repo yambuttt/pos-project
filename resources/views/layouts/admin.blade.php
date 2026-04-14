@@ -97,6 +97,10 @@
                     $isInvMovements = request()->routeIs('admin.inventory-movements.*');
                     $isTables = request()->routeIs('admin.tables.*');
                     $isInventory = $isRawMaterials || $isPurchases || $isWastes || $isOpnames || $isInvMovements || $isTables || $isAttendanceQr || $isAttendanceDevices;
+
+                    $isReservations = request()->routeIs('admin.reservations.*');
+                    $isReservationResources = request()->routeIs('admin.reservation_resources.*');
+                    $isReservationsGroup = $isReservations || $isReservationResources;
                 @endphp
 
                 <!-- DESKTOP SIDEBAR -->
@@ -260,6 +264,59 @@
                                 </svg>
                                 <span class="sidebar-label hidden text-sm font-medium">Transaksi</span>
                             </a>
+
+
+                            {{-- RESERVASI (Desktop) --}}
+                            <div class="mt-2">
+                                <button type="button" id="resvToggleDesktop"
+                                    class="relative flex w-full items-center gap-3 rounded-xl px-3 py-3 transition
+    {{ $isReservationsGroup ? 'bg-yellow-500/12 border border-yellow-500/30' : 'border gold-border bg-white/[0.02] hover:bg-white/[0.05]' }}">
+                                    @if ($isReservationsGroup)
+                                        <span
+                                            class="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r bg-yellow-500"></span>
+                                    @endif
+
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-500" fill="none"
+                                        viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            d="M8 7V6a2 2 0 012-2h4a2 2 0 012 2v1M5 9h14M6 9v10a2 2 0 002 2h8a2 2 0 002-2V9" />
+                                    </svg>
+
+                                    <span
+                                        class="sidebar-label hidden flex-1 text-left text-sm font-medium text-white/90">Reservasi</span>
+
+                                    <svg id="resvChevronDesktop" xmlns="http://www.w3.org/2000/svg"
+                                        class="sidebar-label hidden h-4 w-4 text-white/70 transition" fill="none"
+                                        viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+                                    </svg>
+                                </button>
+
+                                <div id="resvMenuDesktop"
+                                    class="mt-2 space-y-2 pl-2 {{ $isReservationsGroup ? '' : 'hidden' }}">
+                                    <a href="{{ route('admin.reservations.index') }}"
+                                        class="relative flex items-center gap-3 rounded-xl px-3 py-2.5 transition
+      {{ $isReservations ? 'bg-yellow-500/10 border border-yellow-500/25' : 'border gold-border bg-white/[0.02] hover:bg-white/[0.05]' }}">
+                                        @if ($isReservations)
+                                            <span
+                                                class="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r bg-yellow-500"></span>
+                                        @endif
+                                        <span class="sidebar-label hidden text-sm font-medium text-white/90">Daftar
+                                            Reservasi</span>
+                                    </a>
+
+                                    <a href="{{ route('admin.reservation_resources.index') }}"
+                                        class="relative flex items-center gap-3 rounded-xl px-3 py-2.5 transition
+      {{ $isReservationResources ? 'bg-yellow-500/10 border border-yellow-500/25' : 'border gold-border bg-white/[0.02] hover:bg-white/[0.05]' }}">
+                                        @if ($isReservationResources)
+                                            <span
+                                                class="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r bg-yellow-500"></span>
+                                        @endif
+                                        <span class="sidebar-label hidden text-sm font-medium text-white/90">Resource
+                                            Reservasi</span>
+                                    </a>
+                                </div>
+                            </div>
 
 
                             <div class="mt-2">
@@ -520,6 +577,22 @@
                         </a>
 
 
+                        {{-- RESERVASI (Mobile) --}}
+                        <div class="rounded-xl border gold-border bg-white/[0.02] p-2">
+                            <div class="px-2 py-2 text-sm font-semibold text-white/90">Reservasi</div>
+
+                            <a href="{{ route('admin.reservations.index') }}"
+                                class="mt-1 block rounded-xl px-3 py-2 {{ $isReservations ? 'bg-yellow-500/12' : 'hover:bg-white/[0.05]' }}">
+                                Daftar Reservasi
+                            </a>
+
+                            <a href="{{ route('admin.reservation_resources.index') }}"
+                                class="mt-1 block rounded-xl px-3 py-2 {{ $isReservationResources ? 'bg-yellow-500/12' : 'hover:bg-white/[0.05]' }}">
+                                Resource Reservasi
+                            </a>
+                        </div>
+
+
 
                         <div class="rounded-xl border gold-border bg-white/[0.02] p-2">
                             <div class="px-2 py-2 text-sm font-semibold text-white/90">User</div>
@@ -719,6 +792,23 @@
                 }
             }
         })();
+    </script>
+    <script>
+        const resvToggle = document.getElementById('resvToggleDesktop');
+        const resvMenu = document.getElementById('resvMenuDesktop');
+        const resvChevron = document.getElementById('resvChevronDesktop');
+
+        if (resvToggle && resvMenu && resvChevron) {
+            resvToggle.addEventListener('click', () => {
+                const isHidden = resvMenu.classList.contains('hidden');
+                resvMenu.classList.toggle('hidden');
+                resvChevron.classList.toggle('rotate-90', isHidden);
+            });
+
+            if (!resvMenu.classList.contains('hidden')) {
+                resvChevron.classList.add('rotate-90');
+            }
+        }
     </script>
 </body>
 

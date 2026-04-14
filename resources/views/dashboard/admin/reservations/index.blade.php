@@ -1,72 +1,105 @@
-@extends('dashboard.admin._reservation_layout')
-
+@extends('layouts.admin')
 @section('title', 'Reservasi')
-@section('page_title', 'Reservasi')
-@section('page_subtitle', 'Buat, DP, check-in, checkout, cancel')
 
-@section('content')
-<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
-    <form class="flex flex-wrap gap-2" method="GET">
-        <input name="q" value="{{ $q ?? '' }}" placeholder="Cari kode/nama/HP..."
-               class="px-3 py-2 border rounded w-72" />
-        <select name="status" class="px-3 py-2 border rounded">
-            <option value="">Semua status</option>
-            @foreach (['draft','pending_dp','confirmed','checked_in','completed','cancelled','no_show'] as $st)
-                <option value="{{ $st }}" @selected(($status ?? '')===$st)>{{ $st }}</option>
-            @endforeach
-        </select>
-        <button class="px-3 py-2 rounded bg-gray-900 text-white">Filter</button>
-    </form>
+@section('body')
+  <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+    <div class="flex items-center gap-3">
+      <button id="openMobileSidebar" type="button"
+        class="inline-flex items-center justify-center rounded-xl border border-white/20 bg-white/10 px-3 py-2 text-sm backdrop-blur-xl hover:bg-white/15 lg:hidden">☰</button>
+      <div>
+        <h1 class="text-xl font-semibold">Reservasi</h1>
+        <p class="text-sm text-white/70">Kelola reservasi: DP, check-in, checkout, cancel.</p>
+      </div>
+    </div>
 
     <a href="{{ route('admin.reservations.create') }}"
-       class="px-3 py-2 rounded bg-blue-600 text-white hover:bg-blue-700">
-        + Buat Reservasi
+      class="rounded-xl bg-blue-600/85 px-4 py-2 text-sm font-semibold hover:bg-blue-500/85">
+      + Buat Reservasi
     </a>
-</div>
+  </div>
 
-<div class="overflow-x-auto">
-<table class="w-full text-sm">
-    <thead>
-        <tr class="border-b bg-gray-50 text-left">
-            <th class="p-2">Kode</th>
-            <th class="p-2">Customer</th>
-            <th class="p-2">Resource</th>
-            <th class="p-2">Waktu</th>
-            <th class="p-2">Menu</th>
-            <th class="p-2">Total</th>
-            <th class="p-2">DP</th>
-            <th class="p-2">Status</th>
-            <th class="p-2"></th>
-        </tr>
-    </thead>
-    <tbody>
-        @forelse ($rows as $r)
-            <tr class="border-b">
-                <td class="p-2 font-medium">{{ $r->code }}</td>
-                <td class="p-2">
-                    <div>{{ $r->customer_name }}</div>
-                    <div class="text-xs text-gray-600">{{ $r->customer_phone }}</div>
-                </td>
-                <td class="p-2">{{ $r->resource?->name }}</td>
-                <td class="p-2">
-                    <div>{{ $r->start_at->format('d M Y H:i') }}</div>
-                    <div class="text-xs text-gray-600">{{ $r->end_at->format('d M Y H:i') }}</div>
-                </td>
-                <td class="p-2">{{ $r->menu_type }}</td>
-                <td class="p-2">{{ number_format($r->grand_total) }}</td>
-                <td class="p-2">{{ number_format($r->dp_amount) }}</td>
-                <td class="p-2">{{ $r->status }}</td>
-                <td class="p-2 text-right">
-                    <a class="px-2 py-1 border rounded hover:bg-gray-50"
-                       href="{{ route('admin.reservations.show', $r) }}">Detail</a>
-                </td>
+  @if(session('success'))
+    <div class="mt-4 rounded-2xl border border-emerald-300/20 bg-emerald-500/10 px-4 py-3 text-sm">
+      ✅ {{ session('success') }}
+    </div>
+  @endif
+
+  @if($errors->any())
+    <div class="mt-4 rounded-2xl border border-red-300/20 bg-red-500/10 px-4 py-3 text-sm whitespace-pre-line">
+      ❌ {{ $errors->first() }}
+    </div>
+  @endif
+
+  <div class="mt-5 rounded-[26px] border border-white/20 bg-white/10 p-5 backdrop-blur-2xl sm:p-6">
+    <form method="GET" class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+      <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
+        <input name="q" value="{{ $q ?? '' }}" placeholder="Cari kode / nama / HP..."
+          class="w-full sm:w-[320px] rounded-xl border border-white/20 bg-white/10 px-4 py-2.5 text-sm outline-none placeholder:text-white/40 focus:border-white/40" />
+
+        <select name="status"
+          class="w-full sm:w-[200px] rounded-xl border border-white/20 bg-white/10 px-3 py-2.5 text-sm outline-none focus:border-white/40">
+          <option value="">Semua status</option>
+          @foreach (['draft','pending_dp','confirmed','checked_in','completed','cancelled','no_show'] as $st)
+            <option value="{{ $st }}" @selected(($status ?? '')===$st)>{{ $st }}</option>
+          @endforeach
+        </select>
+
+        <button class="rounded-xl bg-white/15 px-4 py-2.5 text-sm font-semibold hover:bg-white/20">
+          Filter
+        </button>
+      </div>
+    </form>
+
+    <div class="mt-4 overflow-hidden rounded-2xl border border-white/15">
+      <div class="overflow-x-auto">
+        <table class="w-full min-w-[1100px] text-left text-sm">
+          <thead class="bg-white/10 text-xs text-white/70">
+            <tr>
+              <th class="px-4 py-3">Kode</th>
+              <th class="px-4 py-3">Customer</th>
+              <th class="px-4 py-3">Resource</th>
+              <th class="px-4 py-3">Waktu</th>
+              <th class="px-4 py-3">Menu</th>
+              <th class="px-4 py-3">Total</th>
+              <th class="px-4 py-3">DP</th>
+              <th class="px-4 py-3">Status</th>
+              <th class="px-4 py-3"></th>
             </tr>
-        @empty
-            <tr><td class="p-4 text-gray-600" colspan="9">Belum ada reservasi.</td></tr>
-        @endforelse
-    </tbody>
-</table>
-</div>
+          </thead>
+          <tbody class="divide-y divide-white/10">
+            @forelse ($rows as $r)
+              <tr class="hover:bg-white/5">
+                <td class="px-4 py-3 font-semibold">{{ $r->code }}</td>
+                <td class="px-4 py-3">
+                  <div class="font-semibold">{{ $r->customer_name }}</div>
+                  <div class="text-xs text-white/60">{{ $r->customer_phone }}</div>
+                </td>
+                <td class="px-4 py-3 text-white/80">{{ $r->resource?->name }}</td>
+                <td class="px-4 py-3 text-white/80">
+                  <div>{{ $r->start_at->format('d M Y H:i') }}</div>
+                  <div class="text-xs text-white/60">{{ $r->end_at->format('d M Y H:i') }}</div>
+                </td>
+                <td class="px-4 py-3">{{ $r->menu_type }}</td>
+                <td class="px-4 py-3 font-semibold">Rp {{ number_format($r->grand_total,0,',','.') }}</td>
+                <td class="px-4 py-3">Rp {{ number_format($r->dp_amount,0,',','.') }}</td>
+                <td class="px-4 py-3">{{ $r->status }}</td>
+                <td class="px-4 py-3 text-right">
+                  <a href="{{ route('admin.reservations.show', $r) }}"
+                    class="rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-xs font-semibold hover:bg-white/10">
+                    Detail
+                  </a>
+                </td>
+              </tr>
+            @empty
+              <tr>
+                <td colspan="9" class="px-4 py-8 text-center text-white/60">Belum ada reservasi.</td>
+              </tr>
+            @endforelse
+          </tbody>
+        </table>
+      </div>
+    </div>
 
-<div class="mt-4">{{ $rows->links() }}</div>
+    <div class="mt-4">{{ $rows->links() }}</div>
+  </div>
 @endsection
