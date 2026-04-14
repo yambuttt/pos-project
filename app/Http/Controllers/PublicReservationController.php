@@ -39,12 +39,11 @@ class PublicReservationController extends Controller
             'menu_type' => ['required', 'in:REGULAR,BUFFET'],
 
             // REGULAR
-            'items' => ['nullable', 'array'],
-            'items.*.product_id' => ['required_with:items', 'integer', 'exists:products,id'],
-            'items.*.qty' => ['required_with:items', 'integer', 'min:1'],
+            'items' => ['exclude_unless:menu_type,REGULAR', 'array', 'min:1'],
+            'items.*.product_id' => ['exclude_unless:menu_type,REGULAR', 'required', 'integer', 'exists:products,id'],
+            'items.*.qty' => ['exclude_unless:menu_type,REGULAR', 'required', 'integer', 'min:1'],
 
-            // BUFFET package
-            'buffet_package_id' => ['nullable', 'integer', 'exists:buffet_packages,id'],
+            'buffet_package_id' => ['exclude_unless:menu_type,BUFFET', 'required', 'integer', 'exists:buffet_packages,id'],
 
             'notes' => ['nullable', 'string'],
         ]);

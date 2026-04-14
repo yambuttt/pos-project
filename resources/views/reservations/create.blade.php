@@ -187,9 +187,26 @@
 
         function syncMenuType() {
             const mt = document.getElementById('menuType').value;
-            document.getElementById('regularWrap').classList.toggle('hidden', mt !== 'REGULAR');
-            document.getElementById('buffetWrap').classList.toggle('hidden', mt !== 'BUFFET');
+
+            const regularWrap = document.getElementById('regularWrap');
+            const buffetWrap = document.getElementById('buffetWrap');
+
+            // show/hide
+            regularWrap.classList.toggle('hidden', mt !== 'REGULAR');
+            buffetWrap.classList.toggle('hidden', mt !== 'BUFFET');
+
+            // IMPORTANT: disable inputs supaya tidak ikut terkirim
+            regularWrap.querySelectorAll('select, input, textarea, button').forEach(el => {
+                // tombol tambah/hapus juga ikut disable biar konsisten
+                if (el.type === 'button') el.disabled = (mt !== 'REGULAR');
+                else el.disabled = (mt !== 'REGULAR');
+            });
+
+            buffetWrap.querySelectorAll('select, input, textarea').forEach(el => {
+                el.disabled = (mt !== 'BUFFET');
+            });
         }
+
         document.getElementById('menuType').addEventListener('change', syncMenuType);
         syncMenuType();
     </script>
