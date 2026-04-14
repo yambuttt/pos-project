@@ -31,6 +31,13 @@
 
   @php
     $remaining = max(0, (int)$reservation->grand_total - (int)$reservation->paid_amount);
+
+    $finalQrUrl = null;
+    if (is_array($reservation->midtrans_response ?? null)) {
+      $actions = collect($reservation->midtrans_response['actions'] ?? []);
+      $finalQrUrl = optional($actions->firstWhere('name','generate-qr-code'))['url'] ?? null;
+    }
+    $isFinalOrder = is_string($reservation->midtrans_order_id ?? null) && str_starts_with($reservation->midtrans_order_id, 'RSV-FINAL-');
   @endphp
 
   <div class="mt-5 grid grid-cols-1 gap-5 lg:grid-cols-[1fr_.9fr]">
@@ -118,6 +125,20 @@
         </div>
       </div>
 
+      {{-- QR FINAL kalau sudah dibuat --}}
+      @if($isFinalOrder && $finalQrUrl && in_array($reservation->midtrans_transaction_status, ['pending','authorize',''], true))
+        <div class="mt-5 rounded-2xl border border-white/15 bg-white/5 p-4 text-sm">
+          <div class="font-semibold">QRIS Pelunasan (Midtrans)</div>
+          <div class="mt-2">
+            <a href="{{ $finalQrUrl }}" target="_blank" class="underline">Buka QR / Scan QR</a>
+          </div>
+          <div class="mt-1 text-xs text-white/60">
+            Status: {{ $reservation->midtrans_transaction_status ?? '-' }}
+            • Exp: {{ optional($reservation->payment_expires_at)?->format('d M Y H:i') ?? '-' }}
+          </div>
+        </div>
+      @endif
+
       <div class="mt-5 rounded-2xl border border-white/15 bg-white/5 p-4">
         <div class="font-semibold">Pembayaran</div>
         <div class="mt-3 space-y-2 text-sm">
@@ -185,7 +206,7 @@
                 <div class="text-xs text-white/60">Metode</div>
                 <select name="method" class="mt-2 w-full rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm outline-none">
                   <option value="CASH">CASH</option>
-                  <option value="QRIS">QRIS</option>
+                  <option value="QRIS">QRIS (Midtrans)</option>
                 </select>
               </div>
               <div>
@@ -199,8 +220,11 @@
                   class="mt-2 w-full rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm outline-none">
               </div>
               <button class="w-full rounded-xl bg-white/15 px-5 py-3 text-sm font-semibold hover:bg-white/20">
-                Checkout & Selesaikan
+                Buat Pembayaran (CASH / QRIS)
               </button>
+              <div class="text-xs text-white/60">
+                Jika pilih QRIS, reservasi selesai setelah webhook settlement Midtrans.
+              </div>
             </div>
           </form>
         @endif

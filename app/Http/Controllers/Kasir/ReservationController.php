@@ -55,15 +55,19 @@ class ReservationController extends Controller
         return back()->with('success', 'Check-in berhasil.');
     }
 
-    public function checkout(Reservation $reservation, Request $request, ReservationInventoryService $inv)
-    {
+    public function checkout(
+        Reservation $reservation,
+        Request $request,
+        ReservationInventoryService $inv,
+        \App\Services\MidtransService $midtrans
+    ) {
         $data = $request->validate([
             'method' => ['required', 'in:CASH,QRIS'],
             'amount' => ['required', 'integer', 'min:1'],
             'reference' => ['nullable', 'string', 'max:120'],
         ]);
 
-        return DB::transaction(function () use ($reservation, $data, $inv) {
+        return DB::transaction(function () use ($reservation, $data, $inv, $midtrans) {
             if ($reservation->status !== 'checked_in') {
                 throw new \RuntimeException('Hanya reservasi CHECKED_IN yang bisa checkout.');
             }
@@ -73,34 +77,76 @@ class ReservationController extends Controller
                 throw new \RuntimeException('Tagihan sudah lunas.');
             }
 
-            // Biar sama seperti kasir kamu sekarang yang “strict” (bayar pas)
             if ((int) $data['amount'] !== $remaining) {
                 throw new \RuntimeException("Jumlah pembayaran harus tepat Rp {$remaining}.");
             }
 
-            ReservationPayment::create([
-                'reservation_id' => $reservation->id,
-                'type' => 'FINAL',
-                'amount' => (int) $data['amount'],
-                'method' => $data['method'],
-                'status' => 'paid',
-                'reference' => $data['reference'] ?? null,
-                'paid_at' => now(),
-            ]);
+            // ======================
+            // CASH = langsung paid + complete (seperti sekarang)
+            // ======================
+            if ($data['method'] === 'CASH') {
+                ReservationPayment::create([
+                    'reservation_id' => $reservation->id,
+                    'type' => 'FINAL',
+                    'amount' => (int) $data['amount'],
+                    'method' => 'CASH',
+                    'status' => 'paid',
+                    'reference' => $data['reference'] ?? null,
+                    'paid_at' => now(),
+                ]);
+
+                $reservation->update([
+                    'paid_amount' => (int) $reservation->paid_amount + (int) $data['amount'],
+                ]);
+
+                $inv->consumeOnCheckout($reservation->fresh(), Auth::id());
+
+                $reservation->update([
+                    'status' => 'completed',
+                    'checked_out_at' => now(),
+                ]);
+
+                return back()->with('success', 'Checkout CASH selesai. Reservasi COMPLETED.');
+            }
+
+            // ======================
+            // QRIS = Midtrans (buat charge, tunggu webhook settlement)
+            // ======================
+            $orderId = 'RSV-FINAL-' . $reservation->code;
+
+            // idempotent: kalau sudah ada payment FINAL pending untuk order ini, jangan buat lagi
+            $alreadyPending = ReservationPayment::where('reservation_id', $reservation->id)
+                ->where('type', 'FINAL')
+                ->where('status', 'pending')
+                ->where('reference', $orderId)
+                ->exists();
+
+            if (!$alreadyPending) {
+                ReservationPayment::create([
+                    'reservation_id' => $reservation->id,
+                    'type' => 'FINAL',
+                    'amount' => (int) $remaining,
+                    'method' => 'MIDTRANS_QRIS',
+                    'status' => 'pending',
+                    'reference' => $orderId, // simpan order_id agar gampang dicari
+                    'paid_at' => null,
+                ]);
+            }
+
+            $charge = $midtrans->chargeCustom($orderId, (int) $remaining, 'qris'); // :contentReference[oaicite:8]{index=8}
+            $instruction = $midtrans->extractInstruction($charge); // :contentReference[oaicite:9]{index=9}
 
             $reservation->update([
-                'paid_amount' => (int) $reservation->paid_amount + (int) $data['amount'],
+                'midtrans_order_id' => $orderId,
+                'midtrans_transaction_id' => $charge['transaction_id'] ?? $reservation->midtrans_transaction_id,
+                'midtrans_transaction_status' => $charge['transaction_status'] ?? $reservation->midtrans_transaction_status,
+                'midtrans_payment_type' => $charge['payment_type'] ?? $reservation->midtrans_payment_type,
+                'midtrans_response' => $charge,
+                'payment_expires_at' => $instruction['expires_at'] ?? $reservation->payment_expires_at,
             ]);
 
-            // REGULAR: consume bahan yang sebelumnya di-lock
-            $inv->consumeOnCheckout($reservation->fresh(), Auth::id());
-
-            $reservation->update([
-                'status' => 'completed',
-                'checked_out_at' => now(),
-            ]);
-
-            return back()->with('success', 'Checkout selesai. Reservasi COMPLETED.');
+            // jangan consume stok & jangan completed di sini
+            return back()->with('success', 'QRIS Midtrans dibuat. Silakan scan QR untuk pelunasan.');
         });
     }
 }

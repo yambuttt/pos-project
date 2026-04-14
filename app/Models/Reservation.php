@@ -27,6 +27,13 @@ class Reservation extends Model
         'checked_out_at',
         'notes',
         'created_by',
+        // tambahkan di $fillable
+        'midtrans_order_id',
+        'midtrans_transaction_id',
+        'midtrans_transaction_status',
+        'midtrans_payment_type',
+        'midtrans_response',
+        'payment_expires_at',
     ];
 
     protected $casts = [

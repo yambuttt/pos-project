@@ -24,6 +24,16 @@
     </div>
   @endif
 
+  @php
+    // Ambil QR URL dari midtrans_response (sesuai pola MidtransService::extractInstruction)
+    $finalQrUrl = null;
+    if (is_array($reservation->midtrans_response ?? null)) {
+      $actions = collect($reservation->midtrans_response['actions'] ?? []);
+      $finalQrUrl = optional($actions->firstWhere('name','generate-qr-code'))['url'] ?? null;
+    }
+    $isFinalOrder = is_string($reservation->midtrans_order_id ?? null) && str_starts_with($reservation->midtrans_order_id, 'RSV-FINAL-');
+  @endphp
+
   <div class="mt-5 grid grid-cols-1 gap-5 lg:grid-cols-[1fr_.9fr]">
     <div class="rounded-3xl border border-white/10 bg-white/5 p-5">
       <div class="grid grid-cols-2 gap-4 text-sm sm:grid-cols-3">
@@ -71,6 +81,22 @@
     <div class="rounded-3xl border border-white/10 bg-white/5 p-5">
       <div class="text-sm font-semibold">Aksi</div>
 
+      {{-- Tampilkan QR FINAL kalau sudah dibuat --}}
+      @if($isFinalOrder && $finalQrUrl && in_array($reservation->midtrans_transaction_status, ['pending','authorize',''], true))
+        <div class="mt-4 rounded-xl border border-white/10 bg-white/5 p-4 text-sm">
+          <div class="font-semibold">QRIS Pelunasan (Midtrans)</div>
+          <div class="mt-2">
+            <a href="{{ $finalQrUrl }}" target="_blank" class="underline">
+              Buka QR / Scan QR
+            </a>
+          </div>
+          <div class="mt-1 text-xs text-white/60">
+            Status: {{ $reservation->midtrans_transaction_status ?? '-' }}
+            • Exp: {{ optional($reservation->payment_expires_at)?->format('d M Y H:i') ?? '-' }}
+          </div>
+        </div>
+      @endif
+
       @if($reservation->status === 'confirmed')
         <form method="POST" action="{{ route('kasir.reservations.check_in', $reservation) }}" class="mt-4">
           @csrf
@@ -89,7 +115,7 @@
             <select name="method"
               class="mt-2 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm outline-none">
               <option value="CASH">CASH</option>
-              <option value="QRIS">QRIS</option>
+              <option value="QRIS">QRIS (Midtrans)</option>
             </select>
           </div>
 
@@ -103,18 +129,22 @@
             <div class="text-xs text-white/60">Reference (opsional)</div>
             <input name="reference"
               class="mt-2 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm outline-none placeholder:text-white/30"
-              placeholder="contoh: nomor referensi QRIS">
+              placeholder="opsional (tidak dipakai untuk Midtrans)">
           </div>
 
           <button class="w-full rounded-xl bg-emerald-500/90 px-5 py-3 text-sm font-semibold text-black hover:bg-emerald-400/90">
-            Checkout & Selesaikan
+            Buat Pembayaran (CASH / QRIS)
           </button>
         </form>
+
+        <div class="mt-3 text-xs text-white/60">
+          Jika pilih QRIS, sistem akan membuat QR Midtrans. Reservasi baru selesai setelah webhook settlement.
+        </div>
       @endif
 
       @if($reservation->menu_type === 'REGULAR')
         <div class="mt-6 text-xs text-white/60">
-          Catatan: Saat checkout, sistem akan consume bahan yang sudah di-lock untuk reservasi REGULAR.
+          Catatan: Saat settlement FINAL, sistem akan consume bahan yang sudah di-lock untuk reservasi REGULAR.
         </div>
       @endif
     </div>
