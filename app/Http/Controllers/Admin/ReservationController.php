@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\BuffetPackage;
 use App\Models\Reservation;
 use App\Models\ReservationItem;
 use App\Models\ReservationPayment;
@@ -40,7 +41,11 @@ class ReservationController extends Controller
         $resources = ReservationResource::where('is_active', true)->orderBy('type')->orderBy('name')->get();
         $products = Product::where('is_active', true)->orderBy('name')->get(['id', 'name', 'price']);
 
-        return view('dashboard.admin.reservations.create', compact('resources', 'products'));
+        $buffetPackages = BuffetPackage::where('is_active', true)
+            ->orderBy('name')
+            ->get(['id', 'name', 'pricing_type', 'price', 'min_pax']);
+
+        return view('dashboard.admin.reservations.create', compact('resources', 'products', 'buffetPackages'));
     }
 
     public function store(Request $request, ReservationInventoryService $inv)
@@ -59,6 +64,9 @@ class ReservationController extends Controller
             'items.*.product_id' => ['required_with:items', 'integer', 'exists:products,id'],
             'items.*.qty' => ['required_with:items', 'integer', 'min:1'],
 
+            // BUFFET
+            'buffet_package_id' => ['nullable', 'integer', 'exists:buffet_packages,id'],
+
             'rental_total' => ['nullable', 'integer', 'min:0'],
             'notes' => ['nullable', 'string'],
         ]);
@@ -70,7 +78,7 @@ class ReservationController extends Controller
         return DB::transaction(function () use ($data, $code, $dpRatio) {
 
             // ============================================================
-            // (5) CEK BENTROK JADWAL RESOURCE + BUFFER
+            // CEK BENTROK JADWAL RESOURCE + BUFFER
             // ============================================================
             $start = \Carbon\Carbon::parse($data['start_at']);
             $end = \Carbon\Carbon::parse($data['end_at']);
@@ -81,15 +89,13 @@ class ReservationController extends Controller
 
             $buffer = (int) ($resource->buffer_minutes ?? 0);
 
-            // kalau ada buffer, kita longgarkan window check
             $startWithBuffer = $start->copy()->subMinutes($buffer);
             $endWithBuffer = $end->copy()->addMinutes($buffer);
 
             $conflict = \App\Models\Reservation::query()
                 ->where('reservation_resource_id', $resource->id)
-                ->whereIn('status', ['pending_dp', 'confirmed', 'checked_in']) // yang dianggap "aktif"
+                ->whereIn('status', ['pending_dp', 'confirmed', 'checked_in'])
                 ->where(function ($q) use ($startWithBuffer, $endWithBuffer) {
-                    // overlap rule: start < existing_end AND end > existing_start
                     $q->where('start_at', '<', $endWithBuffer)
                         ->where('end_at', '>', $startWithBuffer);
                 })
@@ -120,8 +126,6 @@ class ReservationController extends Controller
 
             if ($reservation->menu_type === 'REGULAR') {
                 $items = $data['items'] ?? [];
-
-                // buang baris item kosong (product_id kosong)
                 $items = array_values(array_filter($items, fn($it) => !empty($it['product_id'])));
 
                 if (count($items) === 0) {
@@ -133,12 +137,10 @@ class ReservationController extends Controller
 
                 foreach ($items as $it) {
                     $p = $products[$it['product_id']] ?? null;
-                    if (!$p) {
+                    if (!$p)
                         throw new \RuntimeException("Produk tidak ditemukan (ID {$it['product_id']}).");
-                    }
-                    if (!$p->is_active) {
+                    if (!$p->is_active)
                         throw new \RuntimeException("Produk '{$p->name}' sedang nonaktif.");
-                    }
 
                     $qty = (int) $it['qty'];
                     $unit = (int) $p->price;
@@ -153,6 +155,59 @@ class ReservationController extends Controller
                         'unit_price' => $unit,
                         'qty' => $qty,
                         'subtotal' => $sub,
+                    ]);
+                }
+            } else {
+                // BUFFET => wajib pilih paket
+                if (empty($data['buffet_package_id'])) {
+                    throw new \RuntimeException('Pilih paket buffet.');
+                }
+
+                $pkg = BuffetPackage::with('items.product')->lockForUpdate()->findOrFail((int) $data['buffet_package_id']);
+                $pax = (int) ($reservation->pax ?? 0);
+
+                if ($pkg->min_pax && $pax < (int) $pkg->min_pax) {
+                    throw new \RuntimeException("Paket '{$pkg->name}' minimal pax {$pkg->min_pax}.");
+                }
+
+                if ($pkg->pricing_type === 'per_pax') {
+                    if ($pax <= 0)
+                        throw new \RuntimeException("Paket '{$pkg->name}' butuh pax.");
+                    $menuTotal = (int) $pkg->price * $pax;
+                    $pkgQty = $pax;
+                } else {
+                    $menuTotal = (int) $pkg->price;
+                    $pkgQty = 1;
+                }
+
+                ReservationItem::create([
+                    'reservation_id' => $reservation->id,
+                    'item_type' => 'BUFFET_PACKAGE',
+                    'item_id' => $pkg->id,
+                    'snapshot_name' => $pkg->name,
+                    'unit_price' => (int) $pkg->price,
+                    'qty' => $pkgQty,
+                    'subtotal' => $menuTotal,
+                    'meta' => [
+                        'pricing_type' => $pkg->pricing_type,
+                        'min_pax' => $pkg->min_pax,
+                        'pax' => $pax ?: null,
+                    ],
+                ]);
+
+                foreach ($pkg->items as $it) {
+                    ReservationItem::create([
+                        'reservation_id' => $reservation->id,
+                        'item_type' => 'BUFFET_ITEM',
+                        'item_id' => $it->product_id,
+                        'snapshot_name' => $it->product?->name ?? 'Item Paket',
+                        'unit_price' => 0,
+                        'qty' => (int) $it->qty,
+                        'subtotal' => 0,
+                        'meta' => [
+                            'included' => true,
+                            'note' => $it->note,
+                        ],
                     ]);
                 }
             }
@@ -179,10 +234,6 @@ class ReservationController extends Controller
         return view('dashboard.admin.reservations.show', compact('reservation'));
     }
 
-    /**
-     * Mark DP paid (manual dulu). Nanti bisa dihubungkan Midtrans DP.
-     * Jika REGULAR => auto lock stok (min*2 rule).
-     */
     public function markDpPaid(Reservation $reservation, Request $request, ReservationInventoryService $inv)
     {
         $data = $request->validate([
@@ -212,7 +263,6 @@ class ReservationController extends Controller
                 'paid_at' => now(),
             ]);
 
-            // lock stok kalau REGULAR
             $inv->lockForReservation($reservation->fresh(), Auth::id());
 
             return back()->with('success', 'DP berhasil dicatat, reservasi CONFIRMED.');
@@ -284,7 +334,6 @@ class ReservationController extends Controller
                 return back()->with('success', 'Checkout CASH selesai. Reservasi COMPLETED.');
             }
 
-            // QRIS via Midtrans
             $orderId = 'RSV-FINAL-' . $reservation->code;
 
             $alreadyPending = ReservationPayment::where('reservation_id', $reservation->id)
@@ -305,7 +354,7 @@ class ReservationController extends Controller
                 ]);
             }
 
-            $charge = $midtrans->chargeCustom($orderId, (int) $remaining, 'qris'); // :contentReference[oaicite:10]{index=10}
+            $charge = $midtrans->chargeCustom($orderId, (int) $remaining, 'qris');
             $instruction = $midtrans->extractInstruction($charge);
 
             $reservation->update([
@@ -321,11 +370,6 @@ class ReservationController extends Controller
         });
     }
 
-    /**
-     * Cancel:
-     * - REGULAR: auto release lock
-     * - BUFFET: tidak auto (manual nanti)
-     */
     public function cancel(Reservation $reservation, ReservationInventoryService $inv)
     {
         return DB::transaction(function () use ($reservation, $inv) {
@@ -337,7 +381,6 @@ class ReservationController extends Controller
                 'status' => 'cancelled',
             ]);
 
-            // auto release untuk REGULAR
             $inv->releaseReservationLocks($reservation->fresh(), Auth::id());
 
             return back()->with('success', 'Reservasi dibatalkan.');

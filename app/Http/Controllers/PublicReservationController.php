@@ -9,18 +9,20 @@ use App\Models\ReservationResource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Services\ReservationInventoryService;
+use App\Models\BuffetPackage;
 class PublicReservationController extends Controller
 {
     public function create()
     {
         $resources = ReservationResource::where('is_active', true)->orderBy('type')->orderBy('name')->get();
-
-        // untuk REGULAR: pelanggan bisa pilih menu reguler
         $products = Product::where('is_active', true)->orderBy('name')->get(['id', 'name', 'price']);
 
-        return view('reservations/create', compact('resources', 'products'));
-    }
+        $buffetPackages = BuffetPackage::where('is_active', true)
+            ->orderBy('name')
+            ->get(['id', 'name', 'pricing_type', 'price', 'min_pax']);
 
+        return view('reservations/create', compact('resources', 'products', 'buffetPackages'));
+    }
     public function store(Request $request, \App\Services\ReservationInventoryService $invService)
     {
         $data = $request->validate([
@@ -28,7 +30,6 @@ class PublicReservationController extends Controller
             'customer_name' => ['required', 'string', 'max:120'],
             'customer_phone' => ['nullable', 'string', 'max:30'],
 
-            // split date+time biar pasti bisa pilih jam di semua browser
             'start_date' => ['required', 'date'],
             'start_time' => ['required', 'date_format:H:i'],
             'end_date' => ['required', 'date'],
@@ -42,8 +43,8 @@ class PublicReservationController extends Controller
             'items.*.product_id' => ['required_with:items', 'integer', 'exists:products,id'],
             'items.*.qty' => ['required_with:items', 'integer', 'min:1'],
 
-            // BUFFET (sementara)
-            'buffet_menu_total' => ['nullable', 'integer', 'min:0'],
+            // BUFFET package
+            'buffet_package_id' => ['nullable', 'integer', 'exists:buffet_packages,id'],
 
             'notes' => ['nullable', 'string'],
         ]);
@@ -55,12 +56,10 @@ class PublicReservationController extends Controller
             return back()->withErrors(['end' => 'End harus setelah Start.'])->withInput();
         }
 
-        // Ambil resource untuk validasi rules
+        // Ambil resource untuk validasi rules (min durasi & jam operasional)
         $resource = \App\Models\ReservationResource::findOrFail($data['reservation_resource_id']);
 
-        // ============================================================
-        // (1B) VALIDASI MIN DURASI
-        // ============================================================
+        // min durasi
         $minutes = $start->diffInMinutes($end);
         if ($minutes < (int) $resource->min_duration_minutes) {
             return back()->withErrors([
@@ -68,9 +67,7 @@ class PublicReservationController extends Controller
             ])->withInput();
         }
 
-        // ============================================================
-        // (1B) VALIDASI JAM OPERASIONAL + HARUS HARI YANG SAMA
-        // ============================================================
+        // jam operasional
         $open = config('reservation_hours.open', '10:00');
         $close = config('reservation_hours.close', '22:00');
 
@@ -97,9 +94,7 @@ class PublicReservationController extends Controller
             }
         }
 
-        // ============================================================
-        // (2B) PRE-CHECK STOK REGULAR (BIAR TIDAK GAGAL SAAT DP PAID)
-        // ============================================================
+        // Pre-check stok REGULAR (buffer min x2)
         if ($data['menu_type'] === 'REGULAR') {
             $items = $data['items'] ?? [];
             $items = array_values(array_filter($items, fn($it) => !empty($it['product_id'])));
@@ -114,7 +109,7 @@ class PublicReservationController extends Controller
                 ->get()
                 ->keyBy('id');
 
-            $needs = []; // raw_material_id => qtyNeed
+            $needs = [];
 
             foreach ($items as $it) {
                 $p = $products[$it['product_id']] ?? null;
@@ -143,15 +138,19 @@ class PublicReservationController extends Controller
             }
         }
 
-        // generate code
+        // Validasi BUFFET: wajib pilih paket
+        if ($data['menu_type'] === 'BUFFET') {
+            if (empty($data['buffet_package_id'])) {
+                return back()->withErrors(['buffet_package_id' => 'Pilih paket buffet.'])->withInput();
+            }
+        }
+
         $code = 'RSV-' . now()->format('Ymd') . '-' . strtoupper(substr(bin2hex(random_bytes(3)), 0, 6));
         $dpRatio = (float) config('reservations.dp_ratio', 0.5);
 
         return DB::transaction(function () use ($data, $start, $end, $code, $dpRatio, $resource) {
 
-            // ============================================================
-            // CEK BENTROK + BUFFER (AGAR RESOURCE TIDAK OVERLAP)
-            // ============================================================
+            // cek bentrok + buffer
             $resource = \App\Models\ReservationResource::lockForUpdate()->findOrFail($resource->id);
             $buffer = (int) ($resource->buffer_minutes ?? 0);
 
@@ -172,9 +171,7 @@ class PublicReservationController extends Controller
                 throw new \RuntimeException('Jadwal bentrok: resource sudah dibooking di waktu tersebut.');
             }
 
-            // ============================================================
-            // HITUNG RENTAL OTOMATIS (FLAT ATAU PER JAM)
-            // ============================================================
+            // rental otomatis
             $rentalTotal = 0;
             $minutes = max(1, $start->diffInMinutes($end));
             if (!empty($resource->flat_rate)) {
@@ -184,7 +181,6 @@ class PublicReservationController extends Controller
                 $rentalTotal = (int) $resource->hourly_rate * $hours;
             }
 
-            // create reservation
             $reservation = \App\Models\Reservation::create([
                 'code' => $code,
                 'reservation_resource_id' => $resource->id,
@@ -231,18 +227,59 @@ class PublicReservationController extends Controller
                     ]);
                 }
             } else {
-                $menuTotal = (int) ($data['buffet_menu_total'] ?? 0);
+                // BUFFET: pakai paket
+                $pkg = \App\Models\BuffetPackage::with('items.product')
+                    ->lockForUpdate()
+                    ->findOrFail((int) $data['buffet_package_id']);
+
+                $pax = (int) ($reservation->pax ?? 0);
+
+                if ($pkg->min_pax && $pax < (int) $pkg->min_pax) {
+                    throw new \RuntimeException("Paket '{$pkg->name}' minimal pax {$pkg->min_pax}.");
+                }
+
+                if ($pkg->pricing_type === 'per_pax') {
+                    if ($pax <= 0) {
+                        throw new \RuntimeException("Paket '{$pkg->name}' butuh pax.");
+                    }
+                    $menuTotal = (int) $pkg->price * $pax;
+                    $pkgQty = $pax; // qty = pax
+                } else {
+                    $menuTotal = (int) $pkg->price;
+                    $pkgQty = 1;
+                }
 
                 \App\Models\ReservationItem::create([
                     'reservation_id' => $reservation->id,
                     'item_type' => 'BUFFET_PACKAGE',
-                    'item_id' => null,
-                    'snapshot_name' => 'Buffet (Custom)',
-                    'unit_price' => $menuTotal,
-                    'qty' => 1,
+                    'item_id' => $pkg->id,
+                    'snapshot_name' => $pkg->name,
+                    'unit_price' => (int) $pkg->price,
+                    'qty' => $pkgQty,
                     'subtotal' => $menuTotal,
-                    'meta' => ['pax' => $reservation->pax],
+                    'meta' => [
+                        'pricing_type' => $pkg->pricing_type,
+                        'min_pax' => $pkg->min_pax,
+                        'pax' => $pax ?: null,
+                    ],
                 ]);
+
+                // breakdown item paket (informasi saja, subtotal 0)
+                foreach ($pkg->items as $it) {
+                    \App\Models\ReservationItem::create([
+                        'reservation_id' => $reservation->id,
+                        'item_type' => 'BUFFET_ITEM',
+                        'item_id' => $it->product_id,
+                        'snapshot_name' => $it->product?->name ?? 'Item Paket',
+                        'unit_price' => 0,
+                        'qty' => (int) $it->qty,
+                        'subtotal' => 0,
+                        'meta' => [
+                            'included' => true,
+                            'note' => $it->note,
+                        ],
+                    ]);
+                }
             }
 
             $grand = $menuTotal + $rentalTotal;

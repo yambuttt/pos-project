@@ -72,4 +72,14 @@ class Reservation extends Model
     {
         return $this->hasMany(ReservationMaterialLock::class);
     }
+
+    public function buffetStocks()
+    {
+        return $this->hasMany(\App\Models\ReservationBuffetStock::class);
+    }
+
+    public function buffetMovements()
+    {
+        return $this->hasMany(\App\Models\ReservationBuffetMovement::class);
+    }
 }

@@ -101,6 +101,9 @@
                     $isReservations = request()->routeIs('admin.reservations.*');
                     $isReservationResources = request()->routeIs('admin.reservation_resources.*');
                     $isReservationsGroup = $isReservations || $isReservationResources;
+
+                    $isBuffetPackages = request()->routeIs('admin.buffet_packages.*');
+                    $isReservationsGroup = $isReservations || $isReservationResources || $isBuffetPackages;
                 @endphp
 
                 <!-- DESKTOP SIDEBAR -->
@@ -315,6 +318,18 @@
                                         <span class="sidebar-label hidden text-sm font-medium text-white/90">Resource
                                             Reservasi</span>
                                     </a>
+
+                                    <a href="{{ route('admin.buffet_packages.index') }}"
+                                        class="relative flex items-center gap-3 rounded-xl px-3 py-2.5 transition
+  {{ $isBuffetPackages ? 'bg-yellow-500/10 border border-yellow-500/25' : 'border gold-border bg-white/[0.02] hover:bg-white/[0.05]' }}">
+                                        @if ($isBuffetPackages)
+                                            <span
+                                                class="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r bg-yellow-500"></span>
+                                        @endif
+                                        <span class="sidebar-label hidden text-sm font-medium text-white/90">Paket
+                                            Buffet</span>
+                                    </a>
+
                                 </div>
                             </div>
 
@@ -590,6 +605,12 @@
                                 class="mt-1 block rounded-xl px-3 py-2 {{ $isReservationResources ? 'bg-yellow-500/12' : 'hover:bg-white/[0.05]' }}">
                                 Resource Reservasi
                             </a>
+
+                            <a href="{{ route('admin.buffet_packages.index') }}"
+                                class="mt-1 block rounded-xl px-3 py-2 {{ $isBuffetPackages ? 'bg-yellow-500/12' : 'hover:bg-white/[0.05]' }}">
+                                Paket Buffet
+                            </a>
+
                         </div>
 
 

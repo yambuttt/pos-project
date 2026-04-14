@@ -241,6 +241,45 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::post('/admin/reservations/{reservation}/checkout', [ReservationController::class, 'checkout'])->name('admin.reservations.checkout');
     Route::post('/admin/reservations/{reservation}/cancel', [ReservationController::class, 'cancel'])->name('admin.reservations.cancel');
 
+
+    // Buffet Packages
+    Route::get('/admin/buffet-packages', [\App\Http\Controllers\Admin\BuffetPackageController::class, 'index'])
+        ->name('admin.buffet_packages.index');
+    Route::get('/admin/buffet-packages/create', [\App\Http\Controllers\Admin\BuffetPackageController::class, 'create'])
+        ->name('admin.buffet_packages.create');
+    Route::post('/admin/buffet-packages', [\App\Http\Controllers\Admin\BuffetPackageController::class, 'store'])
+        ->name('admin.buffet_packages.store');
+    Route::get('/admin/buffet-packages/{buffetPackage}/edit', [\App\Http\Controllers\Admin\BuffetPackageController::class, 'edit'])
+        ->name('admin.buffet_packages.edit');
+    Route::put('/admin/buffet-packages/{buffetPackage}', [\App\Http\Controllers\Admin\BuffetPackageController::class, 'update'])
+        ->name('admin.buffet_packages.update');
+    Route::delete('/admin/buffet-packages/{buffetPackage}', [\App\Http\Controllers\Admin\BuffetPackageController::class, 'destroy'])
+        ->name('admin.buffet_packages.destroy');
+
+    Route::post('/admin/buffet-packages/{buffetPackage}/items', [\App\Http\Controllers\Admin\BuffetPackageController::class, 'addItem'])
+        ->name('admin.buffet_packages.items.store');
+    Route::delete('/admin/buffet-packages/{buffetPackage}/items/{item}', [\App\Http\Controllers\Admin\BuffetPackageController::class, 'removeItem'])
+        ->name('admin.buffet_packages.items.destroy');
+
+    // Buffet Inventory per Reservation
+    Route::get('/admin/reservations/{reservation}/buffet-inventory', [\App\Http\Controllers\Admin\ReservationBuffetInventoryController::class, 'show'])
+        ->name('admin.reservations.buffet_inventory');
+
+    Route::post('/admin/reservations/{reservation}/buffet-inventory/purchase', [\App\Http\Controllers\Admin\ReservationBuffetInventoryController::class, 'purchase'])
+        ->name('admin.reservations.buffet_inventory.purchase');
+
+    Route::post('/admin/reservations/{reservation}/buffet-inventory/transfer-from-main', [\App\Http\Controllers\Admin\ReservationBuffetInventoryController::class, 'transferFromMain'])
+        ->name('admin.reservations.buffet_inventory.transfer_from_main');
+
+    Route::post('/admin/reservations/{reservation}/buffet-inventory/return-to-main', [\App\Http\Controllers\Admin\ReservationBuffetInventoryController::class, 'returnToMain'])
+        ->name('admin.reservations.buffet_inventory.return_to_main');
+
+    Route::post('/admin/reservations/{reservation}/buffet-inventory/consume', [\App\Http\Controllers\Admin\ReservationBuffetInventoryController::class, 'consume'])
+        ->name('admin.reservations.buffet_inventory.consume');
+
+    Route::post('/admin/reservations/{reservation}/buffet-inventory/waste', [\App\Http\Controllers\Admin\ReservationBuffetInventoryController::class, 'waste'])
+        ->name('admin.reservations.buffet_inventory.waste');
+
     // Shortcut "Akun Saya" -> edit user yang sedang login
     Route::get('/admin/account', function () {
         return redirect()->route('admin.cashiers.edit', auth()->user());
