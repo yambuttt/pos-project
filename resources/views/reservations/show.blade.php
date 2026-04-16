@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="id">
+
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -8,9 +9,15 @@
 </head>
 
 <body class="min-h-screen bg-[#050505] text-white">
-    <div class="fixed inset-0 -z-10 bg-[radial-gradient(circle_at_top_left,rgba(250,204,21,.12),transparent_28%),radial-gradient(circle_at_top_right,rgba(255,255,255,.06),transparent_20%),linear-gradient(to_bottom,#050505,#09090b)]"></div>
-    <div class="pointer-events-none fixed left-[-120px] top-[60px] -z-10 h-[240px] w-[240px] rounded-full bg-yellow-400/10 blur-3xl"></div>
-    <div class="pointer-events-none fixed right-[-120px] top-[100px] -z-10 h-[220px] w-[220px] rounded-full bg-white/5 blur-3xl"></div>
+    <div
+        class="fixed inset-0 -z-10 bg-[radial-gradient(circle_at_top_left,rgba(250,204,21,.12),transparent_28%),radial-gradient(circle_at_top_right,rgba(255,255,255,.06),transparent_20%),linear-gradient(to_bottom,#050505,#09090b)]">
+    </div>
+    <div
+        class="pointer-events-none fixed left-[-120px] top-[60px] -z-10 h-[240px] w-[240px] rounded-full bg-yellow-400/10 blur-3xl">
+    </div>
+    <div
+        class="pointer-events-none fixed right-[-120px] top-[100px] -z-10 h-[220px] w-[220px] rounded-full bg-white/5 blur-3xl">
+    </div>
 
     <div class="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-8">
         <div class="mb-6 flex items-start justify-between gap-4">
@@ -31,14 +38,15 @@
         <div class="grid grid-cols-1 gap-6 lg:grid-cols-[1.05fr_.95fr]">
             {{-- LEFT --}}
             <section class="space-y-6">
-                <div class="rounded-[28px] border border-white/12 bg-white/[0.06] p-5 shadow-2xl backdrop-blur-2xl sm:p-6">
+                <div
+                    class="rounded-[28px] border border-white/12 bg-white/[0.06] p-5 shadow-2xl backdrop-blur-2xl sm:p-6">
                     <div class="flex flex-wrap items-start justify-between gap-4">
                         <div>
                             <div class="text-sm text-white/55">Kode Reservasi</div>
                             <div class="mt-1 text-2xl font-bold sm:text-3xl">{{ $reservation->code }}</div>
 
                             @php
-                                $statusColor = match($reservation->status) {
+                                $statusColor = match ($reservation->status) {
                                     'pending_dp' => 'text-yellow-300 border-yellow-400/20 bg-yellow-400/10',
                                     'confirmed' => 'text-emerald-300 border-emerald-400/20 bg-emerald-400/10',
                                     'checked_in' => 'text-blue-300 border-blue-400/20 bg-blue-400/10',
@@ -48,7 +56,8 @@
                                 };
                             @endphp
 
-                            <div class="mt-3 inline-flex rounded-full border px-3 py-1 text-xs font-semibold {{ $statusColor }}">
+                            <div
+                                class="mt-3 inline-flex rounded-full border px-3 py-1 text-xs font-semibold {{ $statusColor }}">
                                 {{ strtoupper(str_replace('_', ' ', $reservation->status)) }}
                             </div>
                         </div>
@@ -77,14 +86,16 @@
                         <div class="rounded-2xl border border-white/10 bg-black/20 p-4 sm:col-span-2">
                             <div class="text-[11px] uppercase tracking-[0.18em] text-white/45">Waktu Reservasi</div>
                             <div class="mt-2 font-semibold">
-                                {{ $reservation->start_at->format('d M Y H:i') }} → {{ $reservation->end_at->format('d M Y H:i') }}
+                                {{ $reservation->start_at->format('d M Y H:i') }} →
+                                {{ $reservation->end_at->format('d M Y H:i') }}
                             </div>
                             <div class="mt-1 text-sm text-white/60">Menu type: {{ $reservation->menu_type }}</div>
                         </div>
                     </div>
                 </div>
 
-                <div class="rounded-[28px] border border-white/12 bg-white/[0.06] p-5 shadow-2xl backdrop-blur-2xl sm:p-6">
+                <div
+                    class="rounded-[28px] border border-white/12 bg-white/[0.06] p-5 shadow-2xl backdrop-blur-2xl sm:p-6">
                     <div class="flex items-center justify-between gap-3">
                         <div>
                             <div class="text-[11px] uppercase tracking-[0.22em] text-white/45">Tagihan</div>
@@ -93,34 +104,45 @@
                     </div>
 
                     <div class="mt-4 space-y-3">
-                        <div class="flex items-center justify-between rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm">
+                        <div
+                            class="flex items-center justify-between rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm">
                             <span class="text-white/60">Menu</span>
-                            <span class="font-semibold">Rp {{ number_format($reservation->menu_total, 0, ',', '.') }}</span>
+                            <span class="font-semibold">Rp
+                                {{ number_format($reservation->menu_total, 0, ',', '.') }}</span>
                         </div>
 
-                        <div class="flex items-center justify-between rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm">
+                        <div
+                            class="flex items-center justify-between rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm">
                             <span class="text-white/60">Sewa</span>
-                            <span class="font-semibold">Rp {{ number_format($reservation->rental_total, 0, ',', '.') }}</span>
+                            <span class="font-semibold">Rp
+                                {{ number_format($reservation->rental_total, 0, ',', '.') }}</span>
                         </div>
 
-                        <div class="flex items-center justify-between rounded-2xl border border-yellow-400/15 bg-yellow-400/10 px-4 py-3 text-sm">
+                        <div
+                            class="flex items-center justify-between rounded-2xl border border-yellow-400/15 bg-yellow-400/10 px-4 py-3 text-sm">
                             <span class="text-white/80 font-medium">Total</span>
-                            <span class="text-lg font-bold text-yellow-300">Rp {{ number_format($reservation->grand_total, 0, ',', '.') }}</span>
+                            <span class="text-lg font-bold text-yellow-300">Rp
+                                {{ number_format($reservation->grand_total, 0, ',', '.') }}</span>
                         </div>
 
-                        <div class="flex items-center justify-between rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm">
+                        <div
+                            class="flex items-center justify-between rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm">
                             <span class="text-white/60">DP (50%)</span>
-                            <span class="font-semibold">Rp {{ number_format($reservation->dp_amount, 0, ',', '.') }}</span>
+                            <span class="font-semibold">Rp
+                                {{ number_format($reservation->dp_amount, 0, ',', '.') }}</span>
                         </div>
 
-                        <div class="flex items-center justify-between rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm">
+                        <div
+                            class="flex items-center justify-between rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm">
                             <span class="text-white/60">Sudah dibayar</span>
-                            <span class="font-semibold">Rp {{ number_format($reservation->paid_amount, 0, ',', '.') }}</span>
+                            <span class="font-semibold">Rp
+                                {{ number_format($reservation->paid_amount, 0, ',', '.') }}</span>
                         </div>
                     </div>
                 </div>
 
-                <div class="rounded-[28px] border border-white/12 bg-white/[0.06] p-5 shadow-2xl backdrop-blur-2xl sm:p-6">
+                <div
+                    class="rounded-[28px] border border-white/12 bg-white/[0.06] p-5 shadow-2xl backdrop-blur-2xl sm:p-6">
                     <div class="text-[11px] uppercase tracking-[0.22em] text-white/45">Rincian Menu</div>
                     <h2 class="mt-1 text-lg font-semibold">Item Reservasi</h2>
 
@@ -140,7 +162,8 @@
                                 </div>
                             </div>
                         @empty
-                            <div class="rounded-2xl border border-dashed border-white/10 bg-black/20 px-4 py-5 text-sm text-white/50">
+                            <div
+                                class="rounded-2xl border border-dashed border-white/10 bg-black/20 px-4 py-5 text-sm text-white/50">
                                 Belum ada item reservasi.
                             </div>
                         @endforelse
@@ -150,11 +173,13 @@
 
             {{-- RIGHT --}}
             <aside class="space-y-6 lg:sticky lg:top-6 lg:h-fit">
-                <div class="rounded-[28px] border border-white/12 bg-white/[0.06] p-5 shadow-2xl backdrop-blur-2xl sm:p-6">
+                <div
+                    class="rounded-[28px] border border-white/12 bg-white/[0.06] p-5 shadow-2xl backdrop-blur-2xl sm:p-6">
                     <div class="text-[11px] uppercase tracking-[0.22em] text-white/45">Pembayaran</div>
                     <h2 class="mt-1 text-2xl font-bold tracking-tight">Bayar DP via QRIS</h2>
                     <p class="mt-2 text-sm leading-6 text-white/60">
-                        Pembayaran DP hanya menggunakan QRIS. Setelah pembayaran berhasil, status reservasi akan ter-update otomatis.
+                        Pembayaran DP hanya menggunakan QRIS. Setelah pembayaran berhasil, status reservasi akan
+                        ter-update otomatis.
                     </p>
 
                     @if ($reservation->status === 'pending_dp')
@@ -174,15 +199,19 @@
 
                         <div id="payInfo" class="mt-4"></div>
 
-                        <div id="payHint" class="mt-4 rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-xs leading-6 text-white/60">
-                            Klik <span class="font-semibold text-white/85">Buat QRIS</span>, lalu scan QR dari aplikasi pembayaran kamu.
+                        <div id="payHint"
+                            class="mt-4 rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-xs leading-6 text-white/60">
+                            Klik <span class="font-semibold text-white/85">Buat QRIS</span>, lalu scan QR dari aplikasi
+                            pembayaran kamu.
                         </div>
                     @elseif($reservation->status === 'confirmed')
-                        <div class="mt-5 rounded-2xl border border-emerald-400/20 bg-emerald-400/10 px-4 py-4 text-sm text-emerald-200">
+                        <div
+                            class="mt-5 rounded-2xl border border-emerald-400/20 bg-emerald-400/10 px-4 py-4 text-sm text-emerald-200">
                             ✅ DP sudah dibayar. Reservasi kamu sudah dikonfirmasi.
                         </div>
                     @elseif($reservation->status === 'checked_in')
-                        <div class="mt-5 rounded-2xl border border-blue-400/20 bg-blue-400/10 px-4 py-4 text-sm text-blue-200">
+                        <div
+                            class="mt-5 rounded-2xl border border-blue-400/20 bg-blue-400/10 px-4 py-4 text-sm text-blue-200">
                             ✅ Reservasi sudah check-in.
                         </div>
                     @elseif($reservation->status === 'completed')
@@ -196,7 +225,8 @@
                     @endif
                 </div>
 
-                <div class="rounded-[28px] border border-white/12 bg-white/[0.06] p-5 shadow-2xl backdrop-blur-2xl sm:p-6">
+                <div
+                    class="rounded-[28px] border border-white/12 bg-white/[0.06] p-5 shadow-2xl backdrop-blur-2xl sm:p-6">
                     <div class="text-[11px] uppercase tracking-[0.22em] text-white/45">Riwayat</div>
                     <h2 class="mt-1 text-lg font-semibold">Pembayaran Tercatat</h2>
 
@@ -226,7 +256,8 @@
                                 </div>
                             </div>
                         @empty
-                            <div class="rounded-2xl border border-dashed border-white/10 bg-black/20 px-4 py-5 text-sm text-white/50">
+                            <div
+                                class="rounded-2xl border border-dashed border-white/10 bg-black/20 px-4 py-5 text-sm text-white/50">
                                 Belum ada pembayaran tercatat.
                             </div>
                         @endforelse
@@ -269,22 +300,28 @@
                     const p = json.payment || {};
                     if (p.qr_url) {
                         payInfo.innerHTML = `
-                            <div class="rounded-[24px] border border-white/10 bg-black/20 p-4">
-                                <div class="text-sm font-semibold">QRIS Berhasil Dibuat</div>
-                                <div class="mt-2 text-sm text-white/65">
-                                    Scan QR berikut untuk membayar DP reservasi.
-                                </div>
+        <div class="rounded-[24px] border border-white/10 bg-black/20 p-4">
+            <div class="text-sm font-semibold">QRIS Berhasil Dibuat</div>
+            <div class="mt-2 text-sm text-white/65">
+                Scan QR berikut untuk membayar DP reservasi.
+            </div>
 
-                                <a href="${p.qr_url}" target="_blank"
-                                    class="mt-4 inline-flex rounded-2xl bg-yellow-400 px-4 py-2 text-sm font-semibold text-black hover:bg-yellow-300">
-                                    Buka QRIS
-                                </a>
+            <div class="mt-4 overflow-hidden rounded-2xl border border-white/10 bg-white p-3">
+                <img src="${p.qr_url}" alt="QRIS DP Reservasi" class="mx-auto h-auto w-full max-w-[320px] rounded-xl object-contain">
+            </div>
 
-                                <div class="mt-3 text-xs text-white/55">
-                                    Expired: ${p.expires_at || '-'}
-                                </div>
-                            </div>
-                        `;
+            <div class="mt-4 flex flex-wrap gap-2">
+                <a href="${p.qr_url}" target="_blank"
+                    class="inline-flex rounded-2xl border border-white/12 bg-white/[0.05] px-4 py-2 text-sm font-semibold text-white hover:bg-white/[0.09]">
+                    Buka di Tab Baru
+                </a>
+            </div>
+
+            <div class="mt-3 text-xs text-white/55">
+                Expired: ${p.expires_at || '-'}
+            </div>
+        </div>
+    `;
                     } else {
                         payInfo.innerHTML = `
                             <div class="rounded-2xl border border-red-400/20 bg-red-400/10 px-4 py-4 text-sm text-red-200">
@@ -323,24 +360,30 @@
 
                     if (j.ok && j.qr_url && payInfo && payInfo.innerHTML.trim() === '') {
                         payInfo.innerHTML = `
-                            <div class="rounded-[24px] border border-white/10 bg-black/20 p-4">
-                                <div class="text-sm font-semibold">QRIS Aktif</div>
-                                <div class="mt-2 text-sm text-white/65">
-                                    QRIS sudah tersedia. Kamu bisa lanjut scan pembayaran.
-                                </div>
+        <div class="rounded-[24px] border border-white/10 bg-black/20 p-4">
+            <div class="text-sm font-semibold">QRIS Aktif</div>
+            <div class="mt-2 text-sm text-white/65">
+                QRIS sudah tersedia. Silakan scan untuk membayar DP reservasi.
+            </div>
 
-                                <a href="${j.qr_url}" target="_blank"
-                                    class="mt-4 inline-flex rounded-2xl bg-yellow-400 px-4 py-2 text-sm font-semibold text-black hover:bg-yellow-300">
-                                    Buka QRIS
-                                </a>
+            <div class="mt-4 overflow-hidden rounded-2xl border border-white/10 bg-white p-3">
+                <img src="${j.qr_url}" alt="QRIS DP Reservasi" class="mx-auto h-auto w-full max-w-[320px] rounded-xl object-contain">
+            </div>
 
-                                <div class="mt-3 text-xs text-white/55">
-                                    Expired: ${j.expires_at || '-'}
-                                </div>
-                            </div>
-                        `;
+            <div class="mt-4 flex flex-wrap gap-2">
+                <a href="${j.qr_url}" target="_blank"
+                    class="inline-flex rounded-2xl border border-white/12 bg-white/[0.05] px-4 py-2 text-sm font-semibold text-white hover:bg-white/[0.09]">
+                    Buka di Tab Baru
+                </a>
+            </div>
+
+            <div class="mt-3 text-xs text-white/55">
+                Expired: ${j.expires_at || '-'}
+            </div>
+        </div>
+    `;
                     }
-                } catch (e) {}
+                } catch (e) { }
 
                 setTimeout(tick, 4000);
             }
@@ -349,4 +392,5 @@
         })();
     </script>
 </body>
+
 </html>
