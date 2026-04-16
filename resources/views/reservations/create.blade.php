@@ -221,7 +221,9 @@
                       {!! $bp->min_pax ? ' • Min pax ' . $bp->min_pax : '' !!}
                     </div>
                   </div>
-                  <input type="radio" name="buffet_package_id" value="{{ $bp->id }}" class="mt-1">
+                  <input type="radio" name="buffet_package_id" value="{{ $bp->id }}" data-price="{{ (int) $bp->price }}"
+                    data-pricing-type="{{ $bp->pricing_type }}" data-min-pax="{{ (int) ($bp->min_pax ?? 0) }}"
+                    class="mt-1 buffet-radio">
                 </div>
 
                 <div class="mt-3 text-sm leading-6 text-white/68">
@@ -490,6 +492,22 @@
       }
     }
 
+    function calcBuffetTotal() {
+      const selected = document.querySelector('input[name="buffet_package_id"]:checked');
+      if (!selected) return 0;
+
+      const price = parseInt(selected.dataset.price || '0', 10);
+      const pricingType = selected.dataset.pricingType || '';
+      const paxInput = document.querySelector('input[name="pax"]');
+      const pax = parseInt(paxInput?.value || '0', 10);
+
+      if (pricingType === 'per_pax') {
+        return price * Math.max(0, pax);
+      }
+
+      return price;
+    }
+
     function renderSelectedList() {
       const box = document.getElementById('selectedList');
       const items = [...cart.values()].filter(x => x.qty > 0);
@@ -619,11 +637,13 @@
     }
 
     function updateTotals() {
-      let menuTotal = 0;
+      let regularTotal = 0;
       for (const it of cart.values()) {
-        menuTotal += (it.price || 0) * (it.qty || 0);
+        regularTotal += (it.price || 0) * (it.qty || 0);
       }
 
+      const buffetTotal = calcBuffetTotal();
+      const menuTotal = regularTotal + buffetTotal;
       const rental = calcRental();
       const grand = menuTotal + rental;
 
@@ -990,6 +1010,15 @@
       const qEl = document.getElementById('q-' + id);
       if (qEl) qEl.textContent = String(it.qty);
     };
+
+    document.querySelectorAll('input[name="buffet_package_id"]').forEach(el => {
+      el.addEventListener('change', updateTotals);
+    });
+
+    const paxInput = document.querySelector('input[name="pax"]');
+    if (paxInput) {
+      paxInput.addEventListener('input', updateTotals);
+    }
 
     renderSelectedList();
     updateResourceMeta();
