@@ -172,8 +172,9 @@ class ReservationInventoryService
      */
     public function lockForReservation(Reservation $reservation, ?int $userId = null): void
     {
-        if ($reservation->menu_type !== 'REGULAR')
+        if (!in_array($reservation->menu_type, ['REGULAR', 'MIXED'], true))
             return;
+        return;
 
         if ($reservation->status !== 'confirmed') {
             throw new \RuntimeException('Reservation harus status CONFIRMED untuk lock stok.');
