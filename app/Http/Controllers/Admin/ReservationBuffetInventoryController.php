@@ -16,9 +16,9 @@ class ReservationBuffetInventoryController extends Controller
 {
     public function show(Reservation $reservation)
     {
-        if ($reservation->menu_type !== 'BUFFET') {
+        if (!in_array($reservation->menu_type, ['BUFFET', 'MIXED'], true)) {
             return redirect()->route('admin.reservations.show', $reservation)
-                ->withErrors(['buffet' => 'Reservasi ini bukan BUFFET.']);
+                ->withErrors(['buffet' => 'Reservasi ini tidak punya komponen buffet.']);
         }
 
         $reservation->load([
@@ -125,7 +125,7 @@ class ReservationBuffetInventoryController extends Controller
             }
         }
 
-       return view('dashboard.admin.reservations.buffet_inventory', compact('reservation','needRows','actionMaterials'));
+        return view('dashboard.admin.reservations.buffet_inventory', compact('reservation', 'needRows', 'actionMaterials'));
     }
     // 1) belanja untuk buffet (masuk ke inventory buffet saja)
     public function purchase(Reservation $reservation, Request $request)
@@ -352,8 +352,8 @@ class ReservationBuffetInventoryController extends Controller
 
     private function guardBuffet(Reservation $reservation): void
     {
-        if ($reservation->menu_type !== 'BUFFET') {
-            throw new \RuntimeException('Reservasi ini bukan BUFFET.');
+        if (!in_array($reservation->menu_type, ['BUFFET', 'MIXED'], true)) {
+            throw new \RuntimeException('Reservasi ini tidak punya komponen buffet.');
         }
     }
 }

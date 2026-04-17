@@ -17,7 +17,7 @@
             class="rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-sm font-semibold hover:bg-white/10">
             ← Kembali
         </a>
-        @if($reservation->menu_type === 'BUFFET')
+        @if (in_array($reservation->menu_type, ['BUFFET', 'MIXED']))
             <a href="{{ route('admin.reservations.buffet_inventory', $reservation) }}"
                 class="block w-full text-center rounded-xl bg-white/15 px-5 py-3 text-sm font-semibold hover:bg-white/20">
                 Kelola Buffet Inventory
@@ -88,7 +88,7 @@
                 </div>
             </div>
 
-            @if($reservation->menu_type === 'REGULAR')
+            @if (in_array($reservation->menu_type, ['REGULAR', 'MIXED']))
                 <div class="mt-5 rounded-2xl border border-white/15 bg-white/5 p-4">
                     <div class="font-semibold">Material Locks</div>
                     <div class="mt-3 overflow-hidden rounded-xl border border-white/10">
