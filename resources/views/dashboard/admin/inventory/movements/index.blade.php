@@ -83,7 +83,7 @@
         <div class="text-xs text-white/60">Menampilkan {{ $movements->count() }} baris</div>
       </div>
       <div class="text-xs text-white/60">
-        Tips: pilih 1 bahan + range tanggal biar running balance makin meaningful.
+        Saldo dihitung sebagai stok setelah movement pada baris tersebut.
       </div>
     </div>
 
@@ -97,7 +97,7 @@
               <th class="px-4 py-3">Type</th>
               <th class="px-4 py-3">IN</th>
               <th class="px-4 py-3">OUT</th>
-              <th class="px-4 py-3">Saldo (running)</th>
+              <th class="px-4 py-3">Saldo Stok</th>
               <th class="px-4 py-3">Dibuat oleh</th>
               <th class="px-4 py-3">Note</th>
               <th class="px-4 py-3">Ref</th>

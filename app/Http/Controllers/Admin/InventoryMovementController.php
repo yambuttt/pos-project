@@ -30,45 +30,25 @@ class InventoryMovementController extends Controller
         // Pagination dulu biar ringan
         $movements = $q->paginate(20)->withQueryString();
 
-        /**
-         * Running Balance:
-         * - Kalau filter 1 bahan: kita hitung saldo awal sebelum date_from lalu running.
-         * - Kalau tidak filter bahan: kita hitung running per bahan (group) tapi hanya untuk page ini.
-         *   (Ini cukup untuk tampilan page, dan tetap konsisten.)
-         */
+        $currentStocks = RawMaterial::whereIn(
+            'id',
+            $movements->getCollection()->pluck('raw_material_id')->unique()->values()
+        )->pluck('stock_on_hand', 'id');
 
-        $openingBalances = [];
+        $rowsForView = $movements->getCollection()->map(function ($m) use ($currentStocks) {
+            $newerDelta = InventoryMovement::query()
+                ->where('raw_material_id', $m->raw_material_id)
+                ->where(function ($q) use ($m) {
+                    $q->where('created_at', '>', $m->created_at)
+                        ->orWhere(function ($qq) use ($m) {
+                            $qq->where('created_at', $m->created_at)
+                                ->where('id', '>', $m->id);
+                        });
+                })
+                ->selectRaw('COALESCE(SUM(qty_in - qty_out),0) as delta')
+                ->value('delta');
 
-        if ($materialId) {
-            $opening = InventoryMovement::query()
-                ->where('raw_material_id', $materialId)
-                ->when($dateFrom, fn($qq) => $qq->whereDate('created_at', '<', $dateFrom))
-                ->selectRaw('COALESCE(SUM(qty_in - qty_out),0) as bal')
-                ->value('bal');
-
-            $openingBalances[$materialId] = (float)$opening;
-        } else {
-            // saldo awal per bahan (opsional, kalau date_from diisi)
-            if ($dateFrom) {
-                $rows = InventoryMovement::query()
-                    ->whereDate('created_at', '<', $dateFrom)
-                    ->selectRaw('raw_material_id, COALESCE(SUM(qty_in - qty_out),0) as bal')
-                    ->groupBy('raw_material_id')
-                    ->get();
-
-                foreach ($rows as $r) {
-                    $openingBalances[$r->raw_material_id] = (float)$r->bal;
-                }
-            }
-        }
-
-        // hitung running balance untuk data yang ditampilkan
-        $running = $openingBalances; // per raw_material_id
-        $rowsForView = $movements->getCollection()->map(function ($m) use (&$running) {
-            $rid = $m->raw_material_id;
-            $running[$rid] = ($running[$rid] ?? 0) + ((float)$m->qty_in - (float)$m->qty_out);
-
-            $m->running_balance = $running[$rid];
+            $m->running_balance = (float) ($currentStocks[$m->raw_material_id] ?? 0) - (float) $newerDelta;
             return $m;
         });
 
