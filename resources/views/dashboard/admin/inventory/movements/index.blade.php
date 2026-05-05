@@ -34,7 +34,16 @@
         <select name="type"
           class="mt-2 w-full rounded-xl border border-white/20 bg-white/10 px-3 py-2 text-sm outline-none focus:border-white/40">
           <option value="">Semua</option>
-          @foreach(['purchase'=>'purchase','waste'=>'waste','opname'=>'opname','adjustment'=>'adjustment'] as $k=>$v)
+          @foreach([
+            'purchase' => 'purchase',
+            'waste' => 'waste',
+            'opname' => 'opname',
+            'adjustment' => 'adjustment',
+            'reserve' => 'reserve',
+            'release' => 'release',
+            'commit_paid' => 'commit paid',
+            'sale' => 'sale',
+          ] as $k=>$v)
             <option value="{{ $k }}" @selected($type===$k)>{{ strtoupper($v) }}</option>
           @endforeach
         </select>

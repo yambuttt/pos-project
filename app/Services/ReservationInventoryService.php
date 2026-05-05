@@ -172,12 +172,11 @@ class ReservationInventoryService
      */
     public function lockForReservation(Reservation $reservation, ?int $userId = null): void
     {
-        if (!in_array($reservation->menu_type, ['REGULAR', 'MIXED'], true))
+        if (!$this->hasRegularMenu($reservation))
             return;
-        return;
 
-        if ($reservation->status !== 'confirmed') {
-            throw new \RuntimeException('Reservation harus status CONFIRMED untuk lock stok.');
+        if (!in_array($reservation->status, ['confirmed', 'checked_in'], true)) {
+            throw new \RuntimeException('Reservation harus status CONFIRMED/CHECKED_IN untuk lock stok.');
         }
 
         // idempotent: kalau sudah ada lock rows, jangan lock dua kali
@@ -228,7 +227,7 @@ class ReservationInventoryService
      */
     public function releaseReservationLocks(Reservation $reservation, ?int $userId = null): void
     {
-        if ($reservation->menu_type !== 'REGULAR')
+        if (!$this->hasRegularMenu($reservation))
             return;
 
         $reservation->loadMissing('locks.rawMaterial');
@@ -274,8 +273,12 @@ class ReservationInventoryService
      */
     public function consumeOnCheckout(Reservation $reservation, ?int $userId = null): void
     {
-        if ($reservation->menu_type !== 'REGULAR')
+        if (!$this->hasRegularMenu($reservation))
             return;
+
+        if (!$reservation->locks()->exists()) {
+            $this->lockForReservation($reservation->fresh(), $userId);
+        }
 
         $reservation->loadMissing('locks.rawMaterial');
 
@@ -322,5 +325,10 @@ class ReservationInventoryService
                 'note' => 'Commit/consume on reservation checkout ' . $reservation->code,
             ]);
         }
+    }
+
+    protected function hasRegularMenu(Reservation $reservation): bool
+    {
+        return in_array($reservation->menu_type, ['REGULAR', 'MIXED'], true);
     }
 }
