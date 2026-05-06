@@ -19,7 +19,7 @@
     <!-- LEFT SIDE -->
     <div class="flex-1 flex flex-col min-w-0 xl:overflow-y-auto xl:pr-2 cart-scroll xl:pb-24">
         <!-- Header -->
-        <div class="flex items-center justify-between gap-4">
+        <div class="shrink-0 flex items-center justify-between gap-4">
             <div class="relative w-full max-w-md">
                 <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                 <input type="text" id="search" placeholder="Search menu items..." class="w-full bg-white/5 border border-white/10 rounded-full pl-11 pr-4 py-3 text-sm text-white placeholder-white/40 focus:outline-none focus:border-white/30 transition-colors">
@@ -35,7 +35,7 @@
         </div>
 
         <!-- Categories -->
-        <div class="mt-6 flex items-center gap-3 overflow-x-auto pb-2 scrollbar-hide" id="categoriesContainer">
+        <div class="mt-6 shrink-0 flex items-center gap-3 overflow-x-auto pb-2 scrollbar-hide" id="categoriesContainer">
             <!-- Rendered by JS -->
         </div>
 
@@ -197,7 +197,7 @@
             const btn = document.createElement('button');
             const isActive = currentCategory === cat;
             
-            btn.className = `whitespace-nowrap px-5 py-2.5 rounded-xl text-sm font-medium transition ${isActive ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20' : 'bg-white/5 border border-white/10 text-white/70 hover:bg-white/10 hover:text-white'}`;
+            btn.className = `shrink-0 whitespace-nowrap px-5 py-2.5 rounded-xl text-sm font-medium transition ${isActive ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20' : 'bg-white/5 border border-white/10 text-white/70 hover:bg-white/10 hover:text-white'}`;
             
             // Add icon depending on category (simple logic)
             let icon = '';
