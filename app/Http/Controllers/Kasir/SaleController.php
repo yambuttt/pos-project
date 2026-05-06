@@ -48,6 +48,8 @@ class SaleController extends Controller
                 'price' => (int) $p->price,
                 'max_portions' => (int) ($p->max_portions ?? 0),
                 'is_sellable' => (bool) ($p->is_sellable ?? false),
+                'description' => $p->description,
+                'image_url' => $p->imageUrl(),
             ];
         })->values();
 
