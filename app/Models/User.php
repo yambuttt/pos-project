@@ -22,6 +22,7 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
+        'business_type',
         'created_by',
         // di $fillable
         'default_shift_id',

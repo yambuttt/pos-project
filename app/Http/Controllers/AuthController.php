@@ -9,6 +9,9 @@ class AuthController extends Controller
 {
     public function showLogin()
     {
+        if (env('APP_TYPE') === 'toko') {
+            return view('toko.auth.login');
+        }
         return view('auth.login');
     }
 
@@ -20,9 +23,28 @@ class AuthController extends Controller
         ]);
 
         if (Auth::attempt($credentials)) {
-            $request->session()->regenerate();
+            $user = Auth::user();
+            $isTokoApp = env('APP_TYPE') === 'toko';
 
-            $role = Auth::user()->role;
+            if ($isTokoApp && $user->business_type !== 'toko') {
+                Auth::logout();
+                return back()->withErrors(['email' => 'Akses ditolak. Akun ini bukan karyawan Toko.'])->onlyInput('email');
+            }
+            
+            if (!$isTokoApp && $user->business_type === 'toko') {
+                Auth::logout();
+                return back()->withErrors(['email' => 'Akses ditolak. Akun ini khusus karyawan Toko.'])->onlyInput('email');
+            }
+
+            $request->session()->regenerate();
+            $role = $user->role;
+
+            if ($isTokoApp) {
+                if ($role === 'admin') {
+                    return redirect()->route('toko.admin.dashboard');
+                }
+                return redirect()->route('toko.kasir.dashboard');
+            }
 
             if ($role === 'admin') {
                 return redirect()->route('admin.dashboard');

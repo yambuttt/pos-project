@@ -395,3 +395,14 @@ Route::prefix('pegawai')->name('pegawai.')->middleware(['auth', 'role:pegawai'])
         ->name('attendance.overtime_request');
 
 });
+
+// TOKO ROUTES
+Route::prefix('toko')->name('toko.')->middleware(['auth'])->group(function () {
+    Route::middleware(['role:admin'])->group(function () {
+        Route::get('/admin/dashboard', [\App\Http\Controllers\Toko\AdminDashboardController::class, 'index'])->name('admin.dashboard');
+    });
+
+    Route::middleware(['role:kasir'])->group(function () {
+        Route::get('/kasir/dashboard', [\App\Http\Controllers\Toko\KasirDashboardController::class, 'index'])->name('kasir.dashboard');
+    });
+});

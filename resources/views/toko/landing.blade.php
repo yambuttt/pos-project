@@ -120,8 +120,8 @@
     <header class="sticky top-0 z-50 glass-panel border-b border-yellow-500/10 transition-all duration-300">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-[76px] flex items-center justify-between">
             <a href="#" class="flex items-center gap-3 group">
-                <div class="relative overflow-hidden rounded-full animate-float" style="animation-duration: 4s;">
-                    <img src="{{ asset('images/landing/logo-ayo-renne.png') }}" alt="Ayo Renne Logo" class="h-12 w-auto object-contain drop-shadow-[0_0_10px_rgba(234,179,8,0.3)]">
+                <div class="relative animate-float" style="animation-duration: 4s;">
+                    <img src="{{ asset('images/landing/logo-ayo-renne.png') }}" alt="Ayo Renne Logo" class="h-12 w-auto object-contain">
                 </div>
                 <div class="hidden sm:block">
                     <span class="font-display font-bold text-xl tracking-wide text-white group-hover:text-yellow-400 transition-colors">Ayo Renne</span>
