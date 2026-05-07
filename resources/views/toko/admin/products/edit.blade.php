@@ -25,11 +25,22 @@
         </div>
     @endif
 
-    <form action="{{ route('toko.products.update', $product) }}" method="POST" class="bg-[#0a0a0a] border border-white/5 rounded-2xl p-6 md:p-8 shadow-xl space-y-6" x-data="{ hasVariants: {{ $product->has_variants ? 'true' : 'false' }}, variants: {{ $product->has_variants && $product->variants->count() > 0 ? $product->variants->map(function($v){ return ['id'=>$v->id, 'name'=>$v->name, 'sku'=>$v->sku, 'price'=>$v->price]; })->toJson() : '[{id: Date.now()}]' }} }">
+    <form action="{{ route('toko.products.update', $product) }}" method="POST" enctype="multipart/form-data" class="bg-[#0a0a0a] border border-white/5 rounded-2xl p-6 md:p-8 shadow-xl space-y-6" x-data='{ hasVariants: {{ $product->has_variants ? "true" : "false" }}, variants: {!! $product->has_variants && $product->variants->count() > 0 ? $product->variants->map(function($v){ return ["id"=>$v->id, "name"=>$v->name, "sku"=>$v->sku, "price"=>$v->price]; })->toJson() : "[{id: Date.now()}]" !!} }'>
         @csrf
         @method('PUT')
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Gambar Produk -->
+            <div class="md:col-span-2">
+                <label class="block text-xs uppercase tracking-widest text-white/50 mb-2">Gambar Produk</label>
+                <div class="flex items-center gap-4">
+                    @if($product->image_url)
+                        <img src="{{ asset('storage/' . $product->image_url) }}" class="w-16 h-16 rounded-xl object-cover border border-white/10">
+                    @endif
+                    <input type="file" name="image" accept="image/*" class="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:border-yellow-500 outline-none file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-yellow-500 file:text-black hover:file:bg-yellow-400">
+                </div>
+            </div>
+
             <!-- Nama Produk -->
             <div class="md:col-span-2">
                 <label class="block text-xs uppercase tracking-widest text-white/50 mb-2">Nama Produk <span class="text-red-500">*</span></label>
@@ -39,7 +50,7 @@
             <!-- Kategori -->
             <div>
                 <label class="block text-xs uppercase tracking-widest text-white/50 mb-2">Kategori</label>
-                <select name="toko_category_id" class="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:border-yellow-500 outline-none appearance-none">
+                <select name="toko_category_id" class="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:border-yellow-500 outline-none appearance-none transition-colors">
                     <option value="">-- Pilih Kategori --</option>
                     @foreach($categories as $cat)
                         <option value="{{ $cat->id }}" {{ $product->toko_category_id == $cat->id ? 'selected' : '' }}>{{ $cat->name }}</option>
@@ -50,12 +61,12 @@
             <!-- SKU -->
             <div>
                 <label class="block text-xs uppercase tracking-widest text-white/50 mb-2">SKU (Barcode)</label>
-                <input type="text" name="sku" value="{{ $product->sku }}" class="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:border-yellow-500 outline-none transition-all">
+                <input type="text" name="sku" value="{{ $product->sku }}" class="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:border-yellow-500 outline-none transition-colors">
             </div>
 
-            <!-- Harga Default -->
-            <div x-show="!hasVariants">
-                <label class="block text-xs uppercase tracking-widest text-white/50 mb-2">Harga <span class="text-red-500">*</span></label>
+            <!-- Harga Utama -->
+            <div x-show="!hasVariants" class="md:col-span-2">
+                <label class="block text-xs uppercase tracking-widest text-white/50 mb-2">Harga Utama (Rp) <span class="text-red-500">*</span></label>
                 <div class="relative">
                     <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                         <span class="text-white/30 text-sm">Rp</span>

@@ -128,44 +128,54 @@
             <input type="hidden" name="action_type" id="actionType">
 
             <!-- Item Selection (AlpineJS for dynamic variant loading) -->
-            <div x-data="{ 
-                products: {{ $products->toJson() }},
-                selectedProductId: '',
-                selectedProduct: null,
-                hasVariants() { return this.selectedProduct && (this.selectedProduct.has_variants == 1 || this.selectedProduct.has_variants === true); }
-            }">
+            <div x-data="inventoryForm()">
                 
-                <!-- Select Product -->
-                <div>
-                    <label class="block text-[10px] font-bold uppercase tracking-widest text-white/50 mb-2">Pilih Produk Induk <span class="text-red-500">*</span></label>
-                    <select name="product_id" x-model="selectedProductId" @change="selectedProduct = products.find(p => p.id == selectedProductId)" required class="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:border-yellow-500 outline-none appearance-none">
-                        <option value="">-- Cari / Pilih Produk --</option>
-                        <template x-for="p in products" :key="p.id">
-                            <option :value="p.id" x-text="p.name"></option>
-                        </template>
-                    </select>
+                <h4 class="text-sm font-bold text-white mb-3">Daftar Barang</h4>
+                <div class="space-y-4 max-h-[40vh] overflow-y-auto pr-2 custom-scrollbar">
+                    <template x-for="(item, index) in items" :key="item.id">
+                        <div class="bg-black/40 p-4 rounded-xl border border-white/5 space-y-3 relative">
+                            <!-- Tombol Hapus Baris -->
+                            <button type="button" @click="if(items.length > 1) items.splice(index, 1)" class="absolute top-3 right-3 text-white/30 hover:text-red-500 transition-colors" x-show="items.length > 1">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                            </button>
+
+                            <!-- Select Product -->
+                            <div>
+                                <label class="block text-[10px] font-bold uppercase tracking-widest text-white/50 mb-1">Produk Induk <span class="text-red-500">*</span></label>
+                                <select :name="'items['+index+'][product_id]'" x-model="item.product_id" @change="item.variant_id = ''" required class="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:border-yellow-500 outline-none appearance-none">
+                                    <option value="">-- Pilih Produk --</option>
+                                    <template x-for="p in products" :key="p.id">
+                                        <option :value="p.id" x-text="p.name"></option>
+                                    </template>
+                                </select>
+                            </div>
+
+                            <div class="flex gap-3">
+                                <!-- Select Variant (Shown only if product has variants) -->
+                                <div class="flex-1" x-show="hasVariants(item.product_id)" x-collapse>
+                                    <label class="block text-[10px] font-bold uppercase tracking-widest text-yellow-500/70 mb-1">Varian <span class="text-red-500">*</span></label>
+                                    <select :name="'items['+index+'][variant_id]'" x-model="item.variant_id" :required="hasVariants(item.product_id)" class="w-full bg-black border border-yellow-500/30 rounded-lg px-3 py-2 text-white text-sm focus:border-yellow-500 outline-none appearance-none">
+                                        <option value="">-- Pilih Varian --</option>
+                                        <template x-for="v in getVariants(item.product_id)" :key="v.id">
+                                            <option :value="v.id" x-text="v.name + ' (Stok: ' + v.stock + ')'"></option>
+                                        </template>
+                                    </select>
+                                </div>
+
+                                <!-- Qty -->
+                                <div class="w-24 shrink-0">
+                                    <label class="block text-[10px] font-bold uppercase tracking-widest text-white/50 mb-1">Qty <span class="text-red-500">*</span></label>
+                                    <input type="number" :name="'items['+index+'][qty]'" x-model="item.qty" min="1" required class="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-white text-center text-sm focus:border-yellow-500 outline-none">
+                                </div>
+                            </div>
+                        </div>
+                    </template>
                 </div>
 
-                <!-- Select Variant (Shown only if product has variants) -->
-                <div x-show="hasVariants()" x-collapse class="mt-5 p-4 bg-yellow-500/5 border border-yellow-500/20 rounded-xl">
-                    <label class="block text-[10px] font-bold uppercase tracking-widest text-yellow-500/70 mb-2">Pilih Varian Spesifik <span class="text-red-500">*</span></label>
-                    <select name="variant_id" :required="hasVariants()" class="w-full bg-black border border-yellow-500/30 rounded-xl px-4 py-3 text-white text-sm focus:border-yellow-500 outline-none appearance-none">
-                        <option value="">-- Pilih Varian --</option>
-                        <template x-if="selectedProduct">
-                            <template x-for="v in selectedProduct.variants" :key="v.id">
-                                <option :value="v.id" x-text="v.name + ' (Stok: ' + v.stock + ')'"></option>
-                            </template>
-                        </template>
-                    </select>
-                </div>
-
-            </div>
-
-            <div class="grid grid-cols-2 gap-4">
-                <div class="col-span-2">
-                    <label class="block text-[10px] font-bold uppercase tracking-widest text-white/50 mb-2">Kuantitas (Qty) <span class="text-red-500">*</span></label>
-                    <input type="number" name="qty" min="1" value="1" required class="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white text-2xl font-bold font-mono focus:border-yellow-500 outline-none text-center">
-                </div>
+                <button type="button" @click="items.push({id: Date.now(), product_id: '', variant_id: '', qty: 1})" class="text-yellow-500 hover:text-yellow-400 text-sm font-bold flex items-center gap-2 mt-4 bg-yellow-500/10 px-4 py-2 rounded-lg transition-colors">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                    Tambah Baris Barang (Bulk)
+                </button>
             </div>
 
             <div>
@@ -182,6 +192,21 @@
 </div>
 
 <script>
+    document.addEventListener('alpine:init', () => {
+        Alpine.data('inventoryForm', () => ({
+            products: @json($products),
+            items: [{id: Date.now(), product_id: '', variant_id: '', qty: 1}],
+            hasVariants(productId) { 
+                const p = this.products.find(x => x.id == productId);
+                return p && (p.has_variants == 1 || p.has_variants === true); 
+            },
+            getVariants(productId) {
+                const p = this.products.find(x => x.id == productId);
+                return p ? p.variants : [];
+            }
+        }));
+    });
+
     function openModal(type) {
         const modal = document.getElementById('actionModal');
         const header = document.getElementById('modalHeader');

@@ -25,10 +25,16 @@
         </div>
     @endif
 
-    <form action="{{ route('toko.products.store') }}" method="POST" class="bg-[#0a0a0a] border border-white/5 rounded-2xl p-6 md:p-8 shadow-xl space-y-6" x-data="{ hasVariants: false, variants: [{id: 1}] }">
+    <form action="{{ route('toko.products.store') }}" method="POST" enctype="multipart/form-data" class="bg-[#0a0a0a] border border-white/5 rounded-2xl p-6 md:p-8 shadow-xl space-y-6" x-data="{ hasVariants: false, variants: [{id: 1}] }">
         @csrf
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Gambar Produk -->
+            <div class="md:col-span-2">
+                <label class="block text-xs uppercase tracking-widest text-white/50 mb-2">Gambar Produk</label>
+                <input type="file" name="image" accept="image/*" class="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:border-yellow-500 outline-none file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-yellow-500 file:text-black hover:file:bg-yellow-400">
+            </div>
+
             <!-- Nama Produk -->
             <div class="md:col-span-2">
                 <label class="block text-xs uppercase tracking-widest text-white/50 mb-2">Nama Produk <span class="text-red-500">*</span></label>
@@ -38,7 +44,7 @@
             <!-- Kategori -->
             <div>
                 <label class="block text-xs uppercase tracking-widest text-white/50 mb-2">Kategori</label>
-                <select name="toko_category_id" class="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:border-yellow-500 outline-none appearance-none">
+                <select name="toko_category_id" class="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:border-yellow-500 outline-none appearance-none transition-colors">
                     <option value="">-- Pilih Kategori --</option>
                     @foreach($categories as $cat)
                         <option value="{{ $cat->id }}">{{ $cat->name }}</option>
@@ -49,12 +55,12 @@
             <!-- SKU -->
             <div>
                 <label class="block text-xs uppercase tracking-widest text-white/50 mb-2">SKU (Barcode)</label>
-                <input type="text" name="sku" class="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:border-yellow-500 outline-none transition-all">
+                <input type="text" name="sku" class="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:border-yellow-500 outline-none transition-colors">
             </div>
 
             <!-- Harga Default -->
-            <div x-show="!hasVariants">
-                <label class="block text-xs uppercase tracking-widest text-white/50 mb-2">Harga <span class="text-red-500">*</span></label>
+            <div x-show="!hasVariants" class="md:col-span-2">
+                <label class="block text-xs uppercase tracking-widest text-white/50 mb-2">Harga Utama (Rp) <span class="text-red-500">*</span></label>
                 <div class="relative">
                     <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                         <span class="text-white/30 text-sm">Rp</span>

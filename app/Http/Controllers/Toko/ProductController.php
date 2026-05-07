@@ -13,7 +13,7 @@ class ProductController extends Controller
 {
     public function index()
     {
-        $products = TokoProduct::with('category')->latest()->paginate(10);
+        $products = TokoProduct::with(['category', 'variants'])->latest()->paginate(10);
         return view('toko.admin.products.index', compact('products'));
     }
 
@@ -29,13 +29,23 @@ class ProductController extends Controller
             'name' => 'required|string|max:255',
             'sku' => 'nullable|string|max:255|unique:toko_products,sku',
             'toko_category_id' => 'nullable|exists:toko_categories,id',
-            'price' => 'required|numeric|min:0',
+            'price' => 'nullable|numeric|min:0',
             'description' => 'nullable|string',
             'has_variants' => 'boolean',
             'variants' => 'array',
+            'image' => 'nullable|image|max:2048',
         ]);
 
         $validated['has_variants'] = $request->has('has_variants');
+        if ($validated['has_variants']) {
+            $validated['price'] = 0; // Price relies on variant prices
+        } else if (empty($validated['price'])) {
+            $validated['price'] = 0;
+        }
+
+        if ($request->hasFile('image')) {
+            $validated['image_url'] = $request->file('image')->store('toko_products', 'public');
+        }
 
         $product = TokoProduct::create($validated);
 
@@ -67,30 +77,48 @@ class ProductController extends Controller
             'name' => 'required|string|max:255',
             'sku' => 'nullable|string|max:255|unique:toko_products,sku,'.$product->id,
             'toko_category_id' => 'nullable|exists:toko_categories,id',
-            'price' => 'required|numeric|min:0',
+            'price' => 'nullable|numeric|min:0',
             'description' => 'nullable|string',
             'has_variants' => 'boolean',
             'variants' => 'array',
+            'image' => 'nullable|image|max:2048',
         ]);
 
         $validated['has_variants'] = $request->has('has_variants');
+        if ($validated['has_variants']) {
+            $validated['price'] = 0; // Price relies on variant prices
+        } else if (empty($validated['price'])) {
+            $validated['price'] = 0;
+        }
+
+        if ($request->hasFile('image')) {
+            if ($product->image_url) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($product->image_url);
+            }
+            $validated['image_url'] = $request->file('image')->store('toko_products', 'public');
+        }
 
         $product->update($validated);
 
         if ($validated['has_variants']) {
-            // Very simple variant sync
             $existingVariantIds = [];
             if (!empty($validated['variants'])) {
                 foreach ($validated['variants'] as $variantData) {
                     if (!empty($variantData['name'])) {
-                        if (isset($variantData['id'])) {
+                        $variant = null;
+                        if (!empty($variantData['id'])) {
                             $variant = TokoProductVariant::find($variantData['id']);
-                            if ($variant) {
-                                $variant->update($variantData);
-                                $existingVariantIds[] = $variant->id;
-                            }
+                        }
+
+                        if ($variant && $variant->toko_product_id == $product->id) {
+                            $variant->update($variantData);
+                            $existingVariantIds[] = $variant->id;
                         } else {
-                            $newVariant = $product->variants()->create($variantData);
+                            $newVariant = $product->variants()->create([
+                                'name' => $variantData['name'],
+                                'sku' => $variantData['sku'] ?? null,
+                                'price' => $variantData['price'] ?? 0,
+                            ]);
                             $existingVariantIds[] = $newVariant->id;
                         }
                     }
@@ -106,6 +134,9 @@ class ProductController extends Controller
 
     public function destroy(TokoProduct $product)
     {
+        if ($product->image_url) {
+            \Illuminate\Support\Facades\Storage::disk('public')->delete($product->image_url);
+        }
         $product->delete();
         return redirect()->route('toko.products.index')->with('success', 'Produk berhasil dihapus.');
     }

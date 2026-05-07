@@ -22,32 +22,35 @@ class InventoryMovementController extends Controller
     {
         $request->validate([
             'action_type' => 'required|in:in,out,waste',
-            'product_id' => 'required|integer|exists:toko_products,id',
-            'variant_id' => 'nullable|integer|exists:toko_product_variants,id',
-            'qty' => 'required|integer|min:1',
+            'items' => 'required|array|min:1',
+            'items.*.product_id' => 'required|integer|exists:toko_products,id',
+            'items.*.variant_id' => 'nullable|integer|exists:toko_product_variants,id',
+            'items.*.qty' => 'required|integer|min:1',
             'notes' => 'nullable|string',
         ]);
 
-        $item = null;
-        $product = TokoProduct::findOrFail($request->product_id);
-        
-        if ($product->has_variants) {
-            if (!$request->variant_id) {
-                return back()->withErrors(['variant_id' => 'Produk ini memiliki varian. Harap pilih varian spesifik.']);
+        foreach ($request->items as $index => $itemData) {
+            $product = TokoProduct::findOrFail($itemData['product_id']);
+            $itemModel = null;
+            
+            if ($product->has_variants) {
+                if (empty($itemData['variant_id'])) {
+                    return back()->withErrors(['items.'.$index.'.variant_id' => 'Produk "'.$product->name.'" memiliki varian. Harap pilih varian spesifik.']);
+                }
+                $itemModel = TokoProductVariant::where('toko_product_id', $product->id)->findOrFail($itemData['variant_id']);
+            } else {
+                $itemModel = $product;
             }
-            $item = TokoProductVariant::where('toko_product_id', $product->id)->findOrFail($request->variant_id);
-        } else {
-            $item = $product;
-        }
 
-        // Use the service
-        \App\Services\TokoInventoryService::recordMovement(
-            $item, 
-            $request->action_type, 
-            $request->qty, 
-            null, 
-            $request->notes
-        );
+            // Use the service
+            \App\Services\TokoInventoryService::recordMovement(
+                $itemModel, 
+                $request->action_type, 
+                $itemData['qty'], 
+                null, 
+                $request->notes
+            );
+        }
 
         $actionNames = [
             'in' => 'Barang Masuk',
@@ -55,6 +58,6 @@ class InventoryMovementController extends Controller
             'waste' => 'Barang Waste'
         ];
 
-        return back()->with('success', $actionNames[$request->action_type] . ' berhasil dicatat.');
+        return back()->with('success', $actionNames[$request->action_type] . ' (' . count($request->items) . ' item) berhasil dicatat.');
     }
 }

@@ -3,7 +3,7 @@
 @section('title', 'Manajemen Produk Toko')
 
 @section('content')
-<div class="max-w-7xl mx-auto space-y-6">
+<div class="max-w-7xl mx-auto space-y-6" x-data="{ showVariantModal: false, selectedVariants: [], selectedProductName: '' }">
 
     <!-- Header -->
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -53,10 +53,31 @@
                         <span class="px-2 py-1 bg-white/5 rounded text-xs">{{ $product->category->name ?? '-' }}</span>
                     </td>
                     <td class="px-6 py-4 text-white/50 font-mono text-xs">{{ $product->sku ?? '-' }}</td>
-                    <td class="px-6 py-4 text-right font-mono text-yellow-500">Rp {{ number_format($product->price, 0, ',', '.') }}</td>
+                    <td class="px-6 py-4 text-right font-mono text-yellow-500">
+                        @if($product->has_variants && $product->variants->count() > 0)
+                            @php
+                                $minPrice = $product->variants->min('price');
+                                $maxPrice = $product->variants->max('price');
+                            @endphp
+                            @if($minPrice == $maxPrice)
+                                Rp {{ number_format($minPrice, 0, ',', '.') }}
+                            @else
+                                Rp {{ number_format($minPrice, 0, ',', '.') }} - {{ number_format($maxPrice, 0, ',', '.') }}
+                            @endif
+                        @else
+                            Rp {{ number_format($product->price, 0, ',', '.') }}
+                        @endif
+                    </td>
                     <td class="px-6 py-4 text-center">
                         @if($product->has_variants)
-                            <span class="text-white/40 text-xs italic">Lihat Varian</span>
+                            @php $totalStock = $product->variants->sum('stock'); @endphp
+                            <div class="cursor-pointer inline-block" 
+                                 data-variants="{{ json_encode($product->variants->map(function($v){ return ['name' => $v->name, 'stock' => $v->stock]; })) }}"
+                                 data-product-name="{{ $product->name }}"
+                                 @click="selectedVariants = JSON.parse($el.dataset.variants); selectedProductName = $el.dataset.productName; showVariantModal = true">
+                                <span class="{{ $totalStock <= 5 ? 'text-red-400' : 'text-yellow-500' }} font-bold">{{ $totalStock }}</span>
+                                <div class="text-[10px] text-yellow-500/50 hover:text-yellow-400 underline decoration-dashed transition-colors">(Lihat Detail)</div>
+                            </div>
                         @else
                             <span class="{{ $product->stock <= 5 ? 'text-red-400' : 'text-green-400' }} font-bold">{{ $product->stock }}</span>
                         @endif
@@ -91,6 +112,48 @@
     
     <div class="mt-4">
         {{ $products->links() }}
+    </div>
+
+    <!-- Modal Detail Varian -->
+    <div x-show="showVariantModal" style="display: none;" class="fixed inset-0 z-[100] flex items-center justify-center p-4">
+        <!-- Backdrop -->
+        <div x-show="showVariantModal" x-transition.opacity class="absolute inset-0 bg-black/80 backdrop-blur-sm" @click="showVariantModal = false"></div>
+        
+        <!-- Modal Content -->
+        <div x-show="showVariantModal" 
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0 scale-95 translate-y-4"
+             x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="opacity-100 scale-100 translate-y-0"
+             x-transition:leave-end="opacity-0 scale-95 translate-y-4"
+             class="relative bg-[#121212] border border-white/10 rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden">
+            
+            <div class="px-6 py-4 border-b border-white/5 flex justify-between items-center bg-gradient-to-r from-yellow-500/10 to-transparent">
+                <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                    <svg class="w-5 h-5 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path></svg>
+                    Detail Stok Varian
+                </h3>
+                <button @click="showVariantModal = false" class="text-white/50 hover:text-white p-1 bg-white/5 rounded-full transition-colors"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+            </div>
+
+            <div class="p-6">
+                <div class="text-xs font-semibold text-white/50 uppercase tracking-widest mb-4" x-text="selectedProductName"></div>
+                
+                <div class="space-y-2 max-h-[50vh] overflow-y-auto custom-scrollbar pr-2">
+                    <template x-for="v in selectedVariants" :key="v.name">
+                        <div class="flex justify-between items-center bg-black/40 p-3 rounded-xl border border-white/5">
+                            <span class="text-sm text-white/80 font-medium truncate pr-4" x-text="v.name"></span>
+                            <span class="font-bold text-lg" :class="v.stock <= 5 ? 'text-red-400' : 'text-green-400'" x-text="v.stock"></span>
+                        </div>
+                    </template>
+                </div>
+            </div>
+            
+            <div class="p-4 border-t border-white/5 bg-black/20 text-center">
+                <button @click="showVariantModal = false" class="text-white/50 hover:text-white text-sm font-bold transition-colors">Tutup</button>
+            </div>
+        </div>
     </div>
 
 </div>
