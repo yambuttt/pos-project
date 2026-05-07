@@ -116,24 +116,33 @@
         <div class="flex-1 overflow-y-auto py-6 px-4 space-y-1">
             <div class="text-xs font-semibold text-white/40 uppercase tracking-widest mb-4 px-3">Menu Utama</div>
             
-            <a href="{{ route('toko.admin.dashboard') }}" class="nav-link active flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium text-white/80">
+            <a href="{{ route('toko.admin.dashboard') }}" class="nav-link {{ request()->routeIs('toko.admin.dashboard') ? 'active' : '' }} flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium text-white/80">
                 <svg class="w-5 h-5 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
                 Dashboard
             </a>
             
-            <a href="#" class="nav-link flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium text-white/70">
+            <a href="{{ route('toko.categories.index') }}" class="nav-link {{ request()->routeIs('toko.categories.*') ? 'active' : '' }} flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium text-white/70">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path></svg>
+                Kategori Produk
+            </a>
+
+            <a href="{{ route('toko.products.index') }}" class="nav-link {{ request()->routeIs('toko.products.*') ? 'active' : '' }} flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium text-white/70">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
-                Katalog Produk
+                Manajemen Produk
             </a>
 
-            <a href="#" class="nav-link flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium text-white/70">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
-                Laporan Penjualan
+            <div class="text-xs font-semibold text-white/40 uppercase tracking-widest mt-6 mb-2 px-3">Inventory</div>
+
+            <a href="{{ route('toko.movements.index') }}" class="nav-link {{ request()->routeIs('toko.movements.*') ? 'active' : '' }} flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium text-white/70">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"></path></svg>
+                Pusat Inventory
             </a>
 
-            <a href="#" class="nav-link flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium text-white/70">
+            <div class="text-xs font-semibold text-white/40 uppercase tracking-widest mt-6 mb-2 px-3">Pengaturan</div>
+
+            <a href="{{ route('toko.users.index') }}" class="nav-link {{ request()->routeIs('toko.users.*') ? 'active' : '' }} flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium text-white/70">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
-                Pegawai Kasir
+                Manajemen Akun
             </a>
         </div>
 

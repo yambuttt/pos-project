@@ -400,6 +400,17 @@ Route::prefix('pegawai')->name('pegawai.')->middleware(['auth', 'role:pegawai'])
 Route::prefix('toko')->name('toko.')->middleware(['auth'])->group(function () {
     Route::middleware(['role:admin'])->group(function () {
         Route::get('/admin/dashboard', [\App\Http\Controllers\Toko\AdminDashboardController::class, 'index'])->name('admin.dashboard');
+        
+        // Products & Categories
+        Route::resource('categories', \App\Http\Controllers\Toko\CategoryController::class);
+        Route::resource('products', \App\Http\Controllers\Toko\ProductController::class);
+        
+        // Inventory Management (Unified)
+        Route::get('inventory-movements', [\App\Http\Controllers\Toko\InventoryMovementController::class, 'index'])->name('movements.index');
+        Route::post('inventory-movements/action', [\App\Http\Controllers\Toko\InventoryMovementController::class, 'storeAction'])->name('movements.action');
+
+        // User Management
+        Route::resource('users', \App\Http\Controllers\Toko\UserController::class)->except(['create', 'edit', 'show']);
     });
 
     Route::middleware(['role:kasir'])->group(function () {
