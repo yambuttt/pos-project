@@ -49,7 +49,12 @@ Route::get('/reservasi', [PublicReservationController::class, 'create'])->name('
 Route::post('/reservasi', [PublicReservationController::class, 'store'])->name('public.reservations.store');
 Route::get('/reservasi/{reservation:code}', [PublicReservationController::class, 'show'])->name('public.reservations.show');
 Route::get('/landingtrial', [PublicMenuController::class, 'landingTrial'])->name('public.landingtrial');
-Route::get('/', [PublicMenuController::class, 'landingTrial'])->name('public.home');
+Route::get('/', function() {
+    if (env('APP_TYPE') === 'toko') {
+        return view('toko.landing');
+    }
+    return app(\App\Http\Controllers\PublicMenuController::class)->landingTrial();
+})->name('public.home');
 
 // Halaman Informasi Publik (Untuk Payment Gateway)
 Route::view('/terms', 'public.terms')->name('public.terms');
