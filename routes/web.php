@@ -50,6 +50,11 @@ Route::post('/reservasi', [PublicReservationController::class, 'store'])->name('
 Route::get('/reservasi/{reservation:code}', [PublicReservationController::class, 'show'])->name('public.reservations.show');
 Route::get('/landingtrial', [PublicMenuController::class, 'landingTrial'])->name('public.landingtrial');
 Route::get('/', [PublicMenuController::class, 'landingTrial'])->name('public.home');
+
+// Halaman Informasi Publik (Untuk Payment Gateway)
+Route::view('/terms', 'public.terms')->name('public.terms');
+Route::view('/privacy', 'public.privacy')->name('public.privacy');
+
 Route::get('/menu', [PublicMenuController::class, 'index'])->name('public.menu');
 Route::get('/t/{token}', [PublicMenuController::class, 'byTableToken'])
     ->name('public.table.token');

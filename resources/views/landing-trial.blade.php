@@ -689,7 +689,13 @@ body {
 
         <div
             class="section-wrap mt-12 flex flex-col items-center justify-between gap-4 border-t border-yellow-500/12 pt-8 text-sm text-white/48 md:flex-row">
-            <div>© 2026 Ayo Renne. All rights reserved.</div>
+            <div class="flex flex-col md:flex-row items-center gap-3 md:gap-6 text-center md:text-left">
+                <span>© {{ date('Y') }} Ayo Renne. All rights reserved.</span>
+                <div class="flex gap-4 md:border-l md:border-white/20 md:pl-6">
+                    <a href="{{ route('public.terms') }}" class="hover:text-yellow-500 transition">Syarat & Ketentuan</a>
+                    <a href="{{ route('public.privacy') }}" class="hover:text-yellow-500 transition">Kebijakan Privasi</a>
+                </div>
+            </div>
             <div>Made with 💛 in Probolinggo</div>
         </div>
     </footer>
