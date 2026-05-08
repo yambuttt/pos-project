@@ -121,14 +121,18 @@
 
         <!-- Navigation -->
         <nav class="hidden lg:flex items-center gap-2">
-            <a href="{{ route('toko.kasir.dashboard') }}" class="nav-btn active px-4 py-2 rounded-xl text-sm font-medium text-white/80 border border-transparent flex items-center gap-2">
+            <a href="{{ route('toko.kasir.dashboard') }}" 
+               class="nav-btn {{ request()->routeIs('toko.kasir.dashboard') ? 'active border-yellow-500/40' : 'text-white/70 border-transparent' }} px-4 py-2 rounded-xl text-sm font-medium flex items-center gap-2">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
                 Dashboard
             </a>
-            <a href="#" class="nav-btn px-4 py-2 rounded-xl text-sm font-medium text-white/70 border border-transparent flex items-center gap-2">
+            
+            <a href="{{ route('toko.kasir.pos') }}" 
+               class="nav-btn {{ request()->routeIs('toko.kasir.pos') ? 'active border-yellow-500/40' : 'text-white/70 border-transparent' }} px-4 py-2 rounded-xl text-sm font-medium flex items-center gap-2">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
                 Buka POS
             </a>
+            
             <a href="#" class="nav-btn px-4 py-2 rounded-xl text-sm font-medium text-white/70 border border-transparent flex items-center gap-2">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
                 Riwayat Transaksi
@@ -157,10 +161,20 @@
     </header>
 
     <!-- Mobile Nav (Visible only on small screens) -->
-    <div class="lg:hidden bg-[#0a0a0a] border-b border-white/5 flex overflow-x-auto">
-        <a href="{{ route('toko.kasir.dashboard') }}" class="flex-none px-4 py-3 text-xs font-bold text-yellow-500 border-b-2 border-yellow-500 uppercase tracking-wider">Dashboard</a>
-        <a href="#" class="flex-none px-4 py-3 text-xs font-medium text-white/50 hover:text-white uppercase tracking-wider">Buka POS</a>
-        <a href="#" class="flex-none px-4 py-3 text-xs font-medium text-white/50 hover:text-white uppercase tracking-wider">Riwayat</a>
+  <div class="lg:hidden bg-[#0a0a0a] border-b border-white/5 flex overflow-x-auto">
+        <a href="{{ route('toko.kasir.dashboard') }}" 
+           class="flex-none px-4 py-3 text-xs uppercase tracking-wider {{ request()->routeIs('toko.kasir.dashboard') ? 'font-bold text-yellow-500 border-b-2 border-yellow-500' : 'font-medium text-white/50 hover:text-white' }}">
+           Dashboard
+        </a>
+        
+        <a href="{{ route('toko.kasir.pos') }}" 
+           class="flex-none px-4 py-3 text-xs uppercase tracking-wider {{ request()->routeIs('toko.kasir.pos') ? 'font-bold text-yellow-500 border-b-2 border-yellow-500' : 'font-medium text-white/50 hover:text-white' }}">
+           Buka POS
+        </a>
+        
+        <a href="#" class="flex-none px-4 py-3 text-xs font-medium text-white/50 hover:text-white uppercase tracking-wider">
+           Riwayat
+        </a>
     </div>
 
     <!-- Main Content Area -->

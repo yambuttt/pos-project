@@ -415,5 +415,7 @@ Route::prefix('toko')->name('toko.')->middleware(['auth'])->group(function () {
 
     Route::middleware(['role:kasir'])->group(function () {
         Route::get('/kasir/dashboard', [\App\Http\Controllers\Toko\KasirDashboardController::class, 'index'])->name('kasir.dashboard');
+        Route::get('/kasir/pos', [\App\Http\Controllers\Toko\KasirDashboardController::class, 'pos'])->name('kasir.pos');
     });
 });
+
