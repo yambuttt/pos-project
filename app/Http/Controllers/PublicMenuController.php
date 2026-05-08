@@ -379,6 +379,15 @@ class PublicMenuController extends Controller
         return view('landing-trial', compact('featuredProducts', 'galleryItems', 'testimonials'));
     }
 
+    public function tokoKatalog()
+    {
+        $products = \App\Models\TokoProduct::with(['category', 'variants'])
+            ->where('is_active', true)
+            ->get();
+            
+        return view('toko.katalog', compact('products'));
+    }
+
 
     public function checkout(
         Request $request,

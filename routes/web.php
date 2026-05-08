@@ -56,6 +56,8 @@ Route::get('/', function() {
     return app(\App\Http\Controllers\PublicMenuController::class)->landingTrial();
 })->name('public.home');
 
+Route::get('/katalog', [PublicMenuController::class, 'tokoKatalog'])->name('public.toko.katalog');
+
 // Halaman Informasi Publik (Untuk Payment Gateway)
 Route::view('/terms', 'public.terms')->name('public.terms');
 Route::view('/privacy', 'public.privacy')->name('public.privacy');

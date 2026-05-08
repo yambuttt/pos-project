@@ -131,13 +131,13 @@
             
             <nav class="hidden md:flex gap-10 font-medium text-sm tracking-wider uppercase">
                 <a href="#" class="text-yellow-500 relative after:content-[''] after:absolute after:-bottom-2 after:left-0 after:w-full after:h-0.5 after:bg-yellow-500">Beranda</a>
-                <a href="#katalog" class="text-white/70 hover:text-yellow-400 transition-colors">Katalog Koleksi</a>
+                <a href="{{ route('public.toko.katalog') }}" class="text-white/70 hover:text-yellow-400 transition-colors">Katalog Koleksi</a>
                 <a href="#cerita" class="text-white/70 hover:text-yellow-400 transition-colors">Cerita Kami</a>
             </nav>
             
             <div class="flex items-center gap-5">
                 <a href="{{ route('login') }}" class="text-sm font-medium text-white/70 hover:text-yellow-400 transition hidden sm:block uppercase tracking-wider">Akses Kasir</a>
-                <a href="#katalog" class="btn-gold text-black px-6 py-2.5 rounded-full font-bold text-sm uppercase tracking-wide">
+                <a href="{{ route('public.toko.katalog') }}" class="btn-gold text-black px-6 py-2.5 rounded-full font-bold text-sm uppercase tracking-wide">
                     Mulai Belanja
                 </a>
             </div>
@@ -172,7 +172,7 @@
                         </p>
                         
                         <div class="animate-fade-up delay-300 flex flex-col sm:flex-row justify-center lg:justify-start gap-5">
-                            <a href="#katalog" class="btn-gold text-black px-8 py-4 rounded-full font-bold text-base uppercase tracking-widest flex items-center justify-center gap-3">
+                            <a href="{{ route('public.toko.katalog') }}" class="btn-gold text-black px-8 py-4 rounded-full font-bold text-base uppercase tracking-widest flex items-center justify-center gap-3">
                                 Jelajahi Koleksi
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
                             </a>
@@ -332,7 +332,7 @@
                     <h4 class="font-bold text-white mb-6 uppercase tracking-widest text-sm">Pintasan</h4>
                     <ul class="space-y-4 text-sm">
                         <li><a href="#" class="text-white/50 hover:text-yellow-400 transition flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-yellow-500"></span> Beranda</a></li>
-                        <li><a href="#katalog" class="text-white/50 hover:text-yellow-400 transition flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-yellow-500"></span> Katalog</a></li>
+                        <li><a href="{{ route('public.toko.katalog') }}" class="text-white/50 hover:text-yellow-400 transition flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-yellow-500"></span> Katalog</a></li>
                         <li><a href="{{ route('login') }}" class="text-white/50 hover:text-yellow-400 transition flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-yellow-500"></span> Login Kasir</a></li>
                     </ul>
                 </div>
