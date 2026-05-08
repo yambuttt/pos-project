@@ -537,17 +537,89 @@ function posSystem() {
 
         printReceipt() {
             const content = document.getElementById('receipt-content').innerHTML;
-            const win = window.open('', '_blank', 'width=400,height=700');
+            const win = window.open('', '_blank', 'width=450,height=800');
             win.document.write(`
-                <!DOCTYPE html><html><head>
-                <title>Struk - ${this.lastSale?.invoice_no}</title>
-                <style>
-                    body { font-family: monospace; font-size: 11px; margin: 0; padding: 10px; width: 80mm; }
-                    img { display: block; margin: auto; }
-                    .flex { display: flex; justify-content: space-between; }
-                    @media print { body { width: 80mm; } }
-                </style>
-                </head><body>${content}<script>window.onload=()=>{window.print();window.close();}<\/script></body></html>
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Struk - ${this.lastSale?.invoice_no}</title>
+                    <style>
+                        @page { margin: 0; size: 80mm auto; }
+                        body { 
+                            font-family: 'Courier New', Courier, monospace; 
+                            font-size: 12px; 
+                            line-height: 1.4;
+                            color: #000;
+                            margin: 0;
+                            padding: 20px;
+                            width: 72mm; /* Typical printable width for 80mm paper */
+                            background: #fff;
+                        }
+                        .text-center { text-align: center !important; }
+                        .font-bold { font-weight: bold !important; }
+                        .flex { 
+                            display: flex !important; 
+                            justify-content: space-between !important; 
+                            align-items: flex-start !important;
+                            gap: 10px;
+                        }
+                        .border-t { 
+                            border-top: 1px dashed #000 !important; 
+                            margin: 8px 0 !important;
+                            height: 0;
+                            width: 100%;
+                        }
+                        .my-2 { margin-top: 8px !important; margin-bottom: 8px !important; }
+                        .mb-3 { margin-bottom: 12px !important; }
+                        .space-y-0\\.5 > * + * { margin-top: 2px !important; }
+                        img { display: block; margin: 0 auto 10px; max-height: 50px; filter: grayscale(100%); }
+                        .text-sm { font-size: 14px !important; }
+                        .text-xs { font-size: 12px !important; }
+                        .text-\[10px\] { font-size: 10px !important; }
+                        .justify-between { justify-content: space-between !important; }
+                        .pl-2 { padding-left: 10px !important; }
+                        .pr-2 { padding-right: 10px !important; }
+                        .font-mono { font-family: 'Courier New', Courier, monospace !important; }
+                        
+                        .border-t.border-dashed { 
+                            border-top: 1px dashed #000 !important; 
+                            border-bottom: none !important;
+                            border-left: none !important;
+                            border-right: none !important;
+                        }
+
+                        #receipt-content { 
+                            background: transparent !important; 
+                            padding: 0 !important; 
+                            margin: 0 !important; 
+                            width: 100% !important; 
+                            max-width: none !important; 
+                            border-radius: 0 !important; 
+                            color: #000 !important;
+                        }
+
+                        .text-gray-500 { color: #444 !important; }
+                        
+                        @media print {
+                            body { width: 72mm; padding: 5px; }
+                            .no-print { display: none; }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div style="width: 100%;">
+                        ${content}
+                    </div>
+                    <script>
+                        window.onload = () => {
+                            setTimeout(() => {
+                                window.print();
+                                window.close();
+                            }, 1000);
+                        };
+                    <\/script>
+                </body>
+                </html>
             `);
             win.document.close();
         },

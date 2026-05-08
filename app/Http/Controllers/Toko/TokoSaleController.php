@@ -69,18 +69,33 @@ class TokoSaleController extends Controller
 
                 if ($variantId) {
                     $variant = TokoProductVariant::findOrFail($variantId);
-                    // Kurangi stok varian
+                    // Kurangi stok varian & catat movement
                     if ($variant->stock < $item['qty']) {
                         throw new \Exception("Stok varian '{$variant->name}' tidak mencukupi.");
                     }
-                    $variant->decrement('stock', $item['qty']);
+                    
+                    \App\Services\TokoInventoryService::recordMovement(
+                        $variant,
+                        'sale',
+                        $item['qty'],
+                        $sale,
+                        "Penjualan Kasir (POS): " . $sale->invoice_no
+                    );
+                    
                     $variantName = $variant->name;
                 } else {
-                    // Kurangi stok produk
+                    // Kurangi stok produk & catat movement
                     if ($product->stock < $item['qty']) {
                         throw new \Exception("Stok produk '{$product->name}' tidak mencukupi.");
                     }
-                    $product->decrement('stock', $item['qty']);
+
+                    \App\Services\TokoInventoryService::recordMovement(
+                        $product,
+                        'sale',
+                        $item['qty'],
+                        $sale,
+                        "Penjualan Kasir (POS): " . $sale->invoice_no
+                    );
                 }
 
                 TokoSaleItem::create([
@@ -108,5 +123,20 @@ class TokoSaleController extends Controller
                 'message' => $e->getMessage(),
             ], 422);
         }
+    }
+    public function history(Request $request)
+    {
+        $days = $request->get('days', 7);
+        $query = TokoSale::with(['items', 'cashier'])
+            ->where('created_at', '>=', now()->subDays($days));
+
+        // Hitung stats dari seluruh query sebelum dipaginasi
+        $totalRevenue = $query->sum('total_amount');
+        $avgTransaction = $query->avg('total_amount') ?? 0;
+        $totalTransactions = $query->count();
+
+        $sales = $query->latest()->paginate(15)->withQueryString();
+
+        return view('toko.kasir.history', compact('sales', 'days', 'totalRevenue', 'avgTransaction', 'totalTransactions'));
     }
 }

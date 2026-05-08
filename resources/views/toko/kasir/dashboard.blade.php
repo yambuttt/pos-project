@@ -27,7 +27,7 @@
 
             <!-- Big Action Button -->
             <div class="shrink-0 pt-4 md:pt-0">
-                <a href="#" class="group relative inline-flex items-center justify-center">
+                <a href="{{ route('toko.kasir.pos') }}" class="group relative inline-flex items-center justify-center">
                     <div class="absolute inset-0 bg-yellow-500 rounded-2xl blur-lg opacity-40 group-hover:opacity-60 transition-opacity duration-300"></div>
                     <div class="relative bg-gradient-to-br from-yellow-400 to-yellow-600 px-8 py-5 rounded-2xl text-black font-bold uppercase tracking-widest shadow-xl transform group-hover:-translate-y-1 transition-all duration-300 flex items-center gap-3">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>

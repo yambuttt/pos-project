@@ -419,6 +419,7 @@ Route::prefix('toko')->name('toko.')->middleware(['auth'])->group(function () {
         Route::get('/kasir/dashboard', [\App\Http\Controllers\Toko\KasirDashboardController::class, 'index'])->name('kasir.dashboard');
         Route::get('/kasir/pos', [\App\Http\Controllers\Toko\KasirDashboardController::class, 'pos'])->name('kasir.pos');
         Route::post('/kasir/sales', [\App\Http\Controllers\Toko\TokoSaleController::class, 'store'])->name('kasir.sales.store');
+        Route::get('/kasir/history', [\App\Http\Controllers\Toko\TokoSaleController::class, 'history'])->name('kasir.history');
     });
 });
 
