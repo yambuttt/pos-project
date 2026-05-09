@@ -30,6 +30,15 @@ class TokoSaleController extends Controller
 
         DB::beginTransaction();
         try {
+            // Cek shift aktif
+            $activeShift = \App\Models\TokoShift::where('user_id', Auth::id())
+                ->where('status', 'open')
+                ->first();
+
+            if (!$activeShift) {
+                throw new \Exception("Anda harus memulai shift terlebih dahulu sebelum melakukan transaksi.");
+            }
+
             $taxRate = 11; // 11%
             $subtotal = 0;
 
@@ -47,6 +56,7 @@ class TokoSaleController extends Controller
             $invoiceNo = 'TKO-' . now()->format('Ymd') . '-' . strtoupper(substr(uniqid(), -4));
 
             $sale = TokoSale::create([
+                'toko_shift_id'  => $activeShift->id,
                 'invoice_no'     => $invoiceNo,
                 'user_id'        => Auth::id(),
                 'customer_name'  => $request->customer_name,

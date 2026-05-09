@@ -441,6 +441,12 @@ Route::prefix('toko')->name('toko.')->middleware(['auth'])->group(function () {
         Route::get('/kasir/pos', [\App\Http\Controllers\Toko\KasirDashboardController::class, 'pos'])->name('kasir.pos');
         Route::post('/kasir/sales', [\App\Http\Controllers\Toko\TokoSaleController::class, 'store'])->name('kasir.sales.store');
         Route::get('/kasir/history', [\App\Http\Controllers\Toko\TokoSaleController::class, 'history'])->name('kasir.history');
+
+        // Shift Management
+        Route::post('/kasir/shift/start', [\App\Http\Controllers\Toko\TokoShiftController::class, 'start'])->name('kasir.shift.start');
+        Route::post('/kasir/shift/end', [\App\Http\Controllers\Toko\TokoShiftController::class, 'end'])->name('kasir.shift.end');
+        Route::get('/kasir/shift/history', [\App\Http\Controllers\Toko\TokoShiftController::class, 'history'])->name('kasir.shift.history');
+        Route::get('/kasir/shift/{id}', [\App\Http\Controllers\Toko\TokoShiftController::class, 'show'])->name('kasir.shift.show');
     });
 });
 

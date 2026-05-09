@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class TokoSale extends Model
 {
     protected $fillable = [
+        'toko_shift_id',
         'invoice_no',
         'user_id',
         'customer_name',
@@ -38,5 +39,10 @@ class TokoSale extends Model
     public function items()
     {
         return $this->hasMany(TokoSaleItem::class);
+    }
+
+    public function shift()
+    {
+        return $this->belongsTo(TokoShift::class, 'toko_shift_id');
     }
 }
