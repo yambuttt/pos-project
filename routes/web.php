@@ -62,13 +62,12 @@ Route::get('/', function() {
         $heroProduct = $latestProducts->count() > 0 ? $latestProducts->random() : null;
         $secondaryProduct = $latestProducts->count() > 1 ? $latestProducts->where('id', '!=', optional($heroProduct)->id)->random() : null;
 
-        // Ambil 3 best seller (penjualan terbanyak)
+        // Ambil 3 best seller (penjualan terbanyak) menggunakan subquery join untuk menghindari ONLY_FULL_GROUP_BY error
         $bestSellers = \App\Models\TokoProduct::with('variants')
+            ->select('toko_products.*', 'sales.total_sold')
+            ->join(\DB::raw('(SELECT toko_product_id, SUM(qty) as total_sold FROM toko_sale_items GROUP BY toko_product_id) as sales'), 'toko_products.id', '=', 'sales.toko_product_id')
             ->where('toko_products.is_active', true)
-            ->leftJoin('toko_sale_items', 'toko_products.id', '=', 'toko_sale_items.toko_product_id')
-            ->select('toko_products.*', \DB::raw('SUM(toko_sale_items.qty) as total_sold'))
-            ->groupBy('toko_products.id')
-            ->orderByDesc('total_sold')
+            ->orderByDesc('sales.total_sold')
             ->take(3)
             ->get();
 
