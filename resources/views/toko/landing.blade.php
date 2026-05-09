@@ -193,11 +193,11 @@
                             <!-- Main Showcase Card -->
                             <div class="absolute w-80 h-[420px] rounded-2xl glass-panel p-4 shadow-[0_20px_50px_rgba(0,0,0,0.5)] transform -rotate-6 hover:rotate-0 transition-transform duration-700">
                                 <div class="w-full h-full rounded-xl overflow-hidden relative">
-                                    <img src="{{ asset('images/landing/gallery-5.jpg') }}" alt="Premium Showcase" class="w-full h-full object-cover">
+                                    <img src="{{ $heroProduct ? asset('storage/' . $heroProduct->image_url) : asset('images/landing/gallery-5.jpg') }}" alt="{{ $heroProduct->name ?? 'Premium Showcase' }}" class="w-full h-full object-cover">
                                     <div class="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent"></div>
                                     <div class="absolute bottom-6 left-6">
                                         <div class="text-xs text-yellow-500 font-bold tracking-widest uppercase mb-1">New Arrival</div>
-                                        <div class="text-2xl font-display text-white">Signature Blend</div>
+                                        <div class="text-2xl font-display text-white uppercase">{{ $heroProduct->name ?? 'Signature Blend' }}</div>
                                     </div>
                                 </div>
                             </div>
@@ -205,7 +205,7 @@
                             <!-- Secondary Floating Card -->
                             <div class="absolute -bottom-10 -right-10 w-48 h-56 rounded-2xl glass-panel p-3 shadow-[0_20px_50px_rgba(0,0,0,0.5)] transform rotate-12 hover:rotate-0 transition-transform duration-700 delay-100" style="animation: float 5s ease-in-out infinite reverse;">
                                 <div class="w-full h-full rounded-xl overflow-hidden relative">
-                                    <img src="{{ asset('images/landing/gallery-2.jpg') }}" alt="Accessory Showcase" class="w-full h-full object-cover">
+                                    <img src="{{ $secondaryProduct ? asset('storage/' . $secondaryProduct->image_url) : asset('images/landing/gallery-2.jpg') }}" alt="{{ $secondaryProduct->name ?? 'Accessory Showcase' }}" class="w-full h-full object-cover">
                                 </div>
                             </div>
                         </div>
@@ -227,59 +227,40 @@
                 </div>
                 
                 <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    <!-- WOW Glowing Card 1 -->
-                    <div class="glow-card-wrapper group animate-fade-up delay-100">
+                    @forelse($bestSellers as $index => $product)
+                    <!-- Dynamic Best Seller Card -->
+                    <div class="glow-card-wrapper group animate-fade-up" style="animation-delay: {{ ($index + 1) * 100 }}ms">
                         <div class="glow-card-content p-6 flex flex-col">
                             <div class="reveal-img-wrapper h-64 rounded-xl mb-6 relative">
-                                <img src="{{ asset('images/landing/gallery-6.jpg') }}" alt="Product 1" class="reveal-img w-full h-full object-cover">
+                                <img src="{{ $product->image_url ? asset('storage/' . $product->image_url) : asset('images/landing/gallery-' . (6 + $index) . '.jpg') }}" 
+                                     alt="{{ $product->name }}" 
+                                     class="reveal-img w-full h-full object-cover">
                                 <div class="absolute top-4 right-4 bg-black/60 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold text-yellow-400 border border-yellow-500/30">
-                                    Limited
+                                    Best Seller
                                 </div>
                             </div>
-                            <h3 class="font-display text-2xl text-white mb-2">Premium Gift Box</h3>
-                            <p class="text-white/50 font-light text-sm mb-6 flex-1">Koleksi hadiah eksklusif yang dikemas secara mewah, sempurna untuk momen spesial orang terkasih.</p>
+                            <h3 class="font-display text-2xl text-white mb-2 line-clamp-1">{{ $product->name }}</h3>
+                            <p class="text-white/50 font-light text-sm mb-6 flex-1 line-clamp-3">{{ $product->description ?? 'Produk unggulan dengan kualitas terbaik dari Ayo Renne.' }}</p>
                             <div class="flex justify-between items-center border-t border-white/10 pt-4 mt-auto">
-                                <span class="text-yellow-500 font-bold text-lg">Rp 450.000</span>
-                                <button class="text-xs uppercase tracking-widest font-bold text-white hover:text-yellow-400 transition-colors flex items-center gap-2">
-                                    Beli <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
-                                </button>
+                                <span class="text-yellow-500 font-bold text-lg font-mono">
+                                    @if($product->has_variants && $product->variants->count() > 0)
+                                        Rp {{ number_format($product->variants->min('price'), 0, ',', '.') }} - {{ number_format($product->variants->max('price'), 0, ',', '.') }}
+                                    @else
+                                        Rp {{ number_format($product->price, 0, ',', '.') }}
+                                    @endif
+                                </span>
+                                <a href="{{ route('public.toko.katalog') }}" class="text-xs uppercase tracking-widest font-bold text-white hover:text-yellow-400 transition-colors flex items-center gap-2">
+                                    Detail <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                                </a>
                             </div>
                         </div>
                     </div>
-
-                    <!-- WOW Glowing Card 2 -->
-                    <div class="glow-card-wrapper group animate-fade-up delay-200">
-                        <div class="glow-card-content p-6 flex flex-col">
-                            <div class="reveal-img-wrapper h-64 rounded-xl mb-6 relative">
-                                <img src="{{ asset('images/landing/gallery-4.jpg') }}" alt="Product 2" class="reveal-img w-full h-full object-cover">
-                            </div>
-                            <h3 class="font-display text-2xl text-white mb-2">Ayo Renne Tumbler</h3>
-                            <p class="text-white/50 font-light text-sm mb-6 flex-1">Tumbler isolasi termal premium dengan ukiran logo emas Ayo Renne. Menjaga suhu minuman hingga 12 jam.</p>
-                            <div class="flex justify-between items-center border-t border-white/10 pt-4 mt-auto">
-                                <span class="text-yellow-500 font-bold text-lg">Rp 280.000</span>
-                                <button class="text-xs uppercase tracking-widest font-bold text-white hover:text-yellow-400 transition-colors flex items-center gap-2">
-                                    Beli <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
-                                </button>
-                            </div>
-                        </div>
+                    @empty
+                    <!-- Fallback if no sales yet -->
+                    <div class="lg:col-span-3 text-center py-10 opacity-30">
+                        <p class="text-white tracking-widest uppercase text-xs">Belum ada data penjualan terbaru.</p>
                     </div>
-
-                    <!-- WOW Glowing Card 3 -->
-                    <div class="glow-card-wrapper group animate-fade-up delay-300">
-                        <div class="glow-card-content p-6 flex flex-col">
-                            <div class="reveal-img-wrapper h-64 rounded-xl mb-6 relative">
-                                <img src="{{ asset('images/landing/about-3.jpg') }}" alt="Product 3" class="reveal-img w-full h-full object-cover">
-                            </div>
-                            <h3 class="font-display text-2xl text-white mb-2">Artisan Coffee Beans</h3>
-                            <p class="text-white/50 font-light text-sm mb-6 flex-1">Biji kopi pilihan yang dipanggang dengan tingkat presisi tinggi untuk menghasilkan aroma yang memikat.</p>
-                            <div class="flex justify-between items-center border-t border-white/10 pt-4 mt-auto">
-                                <span class="text-yellow-500 font-bold text-lg">Rp 125.000</span>
-                                <button class="text-xs uppercase tracking-widest font-bold text-white hover:text-yellow-400 transition-colors flex items-center gap-2">
-                                    Beli <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
+                    @endforelse
                 </div>
             </div>
         </section>

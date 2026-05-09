@@ -51,7 +51,28 @@ Route::get('/reservasi/{reservation:code}', [PublicReservationController::class,
 Route::get('/landingtrial', [PublicMenuController::class, 'landingTrial'])->name('public.landingtrial');
 Route::get('/', function() {
     if (env('APP_TYPE') === 'toko') {
-        return view('toko.landing');
+        $latestProducts = \App\Models\TokoProduct::with('variants')
+            ->where('is_active', true)
+            ->whereNotNull('image_url')
+            ->latest()
+            ->take(3)
+            ->get();
+        
+        // Pilih acak untuk hero dan secondary
+        $heroProduct = $latestProducts->count() > 0 ? $latestProducts->random() : null;
+        $secondaryProduct = $latestProducts->count() > 1 ? $latestProducts->where('id', '!=', optional($heroProduct)->id)->random() : null;
+
+        // Ambil 3 best seller (penjualan terbanyak)
+        $bestSellers = \App\Models\TokoProduct::with('variants')
+            ->where('toko_products.is_active', true)
+            ->leftJoin('toko_sale_items', 'toko_products.id', '=', 'toko_sale_items.toko_product_id')
+            ->select('toko_products.*', \DB::raw('SUM(toko_sale_items.qty) as total_sold'))
+            ->groupBy('toko_products.id')
+            ->orderByDesc('total_sold')
+            ->take(3)
+            ->get();
+
+        return view('toko.landing', compact('heroProduct', 'secondaryProduct', 'bestSellers'));
     }
     return app(\App\Http\Controllers\PublicMenuController::class)->landingTrial();
 })->name('public.home');
