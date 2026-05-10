@@ -2,58 +2,73 @@
 @section('title', 'Riwayat Masak')
 
 @section('body')
-  <div class="flex items-start justify-between gap-3">
-    <div>
-      <h1 class="text-2xl font-semibold">Riwayat Masak</h1>
-      <p class="text-sm text-slate-600">Ringkasan pesanan yang sudah selesai dimasak.</p>
+  <div class="premium-card p-6 lg:p-8 animate-fade-up">
+    <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between relative z-10">
+      <div>
+        <div class="inline-flex items-center gap-2 rounded-full border border-white/5 bg-white/5 px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-white/40 mb-4">
+          <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+          Archive • Statistics
+        </div>
+        <h1 class="text-3xl font-bold tracking-tight text-white">Riwayat Masak</h1>
+        <p class="mt-2 text-sm text-white/40">Ringkasan pesanan yang sudah berhasil diselesaikan di dapur.</p>
+      </div>
+    </div>
+
+    <div class="mt-8 pt-8 border-t border-white/5 relative z-10">
+      <form class="flex flex-col gap-6 sm:flex-row sm:items-end">
+        <div class="space-y-2">
+          <label class="text-[10px] font-black uppercase tracking-[0.2em] text-white/20 px-1">Dari Tanggal</label>
+          <input type="date" name="from" value="{{ $from }}"
+                 class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none focus:border-accent-gold/50 transition-colors" />
+        </div>
+        <div class="space-y-2">
+          <label class="text-[10px] font-black uppercase tracking-[0.2em] text-white/20 px-1">Sampai Tanggal</label>
+          <input type="date" name="to" value="{{ $to }}"
+                 class="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none focus:border-accent-gold/50 transition-colors" />
+        </div>
+        <button class="btn-premium-primary px-8 py-3.5 text-xs font-black uppercase tracking-widest">
+          Filter Data
+        </button>
+      </form>
+    </div>
+
+    <div class="mt-8 flex flex-wrap gap-4 relative z-10">
+      <div class="glass-panel rounded-2xl px-6 py-5 border-white/5 bg-white/[0.02]">
+        <div class="text-[10px] font-black uppercase tracking-widest text-white/20 mb-1">Total Order Selesai</div>
+        <div class="text-3xl font-bold text-accent-gold tracking-tight">{{ $totalOrdersDone }}</div>
+      </div>
     </div>
   </div>
 
-  <div class="mt-4 rounded-[26px] border border-slate-200/70 bg-white/55 p-4 shadow-sm backdrop-blur-2xl">
-    <form class="flex flex-col gap-3 sm:flex-row sm:items-end">
-      <div>
-        <label class="text-xs text-slate-600">Dari</label>
-        <input type="date" name="from" value="{{ $from }}"
-               class="mt-1 w-full rounded-xl border border-slate-200/70 bg-white/70 px-3 py-2 text-sm outline-none" />
-      </div>
-      <div>
-        <label class="text-xs text-slate-600">Sampai</label>
-        <input type="date" name="to" value="{{ $to }}"
-               class="mt-1 w-full rounded-xl border border-slate-200/70 bg-white/70 px-3 py-2 text-sm outline-none" />
-      </div>
-      <button class="rounded-xl border border-slate-200/70 bg-white/70 px-4 py-2 text-sm font-semibold hover:bg-white/90 backdrop-blur-2xl">
-        Filter
-      </button>
-    </form>
-
-    <div class="mt-4 flex flex-wrap gap-3">
-      <div class="rounded-2xl border border-slate-200/70 bg-white/70 px-4 py-3 backdrop-blur-2xl">
-        <div class="text-xs text-slate-600">Total order selesai</div>
-        <div class="text-xl font-semibold">{{ $totalOrdersDone }}</div>
-      </div>
+  <div class="premium-card p-6 lg:p-8 mt-8 animate-fade-up stagger-1">
+    <div class="flex items-center gap-3 mb-8 relative z-10">
+      <div class="w-1.5 h-6 bg-accent-gold rounded-full"></div>
+      <h2 class="text-lg font-black uppercase tracking-widest text-white/60">Performa Menu</h2>
     </div>
-  </div>
 
-  <div class="mt-4 rounded-[26px] border border-slate-200/70 bg-white/55 p-4 shadow-sm backdrop-blur-2xl">
-    <h2 class="text-sm font-semibold">Total porsi per menu</h2>
-
-    <div class="mt-3 overflow-x-auto">
-      <table class="min-w-full text-sm">
+    <div class="overflow-x-auto relative z-10">
+      <table class="min-w-full">
         <thead>
-          <tr class="text-left text-slate-600">
-            <th class="py-2 pr-4">Menu</th>
-            <th class="py-2 pr-4">Total porsi</th>
+          <tr class="text-left text-[10px] font-black uppercase tracking-[0.3em] text-white/20 border-b border-white/5">
+            <th class="pb-4 px-4">Nama Produk / Menu</th>
+            <th class="pb-4 px-4 text-right">Total Porsi</th>
           </tr>
         </thead>
-        <tbody class="align-top">
+        <tbody class="divide-y divide-white/5">
           @forelse($byProduct as $row)
-            <tr class="border-t border-slate-200/70">
-              <td class="py-2 pr-4 font-medium">{{ $row->product->name ?? ('Product#'.$row->product_id) }}</td>
-              <td class="py-2 pr-4">{{ (int) $row->total_qty }}</td>
+            <tr class="group hover:bg-white/[0.01] transition-colors">
+              <td class="py-5 px-4 text-sm font-bold text-white/80 group-hover:text-accent-gold transition-colors">
+                {{ $row->product->name ?? ('Product#'.$row->product_id) }}
+              </td>
+              <td class="py-5 px-4 text-right">
+                <span class="bg-white/5 border border-white/10 text-white/40 px-3 py-1 rounded-lg text-xs font-black tracking-tight">
+                  {{ (int) $row->total_qty }} <span class="ml-1 text-[10px] opacity-40">ITEM</span>
+                </span>
+              </td>
             </tr>
           @empty
-            <tr class="border-t border-slate-200/70">
-              <td class="py-3 text-slate-600" colspan="2">Belum ada data.</td>
+            <tr>
+              <td class="py-12 text-center text-white/10 italic" colspan="2">Belum ada data tersedia untuk rentang waktu ini.</td>
             </tr>
           @endforelse
         </tbody>
