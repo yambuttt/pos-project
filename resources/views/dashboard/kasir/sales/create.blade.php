@@ -2,476 +2,366 @@
 @section('title', 'Transaksi Baru')
 
 @section('body')
-<style>
-    /* Custom scrollbar for cart */
-    .cart-scroll::-webkit-scrollbar { width: 4px; }
-    .cart-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+<div class="h-[calc(100vh-6rem)] -m-4 lg:-m-8 flex flex-col lg:flex-row overflow-hidden" x-data="posSystem()">
     
-    /* skeleton animation */
-    @keyframes pulse-fast {
-        0%, 100% { opacity: 1; }
-        50% { opacity: 0.5; }
-    }
-    .animate-pulse-fast { animation: pulse-fast 1.2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
-</style>
-
-<div class="-mx-4 -mt-4 -mb-4 p-4 lg:p-6 min-h-[calc(100vh-4rem)] xl:h-screen xl:max-h-screen text-white font-sans flex flex-col xl:flex-row gap-6 xl:overflow-hidden">
-    <!-- LEFT SIDE -->
-    <div class="flex-1 flex flex-col min-w-0 xl:overflow-y-auto xl:pr-2 cart-scroll xl:pb-24">
-        <!-- Header -->
-        <div class="shrink-0 flex items-center justify-between gap-4">
-            <div class="relative w-full max-w-md">
-                <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                <input type="text" id="search" placeholder="Search menu items..." class="w-full bg-white/5 border border-white/10 rounded-full pl-11 pr-4 py-3 text-sm text-white placeholder-white/40 focus:outline-none focus:border-white/30 transition-colors">
-            </div>
-            <div class="flex items-center gap-3">
-                <button class="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition text-white/70">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
-                </button>
-                <div class="w-10 h-10 rounded-full bg-white/20 overflow-hidden border border-white/10">
-                    <img src="https://ui-avatars.com/api/?name={{ urlencode(auth()->user()->name) }}&background=random" class="w-full h-full object-cover">
-                </div>
-            </div>
-        </div>
-
-        <!-- Categories -->
-        <div class="mt-6 shrink-0 flex items-center gap-3 overflow-x-auto pb-2 scrollbar-hide" id="categoriesContainer">
-            <!-- Rendered by JS -->
-        </div>
-
-        <!-- Products Grid -->
-        <div class="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 pb-10" id="productsGrid">
-            <!-- Rendered by JS -->
-        </div>
-    </div>
-
-    <!-- RIGHT SIDE (Cart) -->
-    <div class="w-full xl:w-[400px] shrink-0 relative z-10 xl:h-full">
-        <form id="saleForm" method="POST" action="{{ route('kasir.sales.store') }}" class="bg-white/5 backdrop-blur-2xl rounded-[24px] border border-white/10 flex flex-col xl:h-full shadow-2xl">
-            @csrf
-            <div id="saleFormData" class="hidden"></div>
-            
-            <div class="p-6 border-b border-white/5">
-                <div class="flex items-center justify-between">
-                    <h2 class="text-xl font-bold">New Order</h2>
-                    <a href="{{ route('kasir.sales.index') }}" class="text-xs text-white/40 hover:text-white transition bg-white/5 px-3 py-1.5 rounded-lg border border-white/10">Riwayat</a>
-                </div>
-                
-                <div class="mt-4 flex gap-2 text-sm">
-                    <label class="flex-1 cursor-pointer">
-                        <input type="radio" name="order_type" value="takeaway" class="peer hidden" {{ old('order_type', 'takeaway') === 'takeaway' ? 'checked' : '' }}>
-                        <div class="text-center py-2.5 rounded-xl border border-white/10 text-white/60 peer-checked:bg-blue-500/20 peer-checked:text-blue-400 peer-checked:border-blue-500 transition font-medium">Take Away</div>
-                    </label>
-                    <label class="flex-1 cursor-pointer">
-                        <input type="radio" name="order_type" value="dine_in" class="peer hidden" {{ old('order_type') === 'dine_in' ? 'checked' : '' }}>
-                        <div class="text-center py-2.5 rounded-xl border border-white/10 text-white/60 peer-checked:bg-blue-500/20 peer-checked:text-blue-400 peer-checked:border-blue-500 transition font-medium">Dine In</div>
-                    </label>
-                </div>
-                <div id="tableWrap" class="mt-3 hidden transition-all">
-                    <select name="dining_table_id" id="diningTable" class="w-full rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-sm outline-none focus:border-blue-500 text-white transition">
-                        <option value="" class="text-black">— Select Table —</option>
-                        @foreach(($tables ?? []) as $t)
-                            <option value="{{ $t->id }}" class="text-black" {{ (string)old('dining_table_id') === (string)$t->id ? 'selected' : '' }}>
-                                {{ $t->name }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-            </div>
-
-            <!-- Cart Items -->
-            <div class="xl:flex-1 max-h-[45vh] xl:max-h-none overflow-y-auto cart-scroll p-4 sm:p-6 space-y-4" id="cart">
-                <!-- Rendered by JS -->
-            </div>
-
-            <!-- Summary & Payment Details -->
-            <div class="p-6 border-t border-white/10 bg-black/20 rounded-b-[24px]">
-                <div class="space-y-3">
-                    <div class="flex justify-between text-sm text-white/50">
-                        <span>Subtotal</span>
-                        <span id="subtotalText" class="text-white/80">Rp 0</span>
+    {{-- Left Side: Products --}}
+    <div class="flex-1 flex flex-col min-w-0 bg-obsidian-950">
+        {{-- POS Header --}}
+        <div class="p-6 border-b border-white/5 space-y-6">
+            <div class="flex items-center justify-between gap-4">
+                <div class="relative flex-1 max-w-md group">
+                    <div class="absolute inset-y-0 left-4 flex items-center pointer-events-none text-white/20 group-focus-within:text-accent-gold transition-colors">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                     </div>
-                    <div class="flex justify-between text-sm text-white/50">
-                        <span>Tax (11%)</span>
-                        <span id="taxText" class="text-white/80">Rp 0</span>
-                    </div>
-                    <div class="flex justify-between text-xl font-bold text-white pt-2 border-t border-white/5">
-                        <span>Total</span>
-                        <span id="totalText">Rp 0</span>
-                    </div>
+                    <input type="text" x-model="search" placeholder="Cari menu atau kategori..." 
+                           class="w-full bg-white/5 border border-white/10 rounded-2xl py-3.5 pl-12 pr-4 text-sm focus:outline-none focus:border-accent-gold/50 focus:ring-4 focus:ring-accent-gold/10 transition-all placeholder-white/20">
                 </div>
-
-                <div class="mt-5 grid grid-cols-2 gap-3">
-                    <div>
-                        <select name="payment_method" id="paymentMethod" class="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-3 text-sm outline-none focus:border-blue-500 text-white transition">
-                            <option value="cash" class="text-black" {{ old('payment_method') === 'cash' ? 'selected' : '' }}>Cash</option>
-                            <option value="qris" class="text-black" {{ old('payment_method') === 'qris' ? 'selected' : '' }}>QRIS</option>
-                            <option value="bca_va" class="text-black" {{ old('payment_method') === 'bca_va' ? 'selected' : '' }}>VA BCA</option>
-                            <option value="bni_va" class="text-black" {{ old('payment_method') === 'bni_va' ? 'selected' : '' }}>VA BNI</option>
-                            <option value="bri_va" class="text-black" {{ old('payment_method') === 'bri_va' ? 'selected' : '' }}>VA BRI</option>
-                            <option value="permata_va" class="text-black" {{ old('payment_method') === 'permata_va' ? 'selected' : '' }}>VA Permata</option>
-                        </select>
-                    </div>
-                    <div>
-                        <input name="paid_amount" id="paidAmount" type="number" min="0" value="{{ old('paid_amount', 0) }}" placeholder="Pay Amount" class="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-3 text-sm outline-none focus:border-blue-500 text-white transition placeholder-white/30">
-                    </div>
-                </div>
-                <div class="mt-2 text-right text-xs text-white/40">
-                    Change: <span id="changeText" class="text-white font-semibold">Rp 0</span>
-                </div>
-
-                <div class="mt-5 flex gap-3">
-                    <button type="button" id="clearCart" class="flex-1 py-3.5 rounded-xl border border-white/10 text-white hover:bg-white/5 font-medium transition text-sm">Cancel</button>
-                    <button type="submit" id="payBtn" disabled class="flex-[2] py-3.5 rounded-xl bg-blue-600 text-white font-bold hover:bg-blue-500 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_4px_14px_rgba(37,99,235,0.4)] text-sm flex items-center justify-center gap-2">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
-                        Checkout
+                <div class="flex items-center gap-2">
+                    <button @click="viewMode = 'grid'" :class="viewMode === 'grid' ? 'bg-accent-gold text-black' : 'bg-white/5 text-white/40'" class="p-2.5 rounded-xl transition-all">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+                    </button>
+                    <button @click="viewMode = 'list'" :class="viewMode === 'list' ? 'bg-accent-gold text-black' : 'bg-white/5 text-white/40'" class="p-2.5 rounded-xl transition-all">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
                     </button>
                 </div>
             </div>
-        </form>
+
+            {{-- Categories --}}
+            <div class="flex items-center gap-3 overflow-x-auto pb-2 custom-scrollbar">
+                <button @click="currentCategory = 'All'" 
+                        :class="currentCategory === 'All' ? 'bg-accent-gold text-black shadow-lg shadow-accent-gold/20' : 'bg-white/5 text-white/50 hover:bg-white/10'"
+                        class="shrink-0 px-6 py-2.5 rounded-2xl text-xs font-bold transition-all uppercase tracking-wider">
+                    Semua Menu
+                </button>
+                <template x-for="cat in categories" :key="cat">
+                    <button @click="currentCategory = cat" 
+                            :class="currentCategory === cat ? 'bg-accent-gold text-black shadow-lg shadow-accent-gold/20' : 'bg-white/5 text-white/50 hover:bg-white/10'"
+                            class="shrink-0 px-6 py-2.5 rounded-2xl text-xs font-bold transition-all uppercase tracking-wider"
+                            x-text="cat">
+                    </button>
+                </template>
+            </div>
+        </div>
+
+        {{-- Product Grid --}}
+        <div class="flex-1 overflow-y-auto p-6 custom-scrollbar">
+            <div :class="viewMode === 'grid' ? 'grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6' : 'space-y-4'">
+                <template x-for="p in filteredProducts" :key="p.id">
+                    <div @click="addToCart(p)" 
+                         :class="[
+                            viewMode === 'grid' ? 'flex flex-col' : 'flex items-center gap-4',
+                            p.max_portions <= 0 ? 'opacity-40 grayscale pointer-events-none' : 'cursor-pointer transform active:scale-95'
+                         ]"
+                         class="premium-card p-3 relative group border-white/5 hover:border-accent-gold/30">
+                        
+                        {{-- Badge --}}
+                        <template x-if="getCartQty(p.id) > 0">
+                            <div class="absolute -top-2 -right-2 w-7 h-7 bg-accent-gold text-black rounded-full flex items-center justify-center text-xs font-black shadow-lg shadow-accent-gold/30 z-10 border-2 border-black" x-text="getCartQty(p.id)"></div>
+                        </template>
+
+                        {{-- Image --}}
+                        <div :class="viewMode === 'grid' ? 'w-full aspect-square mb-4' : 'w-20 h-20'" class="rounded-2xl overflow-hidden bg-white/5 flex items-center justify-center relative">
+                            <template x-if="p.image_url">
+                                <img :src="p.image_url" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
+                            </template>
+                            <template x-if="!p.image_url">
+                                <svg class="w-8 h-8 text-white/10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                            </template>
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                        </div>
+
+                        {{-- Info --}}
+                        <div class="flex-1 min-w-0">
+                            <div class="text-[10px] font-black uppercase tracking-widest text-accent-gold mb-1" x-text="p.category || 'Lainnya'"></div>
+                            <h3 class="font-bold text-sm truncate mb-1 text-white" x-text="p.name"></h3>
+                            <div class="flex items-center justify-between">
+                                <span class="font-bold text-white/80" x-text="fmtRp(p.price)"></span>
+                                <span class="text-[10px] text-white/20 font-bold" x-text="p.max_portions + ' stok'"></span>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </div>
     </div>
+
+    {{-- Right Side: Cart --}}
+    <div class="w-full lg:w-[420px] glass-panel border-y-0 border-r-0 flex flex-col relative z-20 shadow-[-20px_0_50px_rgba(0,0,0,0.8)] bg-black">
+        <div class="p-6 border-b border-white/5 flex items-center justify-between">
+            <h2 class="text-xl font-bold tracking-tight text-white">Pesanan Baru</h2>
+            <button @click="clearCart()" class="text-[10px] font-black text-red-400/60 hover:text-red-400 transition-colors uppercase tracking-widest">Reset</button>
+        </div>
+
+        {{-- Order Settings --}}
+        <div class="p-6 space-y-4">
+            <div class="grid grid-cols-2 gap-2 p-1 bg-white/5 rounded-2xl border border-white/5">
+                <button @click="orderType = 'takeaway'" :class="orderType === 'takeaway' ? 'bg-accent-gold text-black shadow-md shadow-accent-gold/20' : 'text-white/40 hover:text-white'" class="py-2.5 rounded-xl text-[10px] font-black transition-all uppercase tracking-widest">Take Away</button>
+                <button @click="orderType = 'dine_in'" :class="orderType === 'dine_in' ? 'bg-accent-gold text-black shadow-md shadow-accent-gold/20' : 'text-white/40 hover:text-white'" class="py-2.5 rounded-xl text-[10px] font-black transition-all uppercase tracking-widest">Dine In</button>
+            </div>
+
+            {{-- Table Selector --}}
+            <div x-show="orderType === 'dine_in'" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 -translate-y-2" x-transition:enter-end="opacity-100 translate-y-0">
+                <button @click="showTableSelector = true" 
+                        class="w-full flex items-center justify-between px-4 py-3.5 bg-white/5 border border-white/10 rounded-2xl text-sm transition-all hover:bg-white/10">
+                    <div class="flex items-center gap-3">
+                        <svg class="w-5 h-5 text-accent-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-7h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                        <span x-text="selectedTable ? 'Meja: ' + selectedTable.name : 'Pilih Meja...'" :class="selectedTable ? 'text-white font-bold' : 'text-white/30'"></span>
+                    </div>
+                    <svg class="w-4 h-4 text-white/20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                </button>
+            </div>
+        </div>
+
+        {{-- Cart Items --}}
+        <div class="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar">
+            <template x-if="cart.length === 0">
+                <div class="h-full flex flex-col items-center justify-center text-center opacity-10">
+                    <svg class="w-20 h-20 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
+                    <p class="text-sm font-black uppercase tracking-[0.2em]">Keranjang Kosong</p>
+                </div>
+            </template>
+
+            <template x-for="(item, index) in cart" :key="item.id">
+                <div class="flex items-start gap-4 p-4 rounded-2xl bg-white/[0.02] border border-white/5 hover:bg-white/[0.04] transition-all animate-fade-up">
+                    <div class="w-12 h-12 rounded-xl overflow-hidden bg-white/5 shrink-0">
+                        <img x-show="item.image_url" :src="item.image_url" class="w-full h-full object-cover">
+                        <div x-show="!item.image_url" class="w-full h-full flex items-center justify-center text-white/10"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg></div>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <h4 class="font-bold text-sm truncate text-white" x-text="item.name"></h4>
+                        <div class="text-accent-gold font-bold text-xs mt-1" x-text="fmtRp(item.price)"></div>
+                        <input type="text" x-model="item.note" placeholder="Catatan..." class="mt-2 w-full bg-black/40 border border-white/5 rounded-lg px-2 py-1.5 text-[10px] text-white/60 focus:outline-none focus:border-accent-gold/30 placeholder-white/10">
+                    </div>
+                    <div class="flex flex-col items-center gap-1 bg-black rounded-xl p-1 border border-white/10">
+                        <button @click="updateQty(index, 1)" class="w-7 h-7 flex items-center justify-center text-white/40 hover:text-accent-gold transition-colors"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg></button>
+                        <span class="text-xs font-black text-white" x-text="item.qty"></span>
+                        <button @click="updateQty(index, -1)" class="w-7 h-7 flex items-center justify-center text-white/40 hover:text-red-400 transition-colors"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M20 12H4"></path></svg></button>
+                    </div>
+                </div>
+            </template>
+        </div>
+
+        {{-- Summary --}}
+        <div class="p-6 bg-black border-t border-white/10 space-y-4">
+            <div class="space-y-2">
+                <div class="flex justify-between text-xs text-white/30 font-bold">
+                    <span>Subtotal</span>
+                    <span x-text="fmtRp(totalPrice)"></span>
+                </div>
+                <div class="flex justify-between text-xs text-white/30 font-bold">
+                    <span>Pajak (11%)</span>
+                    <span x-text="fmtRp(taxAmount)"></span>
+                </div>
+                <div class="flex justify-between items-end pt-3 border-t border-white/5">
+                    <span class="text-[10px] font-black uppercase tracking-[0.2em] text-white/40">Total Tagihan</span>
+                    <span class="text-2xl font-black text-accent-gold" x-text="fmtRp(grandTotal)"></span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div class="relative group">
+                    <select x-model="paymentMethod" class="w-full bg-white/5 border border-white/10 rounded-2xl py-3.5 px-4 text-xs font-black uppercase tracking-widest appearance-none focus:outline-none focus:border-accent-gold/50 transition-all cursor-pointer text-white">
+                        <option value="cash" class="bg-black">Tunai / Cash</option>
+                        <option value="qris" class="bg-black">QRIS</option>
+                        <option value="bca_va" class="bg-black">VA BCA</option>
+                    </select>
+                    <div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-white/20"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg></div>
+                </div>
+                <div class="relative">
+                    <div class="absolute left-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-white/20">RP</div>
+                    <input type="number" x-model.number="paidAmount" :readonly="paymentMethod !== 'cash'" :class="paymentMethod !== 'cash' ? 'opacity-20' : ''"
+                           class="w-full bg-white/5 border border-white/10 rounded-2xl py-3.5 pl-10 pr-4 text-sm font-bold focus:outline-none focus:border-accent-gold/50 transition-all text-white">
+                </div>
+            </div>
+            
+            <div class="flex items-center justify-between px-2">
+                <span class="text-[10px] font-black text-white/20 uppercase tracking-[0.2em]">Kembalian</span>
+                <span class="text-sm font-bold font-mono" :class="changeAmount >= 0 ? 'text-accent-gold' : 'text-red-400'" x-text="fmtRp(Math.max(0, changeAmount))"></span>
+            </div>
+
+            <button @click="processCheckout()" :disabled="cart.length === 0 || isProcessing"
+                    class="w-full btn-premium-primary py-5 rounded-[1.5rem] uppercase tracking-[0.2em] font-black text-xs disabled:opacity-20 disabled:grayscale">
+                <template x-if="isProcessing">
+                    <svg class="animate-spin h-5 w-5 mr-3 text-black" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                </template>
+                <span x-text="isProcessing ? 'Memproses...' : 'Selesaikan Transaksi'"></span>
+            </button>
+        </div>
+    </div>
+
+    {{-- Mobile Visual Table Selector Drawer --}}
+    <div x-show="showTableSelector" style="display:none" class="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4">
+        <div x-show="showTableSelector" x-transition.opacity class="absolute inset-0 bg-black/95 backdrop-blur-md" @click="showTableSelector = false"></div>
+        <div x-show="showTableSelector" 
+             x-transition:enter="transition ease-out duration-300 transform" 
+             x-transition:enter-start="translate-y-full sm:scale-95 sm:translate-y-0" 
+             x-transition:enter-end="translate-y-0 sm:scale-100"
+             class="relative bg-black border-t sm:border border-white/10 w-full max-w-4xl h-[85vh] sm:h-auto sm:max-h-[80vh] rounded-t-[2.5rem] sm:rounded-[3rem] overflow-hidden flex flex-col shadow-2xl">
+            
+            <div class="p-8 border-b border-white/5 shrink-0">
+                <div class="flex items-center justify-between mb-2">
+                    <div>
+                        <h3 class="text-2xl font-bold tracking-tight text-white">Manajemen Meja</h3>
+                        <p class="text-accent-gold text-[10px] mt-1 uppercase tracking-widest font-black">Pilih lokasi dine-in</p>
+                    </div>
+                    <button @click="showTableSelector = false" class="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center text-white/40 hover:text-white transition-all">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
+                </div>
+            </div>
+
+            <div class="flex-1 overflow-y-auto p-8 custom-scrollbar">
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
+                    <template x-for="t in tables" :key="t.id">
+                        <div @click="selectedTable = t; showTableSelector = false"
+                             :class="selectedTable?.id === t.id ? 'bg-accent-gold border-accent-gold shadow-lg shadow-accent-gold/20 scale-105' : 'bg-white/5 border-white/10 hover:border-accent-gold/30'"
+                             class="aspect-square rounded-[2rem] border-2 flex flex-col items-center justify-center gap-4 transition-all cursor-pointer group">
+                            
+                            <div :class="selectedTable?.id === t.id ? 'bg-black text-accent-gold' : 'bg-white/5 text-white/20'" class="w-16 h-16 rounded-2xl flex items-center justify-center transition-all">
+                                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-7h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                            </div>
+                            <div class="text-center">
+                                <div :class="selectedTable?.id === t.id ? 'text-black font-black' : 'text-white/70 font-bold'" class="text-sm uppercase tracking-widest" x-text="t.name"></div>
+                                <div :class="selectedTable?.id === t.id ? 'text-black/40' : 'text-white/20'" class="text-[10px] mt-1 uppercase font-bold tracking-widest">Available</div>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+
+            <div class="p-8 bg-black border-t border-white/5 flex gap-4">
+                <button @click="showTableSelector = false" class="flex-1 btn-premium-glass text-xs py-4">Batal</button>
+                <button @click="showTableSelector = false" class="flex-[2] btn-premium-primary text-xs py-4">Pilih Meja</button>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 <script>
-    const productsData = @json($productsJson);
-    const grid = document.getElementById('productsGrid');
-    const categoriesContainer = document.getElementById('categoriesContainer');
-    const search = document.getElementById('search');
-    
-    // Cart & form elements
-    const cartMap = new Map();
-    const cartEl = document.getElementById('cart');
-    const formData = document.getElementById('saleFormData');
-    const subtotalText = document.getElementById('subtotalText');
-    const taxText = document.getElementById('taxText');
-    const totalText = document.getElementById('totalText');
-    const paidAmount = document.getElementById('paidAmount');
-    const paymentMethod = document.getElementById('paymentMethod');
-    const changeText = document.getElementById('changeText');
-    const payBtn = document.getElementById('payBtn');
-    const clearCart = document.getElementById('clearCart');
-    const saleForm = document.getElementById('saleForm');
-    
-    const tableWrap = document.getElementById('tableWrap');
-    const diningTable = document.getElementById('diningTable');
-    
-    let currentCategory = 'All Items';
-    let searchQuery = '';
-    
-    const fmtRp = (n) => 'Rp ' + Number(n || 0).toLocaleString('id-ID');
-    const escapeAttr = (str) => String(str ?? '').replaceAll('"', '&quot;').replaceAll("'", '&#039;');
-    
-    function isMidtransMethod(method) {
-        return ['qris', 'bca_va', 'bni_va', 'bri_va', 'permata_va'].includes(method);
-    }
-    
-    // Toggle Dine in / Takeaway
-    function syncOrderTypeUI() {
-        const typeEl = document.querySelector('input[name="order_type"]:checked');
-        const type = typeEl ? typeEl.value : 'takeaway';
-        if (!tableWrap) return;
-        if (type === 'dine_in') {
-            tableWrap.classList.remove('hidden');
-            if (diningTable) diningTable.disabled = false;
-        } else {
-            tableWrap.classList.add('hidden');
-            if (diningTable) {
-                diningTable.value = '';
-                diningTable.disabled = true;
-            }
-        }
-    }
-    document.querySelectorAll('input[name="order_type"]').forEach(r => r.addEventListener('change', syncOrderTypeUI));
-    syncOrderTypeUI();
-    
-    function initCategories() {
-        let categories = new Set();
-        productsData.forEach(p => {
-            if (p.category) categories.add(p.category);
-        });
+function posSystem() {
+    return {
+        products: @json($productsJson),
+        tables: @json($tables),
+        categories: [],
+        currentCategory: 'All',
+        search: '',
+        viewMode: 'grid',
         
-        const cats = ['All Items', ...Array.from(categories)];
-        categoriesContainer.innerHTML = '';
-        
-        cats.forEach(cat => {
-            const btn = document.createElement('button');
-            const isActive = currentCategory === cat;
-            
-            btn.className = `shrink-0 whitespace-nowrap px-5 py-2.5 rounded-xl text-sm font-medium transition ${isActive ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20' : 'bg-white/5 border border-white/10 text-white/70 hover:bg-white/10 hover:text-white'}`;
-            
-            // Add icon depending on category (simple logic)
-            let icon = '';
-            if(cat === 'All Items') icon = '<svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>';
-            
-            btn.innerHTML = icon + cat;
-            btn.onclick = () => {
-                if(currentCategory !== cat) {
-                    currentCategory = cat;
-                    initCategories(); // re-render to update active state
-                    renderProductsWithLoader();
-                }
-            };
-            categoriesContainer.appendChild(btn);
-        });
-    }
+        cart: [],
+        orderType: 'takeaway',
+        selectedTable: null,
+        paymentMethod: 'cash',
+        paidAmount: 0,
+        isProcessing: false,
+        showTableSelector: false,
 
-    function renderSkeleton() {
-        grid.innerHTML = '';
-        for (let i = 0; i < 8; i++) {
-            grid.innerHTML += `
-                <div class="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl overflow-hidden flex flex-col p-3 animate-pulse-fast">
-                    <div class="w-full h-32 sm:h-40 bg-white/5 rounded-xl mb-3"></div>
-                    <div class="h-4 bg-white/10 rounded w-3/4 mb-2"></div>
-                    <div class="h-3 bg-white/5 rounded w-full mb-1"></div>
-                    <div class="h-3 bg-white/5 rounded w-2/3 mb-4"></div>
-                    <div class="mt-auto flex justify-between items-center">
-                        <div class="h-5 bg-white/10 rounded w-1/3"></div>
-                        <div class="h-8 w-8 rounded-full bg-white/10"></div>
-                    </div>
-                </div>
-            `;
-        }
-    }
-    
-    function renderProductsWithLoader() {
-        renderSkeleton();
-        
-        // Simulate network delay / animation for feeling like an app
-        setTimeout(() => {
-            renderProducts();
-        }, 500);
-    }
-    
-    function renderProducts() {
-        grid.innerHTML = '';
-        
-        const filtered = productsData.filter(p => {
-            const matchCat = currentCategory === 'All Items' || p.category === currentCategory;
-            const matchSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase());
-            return matchCat && matchSearch;
-        });
-        
-        if (filtered.length === 0) {
-            grid.innerHTML = '<div class="col-span-full text-center py-10 text-white/40">No products found</div>';
-            return;
-        }
-        
-        filtered.forEach(p => {
-            const isSoldOut = Number(p.max_portions) <= 0;
-            const cartItem = cartMap.get(p.id);
-            const qtyInCart = cartItem ? cartItem.qty : 0;
-            const isSelected = qtyInCart > 0;
-            
-            const card = document.createElement('div');
-            card.className = `bg-white/5 backdrop-blur-xl rounded-2xl overflow-hidden flex flex-col transition-all duration-300 relative group
-                ${isSoldOut ? 'opacity-50 grayscale' : 'hover:scale-[1.02] cursor-pointer hover:shadow-xl'}
-                ${isSelected ? 'ring-1 ring-blue-500 bg-white/10' : 'border border-white/10'}
-            `;
-            
-            // Image area
-            let imgHtml = '';
-            if (p.image_url) {
-                imgHtml = `<img src="${p.image_url}" class="w-full h-32 sm:h-40 object-cover rounded-xl" alt="${escapeAttr(p.name)}">`;
-            } else {
-                imgHtml = `<div class="w-full h-32 sm:h-40 bg-black/40 rounded-xl flex items-center justify-center text-white/20">
-                    <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                </div>`;
-            }
-            
-            let badgeHtml = '';
-            if (qtyInCart > 0) {
-                badgeHtml = `<div class="absolute top-2 right-2 bg-blue-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shadow-lg shadow-black/50 z-10">${qtyInCart}</div>`;
-            } else if (isSoldOut) {
-                 badgeHtml = `<div class="absolute top-2 right-2 bg-red-500/90 text-white px-2 py-0.5 rounded-full text-[10px] font-bold shadow-lg z-10 uppercase tracking-wide">Sold Out</div>`;
-            }
-            
-            card.innerHTML = `
-                <div class="p-2 pb-0 relative">
-                    ${badgeHtml}
-                    ${imgHtml}
-                    ${isSoldOut ? '<div class="absolute inset-2 bg-black/40 rounded-xl"></div>' : ''}
-                </div>
-                <div class="p-3 sm:p-4 flex-1 flex flex-col">
-                    <h3 class="text-sm sm:text-[15px] font-semibold text-white leading-tight mb-1">${escapeAttr(p.name)}</h3>
-                    <p class="text-[11px] sm:text-xs text-white/50 line-clamp-2 mb-3 flex-1">${escapeAttr(p.description || 'No description')}</p>
-                    <div class="flex items-center justify-between mt-auto">
-                        <span class="font-bold text-white">${fmtRp(p.price)}</span>
-                        <button type="button" class="w-8 h-8 rounded-full ${isSoldOut ? 'bg-white/5 text-white/20' : 'bg-blue-600 text-white hover:bg-blue-500'} flex items-center justify-center transition" ${isSoldOut ? 'disabled' : ''}>
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
-                        </button>
-                    </div>
-                </div>
-            `;
-            
-            if (!isSoldOut) {
-                card.onclick = () => addToCart(p);
-            }
-            
-            grid.appendChild(card);
-        });
-    }
-    
-    // --- CART LOGIC ---
-    function addToCart(p) {
-        if (Number(p.max_portions || 0) <= 0) return;
-        const item = cartMap.get(p.id) || { ...p, qty: 0, note: '' };
-        item.qty += 1;
-        cartMap.set(p.id, item);
-        renderCart();
-        renderProducts(); // re-render to update the quantity badge on grid
-    }
-    
-    function changeQty(id, delta) {
-        const item = cartMap.get(id);
-        if (!item) return;
-        item.qty += delta;
-        if (item.qty <= 0) cartMap.delete(id);
-        else cartMap.set(id, item);
-        renderCart();
-        renderProducts(); // update badges
-    }
-    
-    function renderCart() {
-        const TAX_RATE = 0.11;
-        cartEl.innerHTML = '';
-        formData.innerHTML = '';
-        
-        let subtotalAll = 0;
-        let index = 0;
-        
-        if (cartMap.size === 0) {
-            cartEl.innerHTML = `
-                <div class="h-full flex flex-col items-center justify-center text-white/20 pt-10">
-                    <svg class="w-16 h-16 mb-4 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
-                    <p class="text-sm font-medium">Cart is empty</p>
-                </div>
-            `;
-        }
-        
-        cartMap.forEach((item) => {
-            const subtotal = item.price * item.qty;
-            subtotalAll += subtotal;
-            
-            const row = document.createElement('div');
-            row.className = 'border-b border-white/5 pb-4 last:border-0 last:pb-0';
-            
-            row.innerHTML = `
-                <div class="flex items-start justify-between gap-3">
-                    <div class="flex-1">
-                        <div class="text-[15px] font-semibold text-white/90">${escapeAttr(item.name)}</div>
-                        <div class="text-xs text-white/50 mt-1">${fmtRp(item.price)}</div>
-                        <input type="text" placeholder="Add note (optional)..." value="${escapeAttr(item.note)}" data-note-for="${item.id}" class="mt-2 w-full bg-black/20 border border-white/5 rounded-lg px-2.5 py-1.5 text-xs text-white outline-none focus:border-white/20 placeholder-white/20 transition">
-                    </div>
-                    <div class="flex flex-col items-end gap-2">
-                        <div class="text-[15px] font-semibold text-white">${fmtRp(subtotal)}</div>
-                        <div class="flex items-center gap-1 bg-black/20 rounded-lg p-0.5 border border-white/5">
-                            <button type="button" class="w-7 h-7 flex items-center justify-center rounded-md text-white/70 hover:bg-white/10 hover:text-white transition" onclick="changeQty(${item.id}, -1)">
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path></svg>
-                            </button>
-                            <span class="w-6 text-center text-sm font-semibold text-white">${item.qty}</span>
-                            <button type="button" class="w-7 h-7 flex items-center justify-center rounded-md text-white/70 hover:bg-white/10 hover:text-white transition" onclick="changeQty(${item.id}, 1)">
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            `;
-            
-            // Input note binding
-            setTimeout(() => {
-                const noteInput = row.querySelector(`input[data-note-for="${item.id}"]`);
-                if(noteInput) {
-                    noteInput.addEventListener('input', (e) => {
-                        const val = e.target.value ?? '';
-                        const it = cartMap.get(item.id);
-                        if (it) {
-                            it.note = val;
-                            const hidden = formData.querySelector(`input[data-note-hidden-for="${item.id}"]`);
-                            if (hidden) hidden.value = val;
-                        }
-                    });
-                }
-            }, 0);
-            
-            cartEl.appendChild(row);
-            
-            // Hidden Form Data for submission
-            formData.insertAdjacentHTML('beforeend', `
-                <input type="hidden" name="items[${index}][product_id]" value="${item.id}">
-                <input type="hidden" name="items[${index}][qty]" value="${item.qty}">
-                <input type="hidden" name="items[${index}][note]" value="${escapeAttr(item.note)}" data-note-hidden-for="${item.id}">
-            `);
-            index++;
-        });
-        
-        const tax = Math.round(subtotalAll * TAX_RATE);
-        const grandTotal = subtotalAll + tax;
-        
-        subtotalText.textContent = fmtRp(subtotalAll);
-        taxText.textContent = fmtRp(tax);
-        totalText.textContent = fmtRp(grandTotal);
-        
-        payBtn.disabled = cartMap.size === 0;
-        
-        const method = (paymentMethod?.value || 'cash');
-        if (isMidtransMethod(method)) {
-            paidAmount.value = String(grandTotal);
-            paidAmount.setAttribute('readonly', 'readonly');
-            paidAmount.classList.add('opacity-50');
-            changeText.textContent = fmtRp(0);
-        } else {
-            paidAmount.removeAttribute('readonly');
-            paidAmount.classList.remove('opacity-50');
-            const paid = Number(paidAmount.value || 0);
-            const change = Math.max(0, paid - grandTotal);
-            changeText.textContent = fmtRp(change);
-        }
-    }
-    
-    // Listeners
-    search.addEventListener('input', (e) => {
-        searchQuery = e.target.value;
-        renderProducts(); // don't show skeleton for search to make it snappy
-    });
-    
-    paidAmount.addEventListener('input', renderCart);
-    paymentMethod.addEventListener('change', renderCart);
-    
-    clearCart.addEventListener('click', () => {
-        cartMap.clear();
-        renderCart();
-        renderProducts();
-    });
-    
-    saleForm.addEventListener('submit', async (e) => {
-        const method = paymentMethod?.value || 'cash';
-        if (!isMidtransMethod(method)) return;
-        
-        e.preventDefault();
-        const form = new FormData(saleForm);
-        payBtn.disabled = true;
-        payBtn.innerHTML = '<span class="animate-pulse">Processing...</span>';
-        
-        try {
-            const res = await fetch(saleForm.action, {
-                method: 'POST',
-                headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-                body: form,
+        init() {
+            const cats = new Set();
+            this.products.forEach(p => { if(p.category) cats.add(p.category); });
+            this.categories = Array.from(cats);
+        },
+
+        get filteredProducts() {
+            return this.products.filter(p => {
+                const matchCat = this.currentCategory === 'All' || p.category === this.currentCategory;
+                const matchSearch = p.name.toLowerCase().includes(this.search.toLowerCase());
+                return matchCat && matchSearch;
             });
-            const data = await res.json();
-            if (!res.ok || !data.ok) throw new Error(data.message || 'Payment failed.');
-            window.location.href = data.redirect_url;
-        } catch (err) {
-            alert(err.message || 'Error processing payment.');
-            payBtn.disabled = false;
-            payBtn.innerHTML = 'Checkout';
+        },
+
+        get totalPrice() {
+            return this.cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+        },
+
+        get taxAmount() {
+            return Math.round(this.totalPrice * 0.11);
+        },
+
+        get grandTotal() {
+            return this.totalPrice + this.taxAmount;
+        },
+
+        get changeAmount() {
+            return this.paidAmount - this.grandTotal;
+        },
+
+        addToCart(p) {
+            if (p.max_portions <= 0) return;
+            const index = this.cart.findIndex(i => i.id === p.id);
+            if (index > -1) {
+                if (this.cart[index].qty < p.max_portions) this.cart[index].qty++;
+            } else {
+                this.cart.push({ ...p, qty: 1, note: '' });
+            }
+        },
+
+        updateQty(index, delta) {
+            const item = this.cart[index];
+            if (delta > 0 && item.qty >= item.max_portions) return;
+            item.qty += delta;
+            if (item.qty <= 0) this.cart.splice(index, 1);
+        },
+
+        getCartQty(id) {
+            const item = this.cart.find(i => i.id === id);
+            return item ? item.qty : 0;
+        },
+
+        clearCart() {
+            this.cart = [];
+            this.selectedTable = null;
+            this.paidAmount = 0;
+        },
+
+        fmtRp(v) {
+            return 'Rp ' + new Intl.NumberFormat('id-ID').format(v || 0);
+        },
+
+        async processCheckout() {
+            if (this.cart.length === 0 || this.isProcessing) return;
+            if (this.orderType === 'dine_in' && !this.selectedTable) {
+                alert('Pilih meja terlebih dahulu untuk Dine In.');
+                this.showTableSelector = true;
+                return;
+            }
+            if (this.paymentMethod === 'cash' && this.paidAmount < this.grandTotal) {
+                alert('Uang bayar kurang!');
+                return;
+            }
+
+            this.isProcessing = true;
+            const payload = {
+                order_type: this.orderType,
+                dining_table_id: this.orderType === 'dine_in' ? this.selectedTable.id : null,
+                payment_method: this.paymentMethod,
+                paid_amount: this.paidAmount,
+                items: this.cart.map(i => ({ product_id: i.id, qty: i.qty, note: i.note })),
+                _token: document.querySelector('meta[name="csrf-token"]').content
+            };
+
+            try {
+                const res = await fetch("{{ route('kasir.sales.store') }}", {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (data.ok) {
+                    window.location.href = data.redirect_url;
+                } else {
+                    alert(data.message || 'Terjadi kesalahan.');
+                }
+            } catch (e) {
+                alert('Gagal memproses transaksi.');
+            } finally {
+                this.isProcessing = false;
+            }
         }
-    });
-
-    // Initialize
-    initCategories();
-    renderProductsWithLoader();
-    renderCart();
-
+    }
+}
 </script>
 @endsection
