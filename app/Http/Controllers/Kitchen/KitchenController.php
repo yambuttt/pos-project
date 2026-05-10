@@ -64,7 +64,7 @@ class KitchenController extends Controller
         $to = $request->get('to');
 
         $salesDone = Sale::query()
-            ->where('kitchen_status', 'done')
+            ->whereIn('kitchen_status', ['done', 'delivered'])
             ->when($from, fn($q) => $q->whereDate('kitchen_done_at', '>=', $from))
             ->when($to, fn($q) => $q->whereDate('kitchen_done_at', '<=', $to));
 
@@ -73,7 +73,7 @@ class KitchenController extends Controller
         $byProduct = SaleItem::query()
             ->selectRaw('product_id, SUM(qty) as total_qty')
             ->whereHas('sale', function ($q) use ($from, $to) {
-                $q->where('kitchen_status', 'done')
+                $q->whereIn('kitchen_status', ['done', 'delivered'])
                     ->when($from, fn($qq) => $qq->whereDate('kitchen_done_at', '>=', $from))
                     ->when($to, fn($qq) => $qq->whereDate('kitchen_done_at', '<=', $to));
             })
