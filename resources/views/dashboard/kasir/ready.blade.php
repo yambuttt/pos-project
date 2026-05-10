@@ -131,7 +131,7 @@
       ` : '';
 
       return `
-        <div class="premium-card p-6 animate-fade-up border-white/5 hover:border-accent-gold/20">
+        <div class="premium-card p-6 border-white/5 hover:border-accent-gold/20">
           <div class="flex items-start justify-between gap-4 mb-6">
             <div>
               <div class="text-[10px] font-black uppercase tracking-[0.2em] text-white/20 mb-1">Invoice</div>

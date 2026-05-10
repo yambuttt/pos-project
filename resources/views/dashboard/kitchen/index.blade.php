@@ -389,7 +389,7 @@
       }
 
       return `
-        <div class="premium-card p-5 animate-fade-up border-white/5 hover:border-white/10 transition-colors ${borderClass}">
+        <div class="premium-card p-5 border-white/5 hover:border-white/10 transition-colors ${borderClass}">
           <div class="flex items-start justify-between gap-4 mb-4">
             <div class="min-w-0">
               <div class="flex flex-wrap items-center gap-2 mb-3">
