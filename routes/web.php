@@ -433,6 +433,9 @@ Route::prefix('toko')->name('toko.')->middleware(['auth'])->group(function () {
 
         // User Management
         Route::resource('users', \App\Http\Controllers\Toko\UserController::class)->except(['create', 'edit', 'show']);
+
+        // Transaction History
+        Route::get('/sales/history', [\App\Http\Controllers\Toko\AdminSaleController::class, 'history'])->name('admin.sales.history');
     });
 
     Route::middleware(['role:kasir'])->group(function () {
