@@ -345,6 +345,13 @@ Route::prefix('kasir')->name('kasir.')->middleware(['auth', 'role:kasir'])->grou
 
     Route::post('/sales/confirm-pending-cash', [SaleController::class, 'confirmPendingCashOrder'])
         ->name('sales.confirm-pending-cash');
+
+    // Shift Management
+    Route::post('/shift/start', [\App\Http\Controllers\Kasir\SaleShiftController::class, 'start'])->name('shift.start');
+    Route::post('/shift/end', [\App\Http\Controllers\Kasir\SaleShiftController::class, 'end'])->name('shift.end');
+    Route::get('/shift/history', [\App\Http\Controllers\Kasir\SaleShiftController::class, 'history'])->name('shift.history');
+    Route::get('/shift/{id}', [\App\Http\Controllers\Kasir\SaleShiftController::class, 'show'])->name('shift.show');
+
     Route::get('/reservations', [\App\Http\Controllers\Kasir\ReservationController::class, 'index'])
         ->name('reservations.index');
     Route::get('/reservations/{reservation}', [\App\Http\Controllers\Kasir\ReservationController::class, 'show'])

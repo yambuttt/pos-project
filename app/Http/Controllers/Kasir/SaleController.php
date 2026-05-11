@@ -29,6 +29,14 @@ class SaleController extends Controller
 
     public function create(): View
     {
+        $activeShift = \App\Models\SaleShift::where('user_id', auth()->id())
+            ->where('status', 'open')
+            ->first();
+
+        if (!$activeShift) {
+            abort(redirect()->route('kasir.dashboard')->with('error', 'Anda harus memulai shift terlebih dahulu sebelum melakukan transaksi.'));
+        }
+
         $products = Product::query()
             ->where('is_active', true)
             ->with(['recipes.rawMaterial'])
@@ -109,9 +117,18 @@ class SaleController extends Controller
 
                 $materials = $inventory->lockAndValidateMaterials($needs);
 
+                $activeShift = \App\Models\SaleShift::where('user_id', $userId)
+                    ->where('status', 'open')
+                    ->first();
+
+                if (!$activeShift) {
+                    throw new \RuntimeException('Anda harus memulai shift terlebih dahulu sebelum melakukan transaksi.');
+                }
+
                 $sale = Sale::create([
                     'invoice_no' => 'TEMP',
                     'user_id' => $userId,
+                    'sale_shift_id' => $activeShift->id,
                     'total_amount' => $grandTotal,
                     'paid_amount' => $isCash ? $paid : 0,
                     'payment_method' => $data['payment_method'],
@@ -310,9 +327,18 @@ class SaleController extends Controller
 
                 $inventory->commitPaid($sale, auth()->id());
 
+                $activeShift = \App\Models\SaleShift::where('user_id', auth()->id())
+                    ->where('status', 'open')
+                    ->first();
+
+                if (!$activeShift) {
+                    throw new \RuntimeException('Anda harus memulai shift terlebih dahulu sebelum melakukan transaksi.');
+                }
+
                 $sale->update([
                     'payment_status' => 'paid',
                     'status' => 'completed',
+                    'sale_shift_id' => $activeShift->id,
                     'paid_amount' => $paidAmount,
                     'change_amount' => $paidAmount - $totalAmount,
                     'paid_at' => now(),

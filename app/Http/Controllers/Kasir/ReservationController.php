@@ -14,6 +14,14 @@ class ReservationController extends Controller
 {
     public function index(Request $request)
     {
+        $activeShift = \App\Models\SaleShift::where('user_id', auth()->id())
+            ->where('status', 'open')
+            ->first();
+
+        if (!$activeShift) {
+            return redirect()->route('kasir.dashboard')->with('error', 'Anda harus memulai shift terlebih dahulu.');
+        }
+
         $q = trim((string) $request->get('q'));
         $date = $request->get('date') ?: now()->toDateString();
 
@@ -68,6 +76,14 @@ class ReservationController extends Controller
         ]);
 
         return DB::transaction(function () use ($reservation, $data, $inv, $midtrans) {
+            $activeShift = \App\Models\SaleShift::where('user_id', auth()->id())
+                ->where('status', 'open')
+                ->first();
+
+            if (!$activeShift) {
+                throw new \RuntimeException('Anda harus memulai shift terlebih dahulu sebelum melakukan transaksi.');
+            }
+
             if ($reservation->status !== 'checked_in') {
                 throw new \RuntimeException('Hanya reservasi CHECKED_IN yang bisa checkout.');
             }

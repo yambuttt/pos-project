@@ -9,18 +9,42 @@
       <div class="absolute -right-20 -top-20 w-80 h-80 bg-accent-gold/10 rounded-full blur-[80px] group-hover:bg-accent-gold/20 transition-all duration-700"></div>
       
       <div class="relative z-10">
-        <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-white/50 text-[10px] font-black uppercase tracking-[0.2em] mb-4">
-          <span class="w-2 h-2 rounded-full bg-accent-gold animate-pulse shadow-[0_0_8px_rgba(234,179,8,0.5)]"></span>
-          Terminal Aktif
-        </div>
-        <h1 class="text-4xl lg:text-5xl font-bold tracking-tight mb-2">Halo, <span class="text-accent-gold">{{ explode(' ', auth()->user()->name)[0] }}</span>!</h1>
-        <p class="text-white/50 max-w-lg leading-relaxed">Rekap penjualan hari ini diperbarui secara real-time. Pastikan semua transaksi tercatat dengan benar.</p>
-        
-        <div class="mt-8">
-          <a href="{{ route('kasir.sales.create') }}" class="btn-premium-primary text-sm px-8">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
-            Mulai Transaksi Baru
-          </a>
+        <div class="flex flex-wrap items-center justify-between gap-6">
+            <div>
+                <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-white/50 text-[10px] font-black uppercase tracking-[0.2em] mb-4">
+                  <span class="w-2 h-2 rounded-full {{ $activeShift ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]' : 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]' }} animate-pulse"></span>
+                  {{ $activeShift ? 'Shift Aktif' : 'Shift Belum Dimulai' }}
+                </div>
+                <h1 class="text-4xl lg:text-5xl font-bold tracking-tight mb-2">Halo, <span class="text-accent-gold">{{ explode(' ', auth()->user()->name)[0] }}</span>!</h1>
+                <p class="text-white/50 max-w-lg leading-relaxed">
+                    @if($activeShift)
+                        Shift dimulai sejak {{ $activeShift->start_time->format('H:i') }}. Modal awal: Rp {{ number_format($activeShift->starting_cash, 0, ',', '.') }}
+                    @else
+                        Silakan mulai shift Anda untuk dapat melakukan transaksi penjualan.
+                    @endif
+                </p>
+            </div>
+            <div class="flex flex-wrap gap-4">
+                @if(!$activeShift)
+                    <button onclick="document.getElementById('startShiftModal').classList.remove('hidden')" class="btn-premium-primary text-sm px-8">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                        Mulai Shift
+                    </button>
+                @else
+                    <button onclick="document.getElementById('endShiftModal').classList.remove('hidden')" class="bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20 px-8 py-3 rounded-2xl font-bold text-sm transition-all duration-300 flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                        Akhiri Shift
+                    </button>
+                    <a href="{{ route('kasir.sales.create') }}" class="btn-premium-primary text-sm px-8">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
+                        Mulai Transaksi
+                    </a>
+                @endif
+                <a href="{{ route('kasir.shift.history') }}" class="glass-panel px-8 py-3 rounded-2xl text-white/70 hover:text-white border border-white/10 text-sm font-bold transition-all duration-300 flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    Riwayat Shift
+                </a>
+            </div>
         </div>
       </div>
     </div>
@@ -78,7 +102,66 @@
 
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    </div>
+
+    {{-- Start Shift Modal --}}
+    <div id="startShiftModal" class="fixed inset-0 z-[100] flex items-center justify-center hidden p-4">
+      <div class="absolute inset-0 bg-black/80 backdrop-blur-md" onclick="this.parentElement.classList.add('hidden')"></div>
+      <div class="glass-panel w-full max-w-md p-8 relative z-10 border-white/10 rounded-[2rem] animate-scale-up">
+        <h3 class="text-2xl font-bold mb-6">Mulai Shift Baru</h3>
+        <form action="{{ route('kasir.shift.start') }}" method="POST">
+          @csrf
+          <div class="space-y-6">
+            <div>
+              <label class="block text-white/40 text-[10px] font-black uppercase tracking-[0.2em] mb-3">Modal Awal (Cash)</label>
+              <div class="relative">
+                <span class="absolute left-5 top-1/2 -translate-y-1/2 text-accent-gold font-bold">Rp</span>
+                <input type="number" name="starting_cash" required min="0" placeholder="0" 
+                  class="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-12 pr-6 text-white font-bold focus:border-accent-gold/50 focus:ring-0 transition-all">
+              </div>
+            </div>
+            <button type="submit" class="btn-premium-primary w-full py-4">Buka Kasir & Mulai Shift</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    {{-- End Shift Modal --}}
+    <div id="endShiftModal" class="fixed inset-0 z-[100] flex items-center justify-center hidden p-4">
+      <div class="absolute inset-0 bg-black/80 backdrop-blur-md" onclick="this.parentElement.classList.add('hidden')"></div>
+      <div class="glass-panel w-full max-w-lg p-8 relative z-10 border-white/10 rounded-[2rem] animate-scale-up">
+        <h3 class="text-2xl font-bold mb-2">Akhiri Shift</h3>
+        <p class="text-white/40 text-sm mb-8">Pastikan semua transaksi cash sudah sesuai dengan uang di laci.</p>
+        
+        <div class="grid grid-cols-2 gap-4 mb-8">
+          <div class="bg-white/5 rounded-2xl p-4 border border-white/5">
+            <div class="text-[10px] font-black uppercase tracking-widest text-white/30 mb-1">Total Sales Cash</div>
+            <div class="text-lg font-bold text-white">Rp {{ number_format($summary['omzet_cash'], 0, ',', '.') }}</div>
+          </div>
+          <div class="bg-white/5 rounded-2xl p-4 border border-white/5">
+            <div class="text-[10px] font-black uppercase tracking-widest text-white/30 mb-1">Total Sales QRIS</div>
+            <div class="text-lg font-bold text-white">Rp {{ number_format($summary['omzet_qris'], 0, ',', '.') }}</div>
+          </div>
+          <div class="col-span-2 bg-accent-gold/10 rounded-2xl p-6 border border-accent-gold/20">
+            <div class="text-[10px] font-black uppercase tracking-widest text-accent-gold mb-1">Estimasi Uang di Laci (Modal + Sales Cash)</div>
+            <div class="text-2xl font-black text-accent-gold">
+              @if($activeShift)
+                Rp {{ number_format($activeShift->starting_cash + $summary['omzet_cash'], 0, ',', '.') }}
+              @else
+                Rp 0
+              @endif
+            </div>
+          </div>
+        </div>
+
+        <form action="{{ route('kasir.shift.end') }}" method="POST">
+          @csrf
+          <button type="submit" class="bg-red-500 hover:bg-red-600 text-white w-full py-4 rounded-2xl font-bold transition-all shadow-lg shadow-red-500/20">Konfirmasi Tutup Kasir & Selesai Shift</button>
+        </form>
+      </div>
+    </div>
+
+   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <script>
     (function () {
       const labels = @json($labels);
