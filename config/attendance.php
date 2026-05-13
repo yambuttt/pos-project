@@ -10,4 +10,7 @@ return [
 
     // QR berlaku berapa detik (mis. 60 detik)
     'qr_ttl_seconds' => (int) env('ATTENDANCE_QR_TTL_SECONDS', 60),
+
+    // key untuk akses halaman QR tanpa login admin
+    'kiosk_key' => env('ATTENDANCE_KIOSK_KEY', 'pos123'),
 ];

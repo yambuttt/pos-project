@@ -4,10 +4,16 @@
 @section('body')
     <div class="flex items-center justify-between">
         <div class="text-lg font-semibold text-white">Absensi QR (Dinamis)</div>
-        <a href="{{ route('admin.attendance.devices') }}"
-            class="rounded-xl border border-yellow-500/20 bg-white/[0.04] px-4 py-2 text-sm text-yellow-500 hover:bg-white/[0.08]">
-            Kelola Device
-        </a>
+        <div class="flex items-center gap-3">
+            <a href="{{ route('attendance.kiosk.index', config('attendance.kiosk_key', 'pos123')) }}" target="_blank"
+                class="rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-2 text-sm text-emerald-400 hover:bg-emerald-500/20">
+                Buka Kiosk Mode (Tanpa Login)
+            </a>
+            <a href="{{ route('admin.attendance.devices') }}"
+                class="rounded-xl border border-yellow-500/20 bg-white/[0.04] px-4 py-2 text-sm text-yellow-500 hover:bg-white/[0.08]">
+                Kelola Device
+            </a>
+        </div>
     </div>
 
     @if(session('ok'))

@@ -93,6 +93,12 @@ Route::get('/order/invoice/{invoice}', [PublicMenuController::class, 'invoice'])
 
 Route::get('/order/invoice/{invoice}/status', [PublicMenuController::class, 'invoiceStatus'])
     ->name('public.order.invoice.status');
+
+// Attendance Kiosk (Public with Key)
+Route::get('/attendance/kiosk/token', [\App\Http\Controllers\AttendanceKioskController::class, 'token'])
+    ->name('attendance.kiosk.token');
+Route::get('/attendance/kiosk/{key}', [\App\Http\Controllers\AttendanceKioskController::class, 'index'])
+    ->name('attendance.kiosk.index');
 // LOGIN
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.submit');
