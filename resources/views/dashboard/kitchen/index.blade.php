@@ -31,6 +31,54 @@
         </div>
       </div>
     </div>
+    
+    {{-- PERFORMANCE STATS --}}
+    @if($stats && $stats->total_done > 0)
+    <div class="mt-8 pt-8 border-t border-white/5 relative z-10 animate-fade-up">
+        <div class="flex items-center gap-3 mb-6">
+            <div class="w-1.5 h-6 bg-accent-gold rounded-full"></div>
+            <h2 class="text-lg font-black uppercase tracking-widest text-white/60">Evaluasi Performa (Hari Ini)</h2>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+            <div class="premium-card p-6 border-white/5 hover:border-accent-gold/20 transition-all group">
+                <div class="flex items-center gap-4 mb-3">
+                    <div class="w-10 h-10 rounded-xl bg-accent-gold/10 flex items-center justify-center text-accent-gold group-hover:scale-110 transition-transform">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    </div>
+                    <div class="text-[10px] font-black uppercase tracking-widest text-white/40">Rata-rata Waktu Masak</div>
+                </div>
+                <div class="text-2xl font-bold text-white">
+                    {{ floor($stats->avg_seconds / 60) }}m {{ str_pad($stats->avg_seconds % 60, 2, '0', STR_PAD_LEFT) }}s
+                </div>
+            </div>
+
+            <div class="premium-card p-6 border-white/5 hover:border-accent-emerald/20 transition-all group">
+                <div class="flex items-center gap-4 mb-3">
+                    <div class="w-10 h-10 rounded-xl bg-accent-emerald/10 flex items-center justify-center text-accent-emerald group-hover:scale-110 transition-transform">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    </div>
+                    <div class="text-[10px] font-black uppercase tracking-widest text-white/40">Efisiensi (SLA < 15m)</div>
+                </div>
+                <div class="text-2xl font-bold text-white">
+                    {{ round(($stats->on_time_count / $stats->total_done) * 100) }}%
+                    <span class="text-xs text-white/20 font-medium ml-2">({{ $stats->on_time_count }}/{{ $stats->total_done }} Pesanan)</span>
+                </div>
+            </div>
+
+            <div class="premium-card p-6 border-white/5 hover:border-accent-blue/20 transition-all group">
+                <div class="flex items-center gap-4 mb-3">
+                    <div class="w-10 h-10 rounded-xl bg-accent-blue/10 flex items-center justify-center text-accent-blue group-hover:scale-110 transition-transform">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                    </div>
+                    <div class="text-[10px] font-black uppercase tracking-widest text-white/40">Total Selesai</div>
+                </div>
+                <div class="text-2xl font-bold text-white">
+                    {{ $stats->total_done }} <span class="text-xs text-white/20 font-medium ml-2">Pesanan</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
 
     {{-- FILTERS --}}
     <div class="mt-8 pt-8 border-t border-white/5 relative z-10">

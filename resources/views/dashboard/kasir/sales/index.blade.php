@@ -2,7 +2,7 @@
 @section('title','Riwayat Transaksi')
 
 @section('body')
-  <div class="max-w-7xl mx-auto space-y-8 animate-fade-up">
+  <div class="max-w-7xl mx-auto space-y-8 animate-fade-up" x-data="transactionHistory()">
     
     {{-- Header Section --}}
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
@@ -33,7 +33,7 @@
               <th class="px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-white/20">Invoice</th>
               <th class="px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-white/20">Metode</th>
               <th class="px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-white/20">Total</th>
-              <th class="px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-white/20">Detail Item</th>
+              <th class="px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-white/20">Aksi</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-white/5">
@@ -58,14 +58,10 @@
                   <div class="text-sm font-black text-accent-gold">Rp {{ number_format($s->total_amount,0,',','.') }}</div>
                 </td>
                 <td class="px-6 py-6">
-                  <div class="space-y-1">
-                    @foreach($s->items as $it)
-                      <div class="flex items-center justify-between gap-4 max-w-xs">
-                        <span class="text-[11px] text-white/40 truncate font-medium">{{ $it->product?->name }}</span>
-                        <span class="text-[11px] font-black text-accent-gold/40 shrink-0">x{{ $it->qty }}</span>
-                      </div>
-                    @endforeach
-                  </div>
+                  <button @click="openModal({{ $s->id }})" class="btn-premium-glass px-4 py-2 text-[10px] rounded-xl flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                    Lihat Detail
+                  </button>
                 </td>
               </tr>
             @empty
@@ -86,7 +82,107 @@
     <div class="mt-8">
       {{ $sales->links() }}
     </div>
+
+    {{-- Transaction Detail Modal --}}
+    <div x-show="showModal" style="display:none" class="fixed inset-0 z-[100] flex items-start justify-center p-4 lg:pl-72 pt-12 lg:pt-20">
+        <div x-show="showModal" x-transition.opacity class="absolute inset-0 bg-black/95 backdrop-blur-md" @click="showModal = false"></div>
+        <div x-show="showModal" 
+             x-transition:enter="transition ease-out duration-300 transform" 
+             x-transition:enter-start="translate-y-8 opacity-0 scale-95" 
+             x-transition:enter-end="translate-y-0 opacity-100 scale-100"
+             class="relative bg-black border border-white/10 w-full max-w-2xl rounded-[2.5rem] overflow-hidden flex flex-col shadow-2xl max-h-[90vh]">
+            
+            {{-- Modal Header --}}
+            <div class="p-6 lg:p-8 border-b border-white/5 flex items-start justify-between shrink-0">
+                <div>
+                    <h3 class="text-2xl font-bold tracking-tight text-white mb-2">Detail Transaksi</h3>
+                    <div class="flex items-center gap-3">
+                        <span class="text-accent-gold font-mono text-sm tracking-widest" x-text="selectedSale?.invoice_no"></span>
+                        <span class="px-2 py-1 rounded bg-white/5 text-[10px] font-black uppercase tracking-widest text-white/40" x-text="selectedSale?.payment_method?.replace('_', ' ')"></span>
+                    </div>
+                </div>
+                <button @click="showModal = false" class="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center text-white/40 hover:text-white transition-all">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+
+            {{-- Modal Body --}}
+            <div class="p-6 lg:p-8 flex-1 overflow-y-auto custom-scrollbar">
+                <div class="space-y-6">
+                    {{-- Basic Info --}}
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                        <div class="bg-white/5 rounded-2xl p-4 border border-white/5">
+                            <div class="text-[10px] font-black uppercase tracking-widest text-white/30 mb-1">Status Pembayaran</div>
+                            <div class="text-sm font-bold" :class="selectedSale?.payment_status === 'paid' ? 'text-green-400' : 'text-yellow-400'" x-text="selectedSale?.payment_status?.toUpperCase()"></div>
+                        </div>
+                        <div class="bg-white/5 rounded-2xl p-4 border border-white/5">
+                            <div class="text-[10px] font-black uppercase tracking-widest text-white/30 mb-1">Tipe Pesanan</div>
+                            <div class="text-sm font-bold text-white uppercase" x-text="selectedSale?.order_type?.replace('_', ' ')"></div>
+                        </div>
+                        <div class="bg-white/5 rounded-2xl p-4 border border-white/5">
+                            <div class="text-[10px] font-black uppercase tracking-widest text-white/30 mb-1">Status Dapur</div>
+                            <div class="text-sm font-bold text-white uppercase" x-text="selectedSale?.kitchen_status"></div>
+                        </div>
+                        <div class="bg-white/5 rounded-2xl p-4 border border-white/5">
+                            <div class="text-[10px] font-black uppercase tracking-widest text-white/30 mb-1">Kasir</div>
+                            <div class="text-sm font-bold text-white">{{ explode(' ', auth()->user()->name)[0] }}</div>
+                        </div>
+                    </div>
+
+                    {{-- Items List --}}
+                    <div>
+                        <h4 class="text-xs font-black uppercase tracking-widest text-white/40 mb-4">Daftar Pesanan</h4>
+                        <div class="space-y-3">
+                            <template x-for="item in selectedSale?.items" :key="item.id">
+                                <div class="flex items-center justify-between p-4 rounded-2xl bg-white/[0.02] border border-white/5">
+                                    <div class="flex-1">
+                                        <div class="font-bold text-white text-sm" x-text="item.product?.name || 'Produk Dihapus'"></div>
+                                        <div class="text-[10px] text-white/40 mt-1" x-show="item.note">Catatan: <span x-text="item.note"></span></div>
+                                    </div>
+                                    <div class="text-right flex items-center gap-4">
+                                        <div class="text-xs text-white/40 font-bold">x<span x-text="item.qty"></span></div>
+                                        <div class="text-sm font-bold text-accent-gold w-24" x-text="fmtRp(item.subtotal)"></div>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Modal Footer (Total) --}}
+            <div class="p-6 lg:p-8 bg-white/5 border-t border-white/5 shrink-0 flex items-center justify-between">
+                <div>
+                    <div class="text-[10px] font-black uppercase tracking-widest text-white/40 mb-1">Total Dibayar</div>
+                    <div class="text-sm font-bold text-white" x-text="fmtRp(selectedSale?.paid_amount)"></div>
+                </div>
+                <div class="text-right">
+                    <div class="text-[10px] font-black uppercase tracking-widest text-white/40 mb-1">Total Tagihan</div>
+                    <div class="text-2xl font-black text-accent-gold" x-text="fmtRp(selectedSale?.total_amount)"></div>
+                </div>
+            </div>
+        </div>
+    </div>
   </div>
+
+  <script>
+    function transactionHistory() {
+        return {
+            sales: @json($sales->items()),
+            showModal: false,
+            selectedSale: null,
+
+            openModal(id) {
+                this.selectedSale = this.sales.find(s => s.id === id);
+                this.showModal = true;
+            },
+
+            fmtRp(v) {
+                return 'Rp ' + new Intl.NumberFormat('id-ID').format(v || 0);
+            }
+        }
+    }
+  </script>
 @endsection
 
 

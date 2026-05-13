@@ -8,10 +8,33 @@ use Illuminate\Http\Request;
 use App\Models\SaleItem;
 class KitchenController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        // halaman view, data diambil via polling supaya realtime
-        return view('dashboard.kitchen.index');
+        $userId = auth()->id();
+        $period = $request->get('period', 'today'); // today, week, month
+
+        $query = Sale::query()
+            ->where('kitchen_user_id', $userId)
+            ->whereIn('kitchen_status', ['done', 'delivered'])
+            ->whereNotNull('kitchen_started_at')
+            ->whereNotNull('kitchen_done_at');
+
+        if ($period === 'week') {
+            $query->where('kitchen_done_at', '>=', now()->startOfWeek());
+        } elseif ($period === 'month') {
+            $query->where('kitchen_done_at', '>=', now()->startOfMonth());
+        } else {
+            $query->whereDate('kitchen_done_at', now()->toDateString());
+        }
+
+        $stats = $query->selectRaw('
+                COUNT(*) as total_done,
+                AVG(TIMESTAMPDIFF(SECOND, kitchen_started_at, kitchen_done_at)) as avg_seconds,
+                SUM(CASE WHEN TIMESTAMPDIFF(MINUTE, kitchen_started_at, kitchen_done_at) <= 15 THEN 1 ELSE 0 END) as on_time_count
+            ')
+            ->first();
+
+        return view('dashboard.kitchen.index', compact('stats', 'period'));
     }
 
     public function orders(Request $request)
