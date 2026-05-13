@@ -49,8 +49,19 @@
             </div>
 
             @if($it->status !== 'pending')
-              <div class="mt-2 text-xs text-white/60">
-                Catatan admin: <span class="text-white/80">{{ $it->review_note ?? '-' }}</span>
+              <div class="mt-2 text-xs text-white/60" x-data="{ editing: false }">
+                <div x-show="!editing" class="flex items-center gap-2">
+                  <span>Catatan admin: <span class="text-white/80">{{ $it->review_note ?? '-' }}</span></span>
+                  <button @click="editing = true" class="text-yellow-500 hover:underline text-[10px]">Edit</button>
+                </div>
+                <form x-show="editing" method="POST" action="{{ route('admin.checkout_corrections.update_note', $it) }}" 
+                  class="mt-1 flex items-center gap-2" @submit.prevent="$el.submit()">
+                  @csrf
+                  <input name="review_note" value="{{ $it->review_note }}" placeholder="Tulis catatan..."
+                    class="flex-1 rounded-lg border border-white/15 bg-white/[0.04] px-2 py-1 text-[11px] text-white outline-none focus:border-yellow-500/35" />
+                  <button type="submit" class="text-emerald-400 hover:underline text-[10px]">Simpan</button>
+                  <button type="button" @click="editing = false" class="text-white/40 hover:underline text-[10px]">Batal</button>
+                </form>
               </div>
             @endif
           </div>
@@ -58,20 +69,22 @@
           @if($it->status === 'pending')
             <div class="w-full shrink-0 lg:w-[340px]">
               <div class="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-                <form method="POST" action="{{ route('admin.checkout_corrections.approve', $it) }}">
+                <form method="POST" class="space-y-3">
                   @csrf
-                  <button class="w-full rounded-xl bg-yellow-500 px-3 py-2 text-xs font-semibold text-black hover:bg-yellow-400">
-                    Approve (isi checkout = jam selesai shift)
-                  </button>
-                </form>
-
-                <form method="POST" action="{{ route('admin.checkout_corrections.reject', $it) }}" class="mt-3 space-y-2">
-                  @csrf
-                  <input name="review_note" placeholder="Catatan penolakan (opsional)"
-                    class="w-full rounded-xl border border-white/15 bg-white/[0.04] px-3 py-2 text-xs text-white placeholder:text-white/40 outline-none focus:border-yellow-500/35" />
-                  <button class="w-full rounded-xl border border-white/15 bg-white/[0.04] px-3 py-2 text-xs text-white/85 hover:bg-white/[0.08]">
-                    Reject (jadi ALPHA)
-                  </button>
+                  <div class="text-[10px] uppercase tracking-wider text-white/40 font-semibold mb-1">Berikan Catatan (Opsional)</div>
+                  <input name="review_note" placeholder="Tulis catatan di sini..."
+                    class="w-full rounded-xl border border-white/15 bg-white/[0.04] px-3 py-2.5 text-xs text-white placeholder:text-white/30 outline-none focus:border-yellow-500/35" />
+                  
+                  <div class="grid grid-cols-2 gap-2">
+                    <button type="submit" formaction="{{ route('admin.checkout_corrections.approve', $it) }}"
+                      class="rounded-xl bg-yellow-500 px-3 py-2 text-[10px] font-bold text-black hover:bg-yellow-400 transition-colors leading-tight">
+                      Approve<br/><span class="text-[9px] font-normal opacity-80">(Isi Checkout)</span>
+                    </button>
+                    <button type="submit" formaction="{{ route('admin.checkout_corrections.reject', $it) }}"
+                      class="rounded-xl border border-white/15 bg-white/[0.04] px-3 py-2 text-[10px] font-bold text-white/85 hover:bg-white/[0.08] transition-colors leading-tight">
+                      Reject<br/><span class="text-[9px] font-normal opacity-60">(Jadi ALPHA)</span>
+                    </button>
+                  </div>
                 </form>
               </div>
             </div>

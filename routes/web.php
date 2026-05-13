@@ -252,6 +252,9 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
 
     Route::post('/admin/checkout-corrections/{req}/reject', [\App\Http\Controllers\Admin\CheckoutCorrectionAdminController::class, 'reject'])
         ->name('admin.checkout_corrections.reject');
+
+    Route::post('/admin/checkout-corrections/{req}/update-note', [\App\Http\Controllers\Admin\CheckoutCorrectionAdminController::class, 'updateNote'])
+        ->name('admin.checkout_corrections.update_note');
     Route::get('/admin/overtime-requests', [\App\Http\Controllers\Admin\OvertimeRequestAdminController::class, 'index'])
         ->name('admin.overtime_requests.index');
 
@@ -260,6 +263,9 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
 
     Route::post('/admin/overtime-requests/{req}/reject', [\App\Http\Controllers\Admin\OvertimeRequestAdminController::class, 'reject'])
         ->name('admin.overtime_requests.reject');
+
+    Route::post('/admin/overtime-requests/{req}/update-note', [\App\Http\Controllers\Admin\OvertimeRequestAdminController::class, 'updateNote'])
+        ->name('admin.overtime_requests.update_note');
 
     Route::get('/admin/reservation-resources', [ReservationResourceController::class, 'index'])->name('admin.reservation_resources.index');
     Route::get('/admin/reservation-resources/create', [ReservationResourceController::class, 'create'])->name('admin.reservation_resources.create');

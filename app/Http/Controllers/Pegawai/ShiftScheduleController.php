@@ -143,13 +143,13 @@ class ShiftScheduleController extends Controller
                             } else {
                                 // belum ajukan koreksi: tentukan ONGOING / INCOMPLETE berdasarkan batas checkout
                                 if ($dateStr < $now->toDateString()) {
-                                    // hari sudah lewat -> incomplete (lupa checkout)
-                                    $status = 'INCOMPLETE';
-                                    $statusReason = 'Checkout tidak dilakukan';
+                                    // hari sudah lewat -> ALPHA (lupa checkout)
+                                    $status = 'ALPHA';
+                                    $statusReason = 'Lupa checkout (Hari terlewati)';
                                 } elseif ($dateStr === $now->toDateString()) {
                                     if ($now->gt($checkOutTo)) {
-                                        $status = 'INCOMPLETE';
-                                        $statusReason = 'Checkout tidak dilakukan';
+                                        $status = 'ALPHA';
+                                        $statusReason = 'Lupa checkout (Batas waktu habis)';
                                     } else {
                                         $status = 'ONGOING';
                                     }

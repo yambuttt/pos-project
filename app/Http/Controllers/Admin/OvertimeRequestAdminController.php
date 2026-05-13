@@ -24,7 +24,7 @@ class OvertimeRequestAdminController extends Controller
         return view('dashboard.admin.overtime_requests.index', compact('items','status'));
     }
 
-    public function approve(OvertimeRequest $req)
+    public function approve(Request $request, OvertimeRequest $req)
     {
         if ($req->status !== 'pending') return back()->with('ok', 'Sudah diproses.');
 
@@ -52,6 +52,7 @@ class OvertimeRequestAdminController extends Controller
             'approved_minutes' => $mins,
             'reviewed_by' => auth()->id(),
             'reviewed_at' => now(),
+            'review_note' => $request->review_note,
         ]);
 
         return back()->with('ok', "Lembur disetujui ✅ ({$mins} menit)");
@@ -73,5 +74,18 @@ class OvertimeRequestAdminController extends Controller
         ]);
 
         return back()->with('ok', 'Pengajuan lembur ditolak.');
+    }
+
+    public function updateNote(Request $request, OvertimeRequest $req)
+    {
+        $data = $request->validate([
+            'review_note' => ['nullable','string','max:500'],
+        ]);
+
+        $req->update([
+            'review_note' => $data['review_note'],
+        ]);
+
+        return back()->with('ok', 'Catatan admin berhasil diperbarui.');
     }
 }

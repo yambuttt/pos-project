@@ -26,7 +26,7 @@ class CheckoutCorrectionAdminController extends Controller
         return view('dashboard.admin.checkout_corrections.index', compact('items', 'status'));
     }
 
-    public function approve(\App\Models\CheckoutCorrectionRequest $req)
+    public function approve(Request $request, \App\Models\CheckoutCorrectionRequest $req)
     {
         if ($req->status !== 'pending') {
             return back()->with('ok', 'Sudah diproses.');
@@ -35,7 +35,7 @@ class CheckoutCorrectionAdminController extends Controller
         $tz = config('app.timezone', 'Asia/Jakarta');
         $svc = app(\App\Services\ShiftResolverService::class);
 
-        return \DB::transaction(function () use ($req, $svc, $tz) {
+        return \DB::transaction(function () use ($req, $svc, $tz, $request) {
             $dateStr = $req->date->toDateString();
 
             // 1) Cari attendance berdasarkan kolom date (utama)
@@ -72,6 +72,7 @@ class CheckoutCorrectionAdminController extends Controller
                     'status' => 'approved',
                     'reviewed_by' => auth()->id(),
                     'reviewed_at' => now(),
+                    'review_note' => $request->review_note,
                 ])->save();
 
                 return back()->with('ok', 'Sudah ada checkout, request ditandai approved.');
@@ -95,6 +96,7 @@ class CheckoutCorrectionAdminController extends Controller
                 'status' => 'approved',
                 'reviewed_by' => auth()->id(),
                 'reviewed_at' => now(),
+                'review_note' => $request->review_note,
             ])->save();
 
             return back()->with('ok', 'Koreksi checkout disetujui ✅ Checkout diisi jam selesai shift.');
@@ -118,5 +120,18 @@ class CheckoutCorrectionAdminController extends Controller
         ]);
 
         return back()->with('ok', 'Koreksi checkout ditolak. Status hari itu akan dihitung ALPHA.');
+    }
+
+    public function updateNote(Request $request, CheckoutCorrectionRequest $req)
+    {
+        $data = $request->validate([
+            'review_note' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        $req->update([
+            'review_note' => $data['review_note'],
+        ]);
+
+        return back()->with('ok', 'Catatan admin berhasil diperbarui.');
     }
 }
