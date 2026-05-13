@@ -334,11 +334,13 @@ class ShiftSettingController extends Controller
                 'backgroundColor' => $bg,
                 'borderColor' => $bg,
                 'textColor' => $text,
-                'extendedProps' => [
+                    'extendedProps' => [
                     'shift_code' => $shift->code,
                     'shift_name' => $shift->name,
                     'status' => $status,
                     'status_reason' => $statusReason,
+                    'check_in_at' => ($att && $att->check_in_at) ? $att->check_in_at->format('H:i:s') : null,
+                    'check_out_at' => ($att && $att->check_out_at) ? $att->check_out_at->format('H:i:s') : null,
                     'is_override' => $isOverride,
                     'override_reason' => $isOverride ? ($overrides[$dateStr]->reason ?? null) : null,
                 ],

@@ -159,8 +159,11 @@
 
                     let msg = `${emoji} ${date}\n${shiftName}\nStatus: ${status}`;
 
-                    if (status === 'CUTI' || status === 'SAKIT') {
-                        msg += `\nKeterangan: ${p.status_reason || '-'}`;
+                    if (p.check_in_at) msg += `\nCheck-in: ${p.check_in_at}`;
+                    if (p.check_out_at) msg += `\nCheck-out: ${p.check_out_at}`;
+
+                    if (p.status_reason) {
+                        msg += `\nKeterangan: ${p.status_reason}`;
                     }
                     if (p.is_override) {
                         msg += `\nOverride: ya\nAlasan override: ${p.override_reason || '-'}`;
