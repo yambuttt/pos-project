@@ -215,6 +215,8 @@ class KitchenController extends Controller
                 'kitchen_user_id' => auth()->id(),
             ]);
         }
+    }
+
     public function performance(Request $request)
     {
         $userId = auth()->id();
