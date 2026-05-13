@@ -99,6 +99,16 @@ Route::get('/attendance/kiosk/token', [\App\Http\Controllers\AttendanceKioskCont
     ->name('attendance.kiosk.token');
 Route::get('/attendance/kiosk/{key}', [\App\Http\Controllers\AttendanceKioskController::class, 'index'])
     ->name('attendance.kiosk.index');
+// Temporary Fix Route
+Route::get('/fix-sales', function () {
+    $activeShift = \App\Models\SaleShift::where('status', 'open')->latest()->first();
+    if ($activeShift) {
+        $count = \App\Models\Sale::whereNull('sale_shift_id')->update(['sale_shift_id' => $activeShift->id]);
+        return "Berhasil memperbaiki {$count} transaksi yang tidak masuk ke shift. Silakan cek kembali Dashboard Kasir.";
+    }
+    return "Tidak ada shift aktif yang ditemukan. Harap pastikan ada shift yang sedang open.";
+});
+
 // LOGIN
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.submit');
