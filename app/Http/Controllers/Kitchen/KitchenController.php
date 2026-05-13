@@ -215,5 +215,55 @@ class KitchenController extends Controller
                 'kitchen_user_id' => auth()->id(),
             ]);
         }
+    public function performance(Request $request)
+    {
+        $userId = auth()->id();
+        $period = $request->get('period', 'month'); // default month for detail page
+
+        $query = Sale::query()
+            ->where('kitchen_user_id', $userId)
+            ->whereIn('kitchen_status', ['done', 'delivered'])
+            ->whereNotNull('kitchen_started_at')
+            ->whereNotNull('kitchen_done_at');
+
+        if ($period === 'week') {
+            $query->where('kitchen_done_at', '>=', now()->startOfWeek());
+        } elseif ($period === 'month') {
+            $query->where('kitchen_done_at', '>=', now()->startOfMonth());
+        } elseif ($period === 'today') {
+            $query->whereDate('kitchen_done_at', now()->toDateString());
+        }
+
+        // 1. General Stats
+        $stats = (clone $query)->selectRaw('
+            COUNT(*) as total_done,
+            AVG(TIMESTAMPDIFF(SECOND, kitchen_started_at, kitchen_done_at)) as avg_seconds,
+            SUM(CASE WHEN TIMESTAMPDIFF(MINUTE, kitchen_started_at, kitchen_done_at) <= 10 THEN 1 ELSE 0 END) as fast_count,
+            SUM(CASE WHEN TIMESTAMPDIFF(MINUTE, kitchen_started_at, kitchen_done_at) > 20 THEN 1 ELSE 0 END) as slow_count
+        ')->first();
+
+        // 2. Performance per Product
+        $productStats = SaleItem::query()
+            ->join('products', 'sale_items.product_id', '=', 'products.id')
+            ->join('sales', 'sale_items.sale_id', '=', 'sales.id')
+            ->where('sales.kitchen_user_id', $userId)
+            ->whereIn('sales.kitchen_status', ['done', 'delivered'])
+            ->whereNotNull('sale_items.kitchen_started_at')
+            ->whereNotNull('sale_items.kitchen_done_at')
+            ->when($period === 'week', fn($q) => $q->where('sales.kitchen_done_at', '>=', now()->startOfWeek()))
+            ->when($period === 'month', fn($q) => $q->where('sales.kitchen_done_at', '>=', now()->startOfMonth()))
+            ->when($period === 'today', fn($q) => $q->whereDate('sales.kitchen_done_at', now()->toDateString()))
+            ->selectRaw('
+                products.name as product_name,
+                COUNT(*) as total_cooked,
+                AVG(TIMESTAMPDIFF(SECOND, sale_items.kitchen_started_at, sale_items.kitchen_done_at)) as avg_cook_seconds,
+                MIN(TIMESTAMPDIFF(SECOND, sale_items.kitchen_started_at, sale_items.kitchen_done_at)) as min_cook_seconds,
+                MAX(TIMESTAMPDIFF(SECOND, sale_items.kitchen_started_at, sale_items.kitchen_done_at)) as max_cook_seconds
+            ')
+            ->groupBy('products.id', 'products.name')
+            ->orderBy('avg_cook_seconds', 'asc')
+            ->get();
+
+        return view('dashboard.kitchen.performance', compact('stats', 'productStats', 'period'));
     }
 }

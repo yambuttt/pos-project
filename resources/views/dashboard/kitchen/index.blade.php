@@ -35,9 +35,19 @@
     {{-- PERFORMANCE STATS --}}
     @if($stats && $stats->total_done > 0)
     <div class="mt-8 pt-8 border-t border-white/5 relative z-10 animate-fade-up">
-        <div class="flex items-center gap-3 mb-6">
-            <div class="w-1.5 h-6 bg-accent-gold rounded-full"></div>
-            <h2 class="text-lg font-black uppercase tracking-widest text-white/60">Evaluasi Performa (Hari Ini)</h2>
+        <div class="flex items-center justify-between flex-wrap gap-4 mb-6">
+            <div class="flex items-center gap-3">
+                <div class="w-1.5 h-6 bg-accent-gold rounded-full"></div>
+                <h2 class="text-lg font-black uppercase tracking-widest text-white/60">
+                    Evaluasi Performa 
+                    <span class="text-accent-gold">({{ $period === 'week' ? 'Minggu Ini' : ($period === 'month' ? 'Bulan Ini' : 'Hari Ini') }})</span>
+                </h2>
+            </div>
+            <div class="flex bg-white/5 p-1 rounded-xl border border-white/10">
+                <a href="{{ route('kitchen.index', ['period' => 'today']) }}" class="px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all {{ $period === 'today' ? 'bg-accent-gold text-black shadow-lg shadow-accent-gold/20' : 'text-white/40 hover:text-white' }}">Hari</a>
+                <a href="{{ route('kitchen.index', ['period' => 'week']) }}" class="px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all {{ $period === 'week' ? 'bg-accent-gold text-black shadow-lg shadow-accent-gold/20' : 'text-white/40 hover:text-white' }}">Minggu</a>
+                <a href="{{ route('kitchen.index', ['period' => 'month']) }}" class="px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all {{ $period === 'month' ? 'bg-accent-gold text-black shadow-lg shadow-accent-gold/20' : 'text-white/40 hover:text-white' }}">Bulan</a>
+            </div>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
             <div class="premium-card p-6 border-white/5 hover:border-accent-gold/20 transition-all group">

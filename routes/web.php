@@ -394,6 +394,7 @@ Route::middleware(['auth', 'role:kitchen'])
     ->group(function () {
         Route::get('/', [KitchenController::class, 'index'])->name('dashboard');
         Route::get('/history', [KitchenController::class, 'history'])->name('history');
+        Route::get('/performance', [KitchenController::class, 'performance'])->name('performance');
 
         Route::get('/orders', [KitchenController::class, 'orders'])->name('orders'); // json polling
         Route::post('/orders/{sale}/process', [KitchenController::class, 'process'])->name('orders.process');

@@ -40,10 +40,12 @@
       @php
         $isDashboard = request()->routeIs('kitchen.dashboard');
         $isHistory = request()->routeIs('kitchen.history');
+        $isPerformance = request()->routeIs('kitchen.performance');
         
         $navItems = [
           ['route' => 'kitchen.dashboard', 'label' => 'Kitchen Display', 'icon' => 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z', 'active' => $isDashboard],
           ['route' => 'kitchen.history', 'label' => 'Riwayat Masak', 'icon' => 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z', 'active' => $isHistory],
+          ['route' => 'kitchen.performance', 'label' => 'Evaluasi Koki', 'icon' => 'M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z', 'active' => $isPerformance],
         ];
       @endphp
 
