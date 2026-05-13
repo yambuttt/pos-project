@@ -44,9 +44,9 @@
                 </h2>
             </div>
             <div class="flex bg-white/5 p-1 rounded-xl border border-white/10">
-                <a href="{{ route('kitchen.index', ['period' => 'today']) }}" class="px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all {{ $period === 'today' ? 'bg-accent-gold text-black shadow-lg shadow-accent-gold/20' : 'text-white/40 hover:text-white' }}">Hari</a>
-                <a href="{{ route('kitchen.index', ['period' => 'week']) }}" class="px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all {{ $period === 'week' ? 'bg-accent-gold text-black shadow-lg shadow-accent-gold/20' : 'text-white/40 hover:text-white' }}">Minggu</a>
-                <a href="{{ route('kitchen.index', ['period' => 'month']) }}" class="px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all {{ $period === 'month' ? 'bg-accent-gold text-black shadow-lg shadow-accent-gold/20' : 'text-white/40 hover:text-white' }}">Bulan</a>
+                <a href="{{ route('kitchen.dashboard', ['period' => 'today']) }}" class="px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all {{ $period === 'today' ? 'bg-accent-gold text-black shadow-lg shadow-accent-gold/20' : 'text-white/40 hover:text-white' }}">Hari</a>
+                <a href="{{ route('kitchen.dashboard', ['period' => 'week']) }}" class="px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all {{ $period === 'week' ? 'bg-accent-gold text-black shadow-lg shadow-accent-gold/20' : 'text-white/40 hover:text-white' }}">Minggu</a>
+                <a href="{{ route('kitchen.dashboard', ['period' => 'month']) }}" class="px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all {{ $period === 'month' ? 'bg-accent-gold text-black shadow-lg shadow-accent-gold/20' : 'text-white/40 hover:text-white' }}">Bulan</a>
             </div>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
