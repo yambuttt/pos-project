@@ -163,7 +163,6 @@
                     <select x-model="paymentMethod" class="w-full bg-white/5 border border-white/10 rounded-2xl py-3.5 px-4 text-xs font-black uppercase tracking-widest appearance-none focus:outline-none focus:border-accent-gold/50 transition-all cursor-pointer text-white">
                         <option value="cash" class="bg-black">Tunai / Cash</option>
                         <option value="qris" class="bg-black">QRIS</option>
-                        <option value="bca_va" class="bg-black">VA BCA</option>
                     </select>
                     <div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-white/20"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg></div>
                 </div>
@@ -239,6 +238,41 @@
         </div>
     </div>
 
+    {{-- Static QRIS Modal --}}
+    <div x-show="showQrisModal" style="display:none" class="fixed inset-0 z-[100] flex items-center justify-center p-4">
+        <div x-show="showQrisModal" x-transition.opacity class="absolute inset-0 bg-black/95 backdrop-blur-md" @click="showQrisModal = false"></div>
+        <div x-show="showQrisModal" 
+             x-transition:enter="transition ease-out duration-300 transform" 
+             x-transition:enter-start="translate-y-8 opacity-0 scale-95" 
+             x-transition:enter-end="translate-y-0 opacity-100 scale-100"
+             class="relative bg-black border border-white/10 w-full max-w-md rounded-[3rem] overflow-hidden flex flex-col shadow-2xl">
+            
+            <div class="p-8 border-b border-white/5 text-center">
+                <h3 class="text-2xl font-bold tracking-tight text-white mb-2">Scan QRIS</h3>
+                <p class="text-white/40 text-xs">Pastikan customer sudah transfer sejumlah tagihan sebelum konfirmasi pembayaran.</p>
+            </div>
+
+            <div class="p-8 flex flex-col items-center justify-center bg-white/5">
+                <div class="w-48 h-48 bg-white rounded-3xl mb-6 flex items-center justify-center shadow-xl p-3">
+                    <!-- Placeholder QRIS Statis -->
+                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=QRIS_STATIS_RESTAURANT" class="w-full h-full object-contain rounded-xl">
+                </div>
+                
+                <div class="text-center">
+                    <div class="text-[10px] text-white/40 uppercase tracking-widest font-bold mb-1">Total Tagihan</div>
+                    <div class="text-3xl font-black text-accent-gold" x-text="fmtRp(grandTotal)"></div>
+                </div>
+            </div>
+
+            <div class="p-8 border-t border-white/5 flex gap-4">
+                <button @click="showQrisModal = false" class="flex-1 btn-premium-glass text-xs py-4">Batal</button>
+                <button @click="confirmQrisPayment()" :disabled="isProcessing" class="flex-[2] btn-premium-primary text-xs py-4">
+                    <span x-text="isProcessing ? 'Memproses...' : 'Sudah Bayar'"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 <script>
@@ -258,6 +292,7 @@ function posSystem() {
         paidAmount: 0,
         isProcessing: false,
         showTableSelector: false,
+        showQrisModal: false,
 
         init() {
             const cats = new Set();
@@ -333,6 +368,20 @@ function posSystem() {
                 return;
             }
 
+            if (this.paymentMethod === 'qris') {
+                this.showQrisModal = true;
+                return;
+            }
+
+            await this.submitCheckout();
+        },
+
+        async confirmQrisPayment() {
+            this.paidAmount = this.grandTotal;
+            await this.submitCheckout();
+        },
+
+        async submitCheckout() {
             this.isProcessing = true;
             const payload = {
                 order_type: this.orderType,
@@ -354,10 +403,10 @@ function posSystem() {
                     window.location.href = data.redirect_url;
                 } else {
                     alert(data.message || 'Terjadi kesalahan.');
+                    this.isProcessing = false;
                 }
             } catch (e) {
                 alert('Gagal memproses transaksi.');
-            } finally {
                 this.isProcessing = false;
             }
         }

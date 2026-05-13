@@ -91,6 +91,8 @@ class SaleController extends Controller
 
         $userId = auth()->id();
         $isCash = $data['payment_method'] === 'cash';
+        $isStaticQris = $data['payment_method'] === 'qris';
+        $isImmediatePaid = $isCash || $isStaticQris;
 
         $randomLetters = function (int $len): string {
             $alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
@@ -130,17 +132,17 @@ class SaleController extends Controller
                     'user_id' => $userId,
                     'sale_shift_id' => $activeShift->id,
                     'total_amount' => $grandTotal,
-                    'paid_amount' => $isCash ? $paid : 0,
+                    'paid_amount' => $isImmediatePaid ? $paid : 0,
                     'payment_method' => $data['payment_method'],
-                    'payment_status' => $isCash ? 'paid' : 'pending',
+                    'payment_status' => $isImmediatePaid ? 'paid' : 'pending',
                     'order_type' => $data['order_type'],
                     'dining_table_id' => $data['order_type'] === 'dine_in'
                         ? ($data['dining_table_id'] ?? null)
                         : null,
                     'change_amount' => $isCash ? ($paid - $grandTotal) : 0,
-                    'status' => $isCash ? 'completed' : 'pending',
+                    'status' => $isImmediatePaid ? 'completed' : 'pending',
                     'kitchen_status' => 'new',
-                    'paid_at' => $isCash ? now() : null,
+                    'paid_at' => $isImmediatePaid ? now() : null,
                 ]);
 
                 $datePart = now()->format('Ymd');
@@ -190,7 +192,7 @@ class SaleController extends Controller
                 return $sale->fresh(['items.product']);
             });
 
-            if ($isCash) {
+            if ($isImmediatePaid) {
                 return $request->expectsJson()
                     ? response()->json([
                         'ok' => true,
