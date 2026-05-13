@@ -7,114 +7,184 @@
 @section('content')
   <meta name="csrf-token" content="{{ csrf_token() }}">
 
-  <div class="rounded-[26px] border border-white/20 bg-white/10 p-6 backdrop-blur-2xl sm:p-7">
-    <div class="text-sm font-semibold">Status Hari Ini</div>
-    <div class="mt-3 space-y-1 text-sm text-white/80">
-      <div>Check-in: <b>{{ $attendance?->check_in_at?->format('H:i') ?? '--:--' }}</b></div>
-      <div>Check-out: <b>{{ $attendance?->check_out_at?->format('H:i') ?? '--:--' }}</b></div>
-    </div>
-  </div>
+  <style>
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fade-in-up { animation: fadeInUp 0.6s ease-out forwards; opacity: 0; }
+    .delay-100 { animation-delay: 100ms; }
+    
+    .glass-panel {
+      background: rgba(255, 255, 255, 0.04);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+      transition: border-color 0.3s ease;
+    }
+    .glass-panel:hover {
+      border-color: rgba(255, 255, 255, 0.25);
+    }
+    
+    .btn-glow {
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s ease;
+    }
+    .btn-glow:not(:disabled):hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
+    }
+    .btn-glow-gold:not(:disabled):hover {
+      box-shadow: 0 8px 25px rgba(245, 158, 11, 0.4);
+    }
+  </style>
 
-  <div class="mt-5 rounded-[26px] border border-white/20 bg-white/10 p-6 backdrop-blur-2xl sm:p-7">
-    <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-      <div>
-        <div class="text-sm font-semibold">Shift Hari Ini</div>
-        <div class="mt-1 text-xs text-white/70">
-          {{ $ui['shift_name'] ?? '-' }}
+  <div class="space-y-6">
+    <!-- ROW 1: STATUS & SHIFT -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-fade-in-up">
+      <!-- Status Hari Ini -->
+      <div class="glass-panel rounded-[32px] p-7 flex flex-col justify-center relative overflow-hidden group">
+        <div class="absolute -right-10 -top-10 w-40 h-40 bg-emerald-500/10 rounded-full blur-[50px] group-hover:bg-emerald-500/20 transition-all duration-700"></div>
+        <div class="text-sm font-bold text-white/60 uppercase tracking-widest mb-4">Status Hari Ini</div>
+        
+        <div class="flex items-center gap-8">
+          <div>
+            <div class="text-xs text-white/50 mb-1">Check-in</div>
+            <div class="text-3xl font-extrabold {{ $attendance?->check_in_at ? 'text-emerald-400' : 'text-white/90' }}">
+              {{ $attendance?->check_in_at?->format('H:i') ?? '--:--' }}
+            </div>
+          </div>
+          <div class="h-10 w-px bg-white/10"></div>
+          <div>
+            <div class="text-xs text-white/50 mb-1">Check-out</div>
+            <div class="text-3xl font-extrabold {{ $attendance?->check_out_at ? 'text-orange-400' : 'text-white/90' }}">
+              {{ $attendance?->check_out_at?->format('H:i') ?? '--:--' }}
+            </div>
+          </div>
         </div>
       </div>
 
-      <div class="flex flex-wrap gap-2 text-xs">
-        <span class="rounded-full border border-white/10 bg-white/[0.03] px-3 py-1 text-white/80">
-          Check-in: <b id="uiInRange">-</b>
-        </span>
-        <span class="rounded-full border border-white/10 bg-white/[0.03] px-3 py-1 text-white/80">
-          Check-out: <b id="uiOutRange">-</b>
-        </span>
-        <span class="rounded-full border border-white/10 bg-white/[0.03] px-3 py-1 text-white/70">
-          Sekarang: <b id="uiNow">-</b>
-        </span>
+      <!-- Shift Hari Ini -->
+      <div class="glass-panel rounded-[32px] p-7 relative overflow-hidden group">
+        <div class="absolute -right-10 -top-10 w-40 h-40 bg-yellow-500/10 rounded-full blur-[50px] group-hover:bg-yellow-500/20 transition-all duration-700"></div>
+        
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-5">
+          <div>
+            <div class="text-sm font-bold text-white/60 uppercase tracking-widest">Shift Hari Ini</div>
+            <div class="mt-1 text-xl font-bold text-yellow-400">{{ $ui['shift_name'] ?? '-' }}</div>
+          </div>
+          <div class="text-xs font-mono text-white/50 bg-black/30 px-3 py-1.5 rounded-xl border border-white/5">
+            Skrg: <b id="uiNow" class="text-white">-</b>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div class="bg-black/20 rounded-2xl p-4 border border-white/5">
+            <div class="text-[10px] text-white/40 uppercase tracking-wider mb-1">Window Check-in (<span id="uiInRange">-</span>)</div>
+            <div id="uiInStatus" class="text-sm font-semibold text-white/85">-</div>
+          </div>
+          <div class="bg-black/20 rounded-2xl p-4 border border-white/5">
+            <div class="text-[10px] text-white/40 uppercase tracking-wider mb-1">Window Check-out (<span id="uiOutRange">-</span>)</div>
+            <div id="uiOutStatus" class="text-sm font-semibold text-white/85">-</div>
+          </div>
+        </div>
       </div>
     </div>
 
-    <div class="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-      <div class="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-        <div class="text-xs text-white/60">Status Check-in</div>
-        <div id="uiInStatus" class="mt-1 text-sm text-white/85">-</div>
-      </div>
-      <div class="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-        <div class="text-xs text-white/60">Status Check-out</div>
-        <div id="uiOutStatus" class="mt-1 text-sm text-white/85">-</div>
-      </div>
-    </div>
-  </div>
+    <!-- ROW 2: VERIFIKASI & SCAN -->
+    <div class="grid grid-cols-1 xl:grid-cols-[1.2fr_.8fr] gap-6 animate-fade-in-up delay-100">
+      
+      <!-- 1) Verifikasi Device -->
+      <div class="glass-panel rounded-[32px] p-7 flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <div class="text-lg font-bold text-white">1) Verifikasi Device & Lokasi</div>
+            <div id="gateStatus" class="text-xs px-3 py-1 rounded-full bg-white/5 border border-white/10 text-white/60">Status: belum verifikasi</div>
+          </div>
+          <div class="text-sm text-white/50 mb-6">Sistem memvalidasi device dan kordinat lokasi secara otomatis.</div>
+        </div>
 
-  <div class="mt-5 grid grid-cols-1 gap-5 xl:grid-cols-[1.1fr_.9fr]">
-    <div class="rounded-[26px] border border-white/20 bg-white/10 p-6 backdrop-blur-2xl sm:p-7">
-      <div class="text-sm font-semibold">1) Verifikasi Device & Lokasi</div>
-      <div class="mt-2 text-xs text-white/70">
-        Aplikasi akan cek device terdaftar dan lokasi berada di area restoran.
-      </div>
+        <div>
+          <!-- Tombol Utama -->
+          <button id="btnInitNormal" class="btn-glow w-full mb-4 rounded-2xl bg-gradient-to-r from-emerald-600 to-emerald-500 px-6 py-4 text-sm font-bold tracking-wide shadow-lg border border-emerald-400/30 text-white">
+            <span class="flex items-center justify-center gap-2">
+              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+              MULAI VERIFIKASI NORMAL
+            </span>
+          </button>
 
-      <div class="mt-4 flex flex-wrap gap-2">
-        <button id="btnInitNormal"
-          class="rounded-xl bg-emerald-600/80 px-4 py-2 text-sm font-semibold hover:bg-emerald-500/80">
-          Verifikasi Normal
-        </button>
+          <!-- Tombol Sekunder Grid -->
+          <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-1">
+            <div class="flex flex-col">
+              <button id="btnInitException" class="h-full rounded-xl border border-white/10 bg-white/[0.02] hover:bg-white/[0.06] hover:border-white/20 transition-all p-3 text-xs font-semibold text-white/70">
+                Device Lain (Darurat)
+              </button>
+            </div>
+            
+            <div class="flex flex-col relative group">
+              <button id="btnLateRequest" class="h-full rounded-xl border border-white/10 bg-white/[0.02] hover:bg-white/[0.06] hover:border-white/20 transition-all p-3 text-xs font-semibold text-white/70">
+                Ajukan Telat
+              </button>
+            </div>
 
-        <button id="btnInitException"
-          class="rounded-xl border border-white/20 bg-white/10 px-4 py-2 text-sm font-semibold hover:bg-white/15">
-          Pakai Device Lain (Darurat)
-        </button>
-        <button id="btnLateRequest"
-          class="rounded-xl border border-white/20 bg-white/10 px-4 py-2 text-sm font-semibold hover:bg-white/15">
-          Ajukan Telat
-        </button>
-        <div id="lateReqMsg" class="mt-2 text-xs text-white/70"></div>
-        <button id="btnCheckoutCorrection"
-          class="rounded-xl border border-white/20 bg-white/10 px-4 py-2 text-sm font-semibold hover:bg-white/15">
-          Ajukan Koreksi Checkout
-        </button>
-        <div id="ccMsg" class="mt-2 text-xs text-white/70"></div>
-        <button id="btnOvertime"
-          class="rounded-xl border border-white/20 bg-white/10 px-4 py-2 text-sm font-semibold hover:bg-white/15">
-          Ajukan Lembur
-        </button>
-        <div id="otMsg" class="mt-2 text-xs text-white/70"></div>
-      </div>
+            <div class="flex flex-col relative group">
+              <button id="btnCheckoutCorrection" class="h-full rounded-xl border border-white/10 bg-white/[0.02] hover:bg-white/[0.06] hover:border-white/20 transition-all p-3 text-xs font-semibold text-white/70">
+                Koreksi Checkout
+              </button>
+            </div>
 
-      <div id="exceptionReasonWrap" class="mt-4 hidden">
-        <div class="text-xs text-white/70">Alasan (opsional)</div>
-        <textarea id="exceptionReason" rows="3"
-          class="mt-2 w-full rounded-2xl border border-white/15 bg-white/[0.04] px-3 py-2 text-sm text-white placeholder:text-white/40 outline-none focus:border-yellow-500/35"
-          placeholder="Contoh: HP rusak / lupa membawa HP. Mengajukan absensi darurat."></textarea>
+            <div class="flex flex-col relative group">
+              <button id="btnOvertime" class="h-full rounded-xl border border-white/10 bg-white/[0.02] hover:bg-white/[0.06] hover:border-white/20 transition-all p-3 text-xs font-semibold text-white/70">
+                Ajukan Lembur
+              </button>
+            </div>
+          </div>
+          
+          <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 px-1">
+             <div></div>
+             <div id="lateReqMsg" class="text-[10px] text-yellow-400/80 leading-tight"></div>
+             <div id="ccMsg" class="text-[10px] text-yellow-400/80 leading-tight"></div>
+             <div id="otMsg" class="text-[10px] text-yellow-400/80 leading-tight"></div>
+          </div>
+          
+        </div>
 
-        <div class="mt-2 text-xs text-white/50">
-          Pengajuan akan masuk ke admin untuk persetujuan. Sistem akan mencatat device ini milik pegawai siapa.
+        <div id="exceptionReasonWrap" class="mt-5 hidden bg-white/[0.02] p-4 rounded-2xl border border-white/5">
+          <div class="text-xs font-semibold text-yellow-500 mb-2">Darurat: Verifikasi Device Baru</div>
+          <textarea id="exceptionReason" rows="2" class="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3 text-sm text-white placeholder:text-white/30 outline-none focus:border-yellow-500/50 transition-colors" placeholder="Tulis alasan menggunakan device lain..."></textarea>
+          <div class="mt-2 text-[10px] text-white/40">Pengajuan akan dikirim ke admin untuk disetujui.</div>
         </div>
       </div>
 
-      <div id="gateStatus" class="mt-3 text-sm text-white/80">Status: belum verifikasi.</div>
-    </div>
+      <!-- 2) Scan QR -->
+      <div class="glass-panel rounded-[32px] p-7 flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <div class="text-lg font-bold text-white">2) Scan QR + Selfie</div>
+          </div>
+          <div class="text-sm text-white/50 mb-6">Arahkan kamera ke QR Code yang tampil di Kiosk lalu lakukan selfie absensi.</div>
+        </div>
 
-    <div class="rounded-[26px] border border-white/20 bg-white/10 p-6 backdrop-blur-2xl sm:p-7">
-      <div class="text-sm font-semibold">2) Scan QR + Selfie</div>
-      <div class="mt-2 text-xs text-white/70">
-        Tekan tombol Check-in / Check-out untuk membuka kamera (popup fullscreen).
+        <div class="flex flex-col sm:flex-row gap-4 mt-auto">
+          <button id="btnCheckIn" disabled class="btn-glow btn-glow-gold flex-1 rounded-2xl bg-gradient-to-r from-yellow-600 to-yellow-500 px-4 py-5 text-sm font-bold text-black shadow-lg shadow-yellow-500/20 disabled:opacity-30 disabled:shadow-none disabled:cursor-not-allowed transition-all">
+            <span class="flex items-center justify-center gap-2">
+              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path></svg>
+              CHECK-IN
+            </span>
+          </button>
+          
+          <button id="btnCheckOut" disabled class="btn-glow btn-glow-gold flex-1 rounded-2xl bg-gradient-to-r from-orange-600 to-orange-500 px-4 py-5 text-sm font-bold text-white shadow-lg shadow-orange-500/20 disabled:opacity-30 disabled:shadow-none disabled:cursor-not-allowed transition-all">
+            <span class="flex items-center justify-center gap-2">
+              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+              CHECK-OUT
+            </span>
+          </button>
+        </div>
+        
+        <div id="scanStatus" class="mt-5 text-center text-xs px-3 py-2 rounded-xl bg-white/5 border border-white/5 text-white/50">Status: menunggu verifikasi</div>
       </div>
 
-      <div class="mt-4 flex flex-wrap gap-2">
-        <button id="btnCheckIn" disabled
-          class="rounded-xl border border-white/20 bg-white/10 px-4 py-2 text-sm font-semibold hover:bg-white/15 disabled:opacity-50">
-          Check-in
-        </button>
-        <button id="btnCheckOut" disabled
-          class="rounded-xl border border-white/20 bg-white/10 px-4 py-2 text-sm font-semibold hover:bg-white/15 disabled:opacity-50">
-          Check-out
-        </button>
-      </div>
-
-      <div id="scanStatus" class="mt-3 text-sm text-white/80">Status: menunggu verifikasi.</div>
     </div>
   </div>
 
