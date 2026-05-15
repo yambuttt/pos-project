@@ -4,189 +4,283 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Ayo Renne — Overview Pesanan</title>
+    <title>Ayo Renne — Premium Checkout</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
         integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
         integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+    <style>
+        :root {
+            --gold: #fbbf24;
+            --obsidian: #070708;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--obsidian);
+            color: white;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .font-heading { font-family: 'Outfit', sans-serif; }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .glass-gold {
+            background: rgba(251, 191, 36, 0.05);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(251, 191, 36, 0.2);
+        }
+
+        .premium-gradient-text {
+            background: linear-gradient(135deg, #fff 0%, #fbbf24 50%, #d97706 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        @keyframes reveal {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .animate-reveal {
+            animation: reveal 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+        }
+
+        .stagger-1 { animation-delay: 0.1s; }
+        .stagger-2 { animation-delay: 0.2s; }
+        .stagger-3 { animation-delay: 0.3s; }
+
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        input:focus, select:focus, textarea:focus {
+            border-color: rgba(251, 191, 36, 0.5) !important;
+            background: rgba(255, 255, 255, 0.05) !important;
+            box-shadow: 0 0 0 4px rgba(251, 191, 36, 0.05);
+        }
+    </style>
 </head>
 
-<body class="min-h-screen text-white">
-    <div class="fixed inset-0 -z-10 bg-gradient-to-b from-[#070708] to-[#0b0b0d]"></div>
+<body class="min-h-screen relative overflow-x-hidden">
+    {{-- Background Glow --}}
+    <div class="fixed inset-0 -z-10 bg-[radial-gradient(circle_at_50%_-20%,rgba(251,191,36,0.1),transparent_70%)]"></div>
+    <div class="fixed inset-0 -z-10 bg-[radial-gradient(circle_at_0%_100%,rgba(251,191,36,0.05),transparent_50%)]"></div>
 
-    <div class="mx-auto max-w-3xl px-4 pb-20 pt-8">
-        <div class="mb-5 flex items-center justify-between gap-3">
+    <div class="mx-auto max-w-2xl px-4 pb-20 pt-8">
+        <header class="mb-10 flex items-center justify-between gap-6 animate-reveal">
             <div>
-                <div class="text-xs tracking-[0.22em] uppercase text-white/80">Ayo Renne</div>
-                <h1 class="mt-2 text-2xl font-semibold tracking-tight">Overview Pesanan</h1>
-                <p class="mt-1 text-sm text-white/65">Cek item kamu dulu, lalu isi keterangan sebelum checkout.</p>
+                <div class="mb-1 text-[10px] font-black uppercase tracking-[0.2em] text-yellow-400">Checkout Journey</div>
+                <h1 class="font-heading text-3xl font-black text-white sm:text-4xl">Order <span class="premium-gradient-text">Overview</span></h1>
+                <p class="mt-2 text-xs font-medium text-white/40 uppercase tracking-widest">Review your flavors before we cook</p>
             </div>
 
-            <a href="/"
-                class="rounded-xl border border-white/15 bg-black/20 px-4 py-2 text-sm font-semibold text-white/90 backdrop-blur-2xl hover:bg-white/10">
-                ← Kembali
+            <a href="/" class="glass flex h-12 w-12 items-center justify-center rounded-2xl text-white/40 hover:text-white hover:border-white/20 transition-all">
+                <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
             </a>
-        </div>
+        </header>
 
-        <div class="rounded-[24px] border border-white/15 bg-white/10 p-4 shadow-2xl backdrop-blur-2xl">
-            <div class="flex items-center justify-between">
-                <h2 class="text-xs tracking-[0.22em] uppercase text-white/80">Item Pesanan</h2>
-                <button type="button"
-                    class="rounded-xl border border-white/15 bg-black/20 px-3 py-2 text-xs font-semibold text-white/85 backdrop-blur-2xl hover:bg-white/10"
-                    onclick="clearAll()">Clear</button>
+        <div class="glass overflow-hidden rounded-[32px] p-8 shadow-2xl animate-reveal stagger-1">
+            <div class="mb-8 flex items-center justify-between">
+                <div>
+                    <h2 class="text-lg font-bold text-white tracking-tight">Item Summary</h2>
+                    <p class="text-[10px] font-bold uppercase tracking-widest text-white/30">Selected Flavors</p>
+                </div>
+                <button type="button" onclick="clearAll()" class="text-[10px] font-black uppercase tracking-[0.2em] text-white/20 hover:text-white transition-colors">Clear All</button>
             </div>
 
-            <div id="items" class="mt-4 flex flex-col gap-2"></div>
+            <div id="items" class="flex flex-col gap-6">
+                {{-- Dynamic Items --}}
+            </div>
 
-            <div class="mt-4 space-y-2 border-t border-white/10 pt-4 text-sm">
-                <div class="flex items-center justify-between text-white/75">
+            <div class="mt-10 space-y-4 border-t border-white/5 pt-8">
+                <div class="flex items-center justify-between text-[11px] font-bold uppercase tracking-widest text-white/30">
                     <span>Subtotal</span>
-                    <span class="font-semibold text-white/90" id="subtotal">Rp 0</span>
+                    <span class="text-white" id="subtotal">Rp 0</span>
                 </div>
-                <div class="flex items-center justify-between text-white/75">
-                    <span>Estimasi Pajak (11%)</span>
-                    <span class="font-semibold text-white/90" id="tax">Rp 0</span>
+                <div class="flex items-center justify-between text-[11px] font-bold uppercase tracking-widest text-white/30">
+                    <span>Service Tax (11%)</span>
+                    <span class="text-white" id="tax">Rp 0</span>
                 </div>
-                <div class="flex items-center justify-between text-white/75">
-                    <span>Total</span>
-                    <span class="font-semibold text-white/95" id="total">Rp 0</span>
+                <div class="flex items-center justify-between pt-2">
+                    <span class="text-sm font-black uppercase tracking-[0.2em] text-yellow-400">Total Amount</span>
+                    <span class="text-3xl font-black tracking-tighter text-white" id="total">Rp 0</span>
                 </div>
             </div>
         </div>
 
-        <div class="mt-4 rounded-[24px] border border-white/15 bg-white/10 p-4 shadow-2xl backdrop-blur-2xl">
-            <h2 class="text-xs tracking-[0.22em] uppercase text-white/80">Keterangan</h2>
+        <div class="mt-6 space-y-6 animate-reveal stagger-2">
+            <div class="glass overflow-hidden rounded-[32px] p-8 shadow-2xl">
+                <h2 class="mb-6 text-lg font-bold text-white tracking-tight">Customer Information</h2>
+                
+                <div class="space-y-6">
+                    <div>
+                        <label class="mb-2 block text-[10px] font-black uppercase tracking-[0.2em] text-white/30">Your Name</label>
+                        <input id="custName" type="text" placeholder="Enter your name"
+                            class="w-full rounded-2xl border border-white/5 bg-white/[0.02] px-6 py-4 text-sm font-bold text-white transition-all outline-none" />
+                    </div>
 
-            <div class="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <div class="sm:col-span-2">
-                    <label class="text-xs text-white/60">Nama</label>
-                    <input id="custName" type="text" placeholder="Nama kamu"
-                        class="mt-2 w-full rounded-xl border border-white/15 bg-black/20 px-4 py-3 text-sm text-white/90 placeholder:text-white/40 outline-none focus:border-white/30" />
-                </div>
-
-                @if($isDelivery)
-                    <div class="mt-4 rounded-2xl border border-white/15 bg-black/20 p-4">
-                        <div class="text-sm font-semibold text-yellow-300">Mode: Delivery</div>
-
-                        <div class="mt-4 space-y-3">
-                            <input id="deliveryPhone" type="text" placeholder="No HP"
-                                class="w-full rounded-xl border border-white/15 bg-black/30 px-4 py-3 text-sm text-white/90 placeholder:text-white/40 outline-none" />
-
-                            <textarea id="deliveryAddress" rows="3" placeholder="Alamat lengkap"
-                                class="w-full rounded-xl border border-white/15 bg-black/30 px-4 py-3 text-sm text-white/90 placeholder:text-white/40 outline-none"></textarea>
-
-                            <div class="flex flex-wrap gap-2">
-                                <button type="button" onclick="useMyLocation()"
-                                    class="rounded-xl bg-yellow-400/90 px-4 py-2 text-sm font-semibold text-black hover:bg-yellow-300">
-                                    Gunakan Lokasi Saya
-                                </button>
-
-                                <button type="button" onclick="openMapPicker()"
-                                    class="rounded-xl border border-white/15 bg-black/20 px-4 py-2 text-sm font-semibold text-white/90 hover:bg-white/10">
-                                    Pin Lokasi di Map
-                                </button>
+                    @if($isDelivery)
+                        <div class="glass-gold rounded-3xl p-6 border-dashed">
+                            <div class="mb-4 flex items-center justify-between">
+                                <h3 class="text-xs font-black uppercase tracking-[0.2em] text-yellow-400">Delivery Details</h3>
+                                <div class="h-1.5 w-1.5 animate-pulse rounded-full bg-yellow-400"></div>
                             </div>
 
-                            <div class="text-xs text-white/60">
-                                Lokasi: <span id="locStatus">Belum dipilih</span>
-                            </div>
+                            <div class="space-y-4">
+                                <input id="deliveryPhone" type="text" placeholder="Phone Number"
+                                    class="w-full rounded-xl border border-white/5 bg-white/[0.02] px-5 py-3.5 text-sm font-bold text-white outline-none" />
 
-                            <div class="text-xs text-white/60">
-                                Jarak: <span id="deliveryDistance">-</span>
-                            </div>
+                                <textarea id="deliveryAddress" rows="3" placeholder="Full Delivery Address"
+                                    class="w-full rounded-xl border border-white/5 bg-white/[0.02] px-5 py-3.5 text-sm font-bold text-white outline-none"></textarea>
 
-                            <div class="text-xs text-white/60">
-                                Ongkir: <span id="deliveryFee">Rp 0</span>
+                                <div class="grid grid-cols-2 gap-3">
+                                    <button type="button" onclick="useMyLocation()"
+                                        class="flex items-center justify-center gap-2 rounded-xl bg-yellow-400 px-4 py-3.5 text-[10px] font-black uppercase tracking-widest text-black hover:bg-yellow-300 active:scale-95 transition-all">
+                                        <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                                        GPS Location
+                                    </button>
+
+                                    <button type="button" onclick="openMapPicker()"
+                                        class="glass flex items-center justify-center gap-2 rounded-xl px-4 py-3.5 text-[10px] font-black uppercase tracking-widest text-white hover:bg-white/5 active:scale-95 transition-all">
+                                        <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7l5-2.5 5.553 2.776a1 1 0 01.447.894v10.764a1 1 0 01-1.447.894L15 17l-6 3z"></path></svg>
+                                        Pick on Map
+                                    </button>
+                                </div>
+
+                                <div class="grid grid-cols-2 gap-4 pt-2">
+                                    <div class="glass flex flex-col items-center justify-center rounded-2xl p-3">
+                                        <div class="text-[9px] font-black uppercase tracking-widest text-white/30">Distance</div>
+                                        <div id="deliveryDistance" class="text-xs font-black text-white">-</div>
+                                    </div>
+                                    <div class="glass-gold flex flex-col items-center justify-center rounded-2xl p-3">
+                                        <div class="text-[9px] font-black uppercase tracking-widest text-yellow-400/40">Fee</div>
+                                        <div id="deliveryFee" class="text-xs font-black text-yellow-400">Rp 0</div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                @endif
+                    @endif
 
-                {{-- =========================
-                BAGIAN MEJA (HANYA DINE IN)
-                ========================= --}}
-                @if(!$isDelivery)
-                    <div class="sm:col-span-2">
-                        <label class="text-xs text-white/60">Meja</label>
-
-                        <select id="diningTableId" data-locked="{{ $lockedTable ? '1' : '0' }}"
-                            data-locked-id="{{ $lockedTable?->id ?? '' }}"
-                            class="mt-2 w-full rounded-xl border border-white/15 bg-black/20 px-4 py-3 text-sm text-white/90 outline-none focus:border-white/30">
-                            <option value="">— Pilih meja —</option>
-                            @foreach(($tables ?? []) as $t)
-                                <option value="{{ $t->id }}">{{ $t->name }}</option>
-                            @endforeach
-                        </select>
-
-                        @if($lockedTable)
-                            <p class="mt-2 text-xs text-green-200/90">
-                                Meja terkunci dari QR: <b>{{ $lockedTable->name }}</b>
-                            </p>
-                        @endif
-                    </div>
-                @endif
+                    @if(!$isDelivery)
+                        <div>
+                            <label class="mb-2 block text-[10px] font-black uppercase tracking-[0.2em] text-white/30">Dining Table</label>
+                            <div class="relative">
+                                <select id="diningTableId" data-locked="{{ $lockedTable ? '1' : '0' }}"
+                                    data-locked-id="{{ $lockedTable?->id ?? '' }}"
+                                    class="w-full appearance-none rounded-2xl border border-white/5 bg-white/[0.02] px-6 py-4 text-sm font-bold text-white transition-all outline-none">
+                                    <option value="" class="bg-black">— Select your table —</option>
+                                    @foreach(($tables ?? []) as $t)
+                                        <option value="{{ $t->id }}" class="bg-black">{{ $t->name }}</option>
+                                    @endforeach
+                                </select>
+                                <div class="pointer-events-none absolute right-6 top-1/2 -translate-y-1/2 text-white/20">
+                                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7"></path></svg>
+                                </div>
+                            </div>
+                            @if($lockedTable)
+                                <p class="mt-3 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-yellow-400/60">
+                                    <span class="h-1.5 w-1.5 rounded-full bg-yellow-400"></span>
+                                    Locked to QR: {{ $lockedTable->name }}
+                                </p>
+                            @endif
+                        </div>
+                    @endif
+                </div>
             </div>
 
-            <div class="sm:col-span-2">
-                <label class="text-xs text-white/60">Metode Pembayaran</label>
-
-                <div class="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
-                    <label
-                        class="flex cursor-not-allowed opacity-50 items-center gap-3 rounded-xl border border-white/15 bg-black/20 px-4 py-3 text-sm text-white/90">
-                        <input type="radio" name="paymentMethod" value="qris" disabled class="accent-yellow-400">
-                        <span>QRIS (Maintenance)</span>
+            <div class="glass overflow-hidden rounded-[32px] p-8 shadow-2xl">
+                <h2 class="mb-6 text-lg font-bold text-white tracking-tight">Payment Method</h2>
+                
+                <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <label class="relative cursor-not-allowed group">
+                        <input type="radio" name="paymentMethod" value="qris" disabled class="peer hidden">
+                        <div class="flex h-full items-center gap-4 rounded-2xl border border-white/5 bg-white/[0.01] px-6 py-4 transition-all opacity-30">
+                            <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-white/5 text-white/40">
+                                <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path></svg>
+                            </div>
+                            <div class="text-left">
+                                <div class="text-sm font-black text-white">QRIS</div>
+                                <div class="text-[9px] font-bold uppercase tracking-widest text-white/30">Maintenance</div>
+                            </div>
+                        </div>
                     </label>
 
-                    <label
-                        class="flex cursor-pointer items-center gap-3 rounded-xl border border-white/15 bg-black/20 px-4 py-3 text-sm text-white/90">
-                        <input type="radio" name="paymentMethod" value="cash" checked class="accent-yellow-400">
-                        <span>Tunai di Kasir</span>
+                    <label class="relative cursor-pointer group">
+                        <input type="radio" name="paymentMethod" value="cash" checked class="peer hidden">
+                        <div class="flex h-full items-center gap-4 rounded-2xl border border-white/5 bg-white/[0.01] px-6 py-4 transition-all peer-checked:border-yellow-400 peer-checked:bg-yellow-400/10 group-hover:bg-white/[0.03]">
+                            <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-yellow-400/10 text-yellow-400 peer-checked:bg-yellow-400 peer-checked:text-black">
+                                <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                            </div>
+                            <div class="text-left">
+                                <div class="text-sm font-black text-white">Cashier</div>
+                                <div class="text-[9px] font-bold uppercase tracking-widest text-white/30">Pay at counter</div>
+                            </div>
+                            <div class="absolute right-4 top-1/2 -translate-y-1/2 opacity-0 peer-checked:opacity-100 transition-opacity">
+                                <div class="flex h-5 w-5 items-center justify-center rounded-full bg-yellow-400">
+                                    <svg class="h-3 w-3 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                                </div>
+                            </div>
+                        </div>
                     </label>
                 </div>
             </div>
 
-            <button
-                class="mt-4 w-full rounded-xl bg-yellow-400/95 px-4 py-3 text-sm font-semibold text-black shadow-lg shadow-yellow-400/10 hover:bg-yellow-300"
-                type="button" onclick="checkoutDb()">
-                Checkout
-            </button>
-
-            <p class="mt-2 text-xs text-white/50">
-                * Checkout akan menyimpan order ke database & masuk antrean kitchen.
-            </p>
+            <div class="pt-4">
+                <button onclick="checkoutDb()" class="group relative w-full overflow-hidden rounded-[24px] bg-yellow-400 py-6 text-xs font-black uppercase tracking-[0.2em] text-black transition-all hover:bg-yellow-300 active:scale-95 shadow-[0_20px_50px_rgba(250,204,21,0.2)]">
+                    <span class="relative z-10 flex items-center justify-center gap-3">
+                        Place Your Order
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                    </span>
+                    <div class="absolute inset-0 -translate-x-full bg-gradient-to-r from-white/0 via-white/40 to-white/0 transition-transform duration-1000 group-hover:translate-x-full"></div>
+                </button>
+                <p class="mt-6 text-center text-[10px] font-bold uppercase tracking-[0.2em] text-white/20">
+                    * Order will be sent to kitchen immediately after checkout
+                </p>
+            </div>
         </div>
-    </div>
-
-    <!-- MAP PICKER BACKDROP -->
-    <div id="mapBackdrop" class="fixed inset-0 z-50 hidden bg-black/70 backdrop-blur-[2px]" onclick="closeMapPicker()">
     </div>
 
     <!-- MAP PICKER MODAL -->
-    <div id="mapModal"
-        class="fixed left-1/2 top-1/2 z-50 hidden w-[92%] max-w-[720px] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-[24px] border border-white/15 bg-black/55 shadow-2xl backdrop-blur-2xl">
-        <div class="flex items-center justify-between border-b border-white/10 px-4 py-3">
-            <div class="text-sm font-semibold text-white/90">Pilih Lokasi Pengantaran</div>
-            <button type="button"
-                class="rounded-xl border border-white/15 bg-black/30 px-3 py-2 text-xs font-semibold text-white/90 hover:bg-white/10"
-                onclick="closeMapPicker()">Tutup</button>
+    <div id="mapBackdrop" class="fixed inset-0 z-[60] hidden bg-black/90 backdrop-blur-md transition-opacity duration-300" onclick="closeMapPicker()"></div>
+    <div id="mapModal" class="fixed left-1/2 top-1/2 z-[70] hidden w-[92%] max-w-2xl -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-[40px] border border-white/10 bg-[#070708] shadow-2xl transition-all duration-500 scale-95 opacity-0" role="dialog">
+        <div class="flex items-center justify-between p-8">
+            <div>
+                <h2 class="text-xl font-black text-white tracking-tight">Delivery <span class="text-yellow-400 font-heading italic">Location</span></h2>
+                <p class="text-[10px] font-bold uppercase tracking-[0.2em] text-white/30 text-nowrap">Pin your address on the map</p>
+            </div>
+            <button onclick="closeMapPicker()" class="glass flex h-10 w-10 items-center justify-center rounded-full text-white/40 hover:text-white transition-all">
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
         </div>
 
-        <div class="p-4">
-            <div class="text-xs text-white/60 mb-2">
-                Klik di peta untuk pasang pin. Kamu juga bisa order untuk orang lain.
-            </div>
+        <div class="px-8 pb-8">
+            <div id="map" class="h-[400px] w-full rounded-3xl border border-white/5 bg-white/[0.02]"></div>
 
-            <div id="map" class="h-[420px] w-full rounded-2xl border border-white/10"></div>
-
-            <div class="mt-3 flex items-center justify-end gap-2">
-                <button type="button"
-                    class="rounded-xl border border-white/15 bg-black/25 px-4 py-2 text-sm text-white/90 hover:bg-white/10"
-                    onclick="closeMapPicker()">Batal</button>
-                <button type="button"
-                    class="rounded-xl bg-yellow-400/95 px-4 py-2 text-sm font-semibold text-black hover:bg-yellow-300"
-                    onclick="confirmPickedLocation()">Pakai Lokasi Ini</button>
+            <div class="mt-8 flex items-center justify-between gap-4">
+                <div class="flex-1">
+                    <p class="text-[10px] font-bold uppercase tracking-widest text-white/20">Coordinate Status</p>
+                    <p id="tempCoords" class="text-xs font-black text-white/40 italic mt-1 truncate">No location pinned</p>
+                </div>
+                <button type="button" onclick="confirmPickedLocation()" class="group relative overflow-hidden rounded-2xl bg-yellow-400 px-8 py-4 text-[10px] font-black uppercase tracking-[0.2em] text-black transition-all hover:bg-yellow-300 active:scale-95 shadow-xl shadow-yellow-400/10">
+                    <span class="relative z-10">Confirm Location</span>
+                    <div class="absolute inset-0 -translate-x-full bg-gradient-to-r from-white/0 via-white/40 to-white/0 transition-transform duration-1000 group-hover:translate-x-full"></div>
+                </button>
             </div>
         </div>
     </div>
@@ -272,13 +366,22 @@
         let tempPickedLng = null;
 
         function openMapPicker() {
-            document.getElementById('mapBackdrop')?.classList.remove('hidden');
-            document.getElementById('mapModal')?.classList.remove('hidden');
+            const backdrop = document.getElementById('mapBackdrop');
+            const modal = document.getElementById('mapModal');
+            if (!backdrop || !modal) return;
+
+            backdrop.classList.remove('hidden');
+            setTimeout(() => backdrop.classList.add('opacity-100'), 10);
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('scale-95', 'opacity-0');
+                modal.classList.add('scale-100', 'opacity-100');
+            }, 10);
 
             setTimeout(() => {
                 if (!mapInstance) {
-                    // default center: toko
-                    mapInstance = L.map('map').setView([STORE_LAT || -6.2, STORE_LNG || 106.8], 14);
+                    mapInstance = L.map('map', { zoomControl: false }).setView([STORE_LAT || -6.2, STORE_LNG || 106.8], 14);
+                    L.control.zoom({ position: 'bottomright' }).addTo(mapInstance);
 
                     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                         maxZoom: 19,
@@ -288,30 +391,39 @@
                     mapInstance.on('click', function (e) {
                         tempPickedLat = e.latlng.lat;
                         tempPickedLng = e.latlng.lng;
-
+                        document.getElementById('tempCoords').textContent = `${tempPickedLat.toFixed(6)}, ${tempPickedLng.toFixed(6)}`;
                         if (mapMarker) mapMarker.setLatLng(e.latlng);
                         else mapMarker = L.marker(e.latlng).addTo(mapInstance);
-
                     });
                 } else {
                     mapInstance.invalidateSize();
                 }
 
-                // kalau sudah pernah punya lokasi delivery, tampilkan marker di situ
                 if (deliveryLat != null && deliveryLng != null) {
                     const ll = L.latLng(deliveryLat, deliveryLng);
                     tempPickedLat = deliveryLat;
                     tempPickedLng = deliveryLng;
+                    document.getElementById('tempCoords').textContent = `${tempPickedLat.toFixed(6)}, ${tempPickedLng.toFixed(6)}`;
                     if (mapMarker) mapMarker.setLatLng(ll);
                     else mapMarker = L.marker(ll).addTo(mapInstance);
                     mapInstance.setView(ll, 15);
                 }
-            }, 50);
+            }, 300);
         }
 
         function closeMapPicker() {
-            document.getElementById('mapBackdrop')?.classList.add('hidden');
-            document.getElementById('mapModal')?.classList.add('hidden');
+            const backdrop = document.getElementById('mapBackdrop');
+            const modal = document.getElementById('mapModal');
+            if (!backdrop || !modal) return;
+
+            backdrop.classList.remove('opacity-100');
+            modal.classList.remove('scale-100', 'opacity-100');
+            modal.classList.add('scale-95', 'opacity-0');
+            
+            setTimeout(() => {
+                backdrop.classList.add('hidden');
+                modal.classList.add('hidden');
+            }, 500);
         }
 
         function confirmPickedLocation() {
@@ -448,9 +560,13 @@
 
             if (entries.length === 0) {
                 wrap.innerHTML = `
-          <div class="rounded-2xl border border-white/10 bg-black/20 px-4 py-4 text-center text-sm text-white/65 backdrop-blur-2xl">
-            Keranjang kosong. Silakan pilih menu dulu 🙂
-          </div>`;
+                    <div class="glass flex flex-col items-center justify-center rounded-[32px] p-12 text-center">
+                        <div class="mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-yellow-400/10 text-yellow-400">
+                            <svg class="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
+                        </div>
+                        <h3 class="mb-2 text-lg font-bold text-white uppercase tracking-tight text-nowrap">Your cart is empty</h3>
+                        <p class="text-xs font-medium text-white/30 uppercase tracking-widest text-nowrap">Select items to start ordering</p>
+                    </div>`;
                 document.getElementById('subtotal').textContent = 'Rp 0';
                 document.getElementById('tax').textContent = 'Rp 0';
                 document.getElementById('total').textContent = 'Rp 0';
@@ -464,32 +580,45 @@
                 const note = (typeof it.note === 'string') ? it.note : '';
 
                 const row = document.createElement('div');
-                row.className = "flex items-start justify-between gap-3 rounded-2xl border border-white/10 bg-black/20 px-4 py-3 backdrop-blur-2xl";
+                row.className = "glass group relative flex flex-col sm:flex-row sm:items-center gap-6 rounded-[28px] p-6 transition-all hover:bg-white/[0.05]";
                 row.innerHTML = `
-          <div class="min-w-0 flex-1">
-            <div class="truncate text-sm font-semibold text-white/90">${escapeHtml(name)}</div>
-            <div class="mt-1 text-xs text-white/55">${formatRp(price)} × ${qty}</div>
+                    <div class="flex flex-1 items-center gap-4">
+                        <div class="h-16 w-16 shrink-0 overflow-hidden rounded-2xl bg-white/5">
+                            <img src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=200&q=80" class="h-full w-full object-cover opacity-60" />
+                        </div>
+                        <div class="min-w-0 flex-1">
+                            <h4 class="truncate text-[15px] font-black uppercase tracking-tight text-white">${escapeHtml(name)}</h4>
+                            <p class="mt-1 text-[11px] font-black text-yellow-400/60 uppercase tracking-widest">${formatRp(price)} per item</p>
+                        </div>
+                    </div>
 
-            <div class="mt-2">
-              <label class="block text-[11px] text-white/55">Catatan item (opsional)</label>
-              <input
-                type="text"
-                value="${escapeHtml(note)}"
-                oninput="setNote('${id}', this.value)"
-                placeholder="Contoh: tanpa sambal / pedas sedang"
-                class="mt-1 w-full rounded-xl border border-white/12 bg-black/25 px-3 py-2 text-sm text-white/90 placeholder:text-white/35 outline-none focus:border-white/25"
-              />
-            </div>
-          </div>
+                    <div class="flex flex-1 flex-col gap-3">
+                        <label class="text-[9px] font-black uppercase tracking-[0.2em] text-white/20">Chef Notes</label>
+                        <input
+                            type="text"
+                            value="${escapeHtml(note)}"
+                            oninput="setNote('${id}', this.value)"
+                            placeholder="Add your preferences..."
+                            class="w-full rounded-xl border border-white/5 bg-white/[0.02] px-4 py-2.5 text-xs font-bold text-white placeholder:text-white/20 outline-none transition-all"
+                        />
+                    </div>
 
-          <div class="flex items-center gap-2 pt-1">
-            <button class="h-8 w-8 rounded-xl border border-white/12 bg-black/25 text-white/90 font-black hover:bg-white/10"
-                    onclick="setQty('${id}', ${qty - 1})" type="button">−</button>
-            <div class="min-w-[20px] text-center text-sm font-bold text-white/95">${qty}</div>
-            <button class="h-8 w-8 rounded-xl border border-white/12 bg-black/25 text-white/90 font-black hover:bg-white/10"
-                    onclick="setQty('${id}', ${qty + 1})" type="button">+</button>
-          </div>
-        `;
+                    <div class="flex items-center justify-between sm:justify-end gap-6 pt-4 sm:pt-0 sm:border-l sm:border-white/5 sm:pl-6">
+                        <div class="flex items-center gap-4">
+                            <button onclick="setQty('${id}', ${qty - 1})" class="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/5 text-white/40 transition-all hover:bg-white/10 hover:text-white active:scale-90">
+                                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M20 12H4"></path></svg>
+                            </button>
+                            <span class="min-w-[20px] text-center text-sm font-black text-white">${qty}</span>
+                            <button onclick="setQty('${id}', ${qty + 1})" class="flex h-10 w-10 items-center justify-center rounded-2xl bg-yellow-400 text-black transition-all hover:bg-yellow-300 active:scale-90">
+                                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4"></path></svg>
+                            </button>
+                        </div>
+                        <div class="text-right min-w-[100px]">
+                            <div class="text-[9px] font-black uppercase tracking-widest text-white/20">Subtotal</div>
+                            <div class="text-sm font-black text-white tracking-tight">${formatRp(price * qty)}</div>
+                        </div>
+                    </div>
+                `;
                 wrap.appendChild(row);
             }
 
@@ -497,6 +626,7 @@
             document.getElementById('subtotal').textContent = formatRp(t.subtotal);
             document.getElementById('tax').textContent = formatRp(t.tax);
             document.getElementById('total').textContent = formatRp(t.total);
+            updateTotalWithDelivery();
         }
 
         async function checkoutDb() {
