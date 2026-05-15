@@ -187,7 +187,7 @@ class PublicReservationController extends Controller
                     $hasSlot = true;
                     break;
                 }
-                $t->addMinutes($slot);
+                $t->addMinutes($slot ?: 5);
             }
 
             $out[] = [
