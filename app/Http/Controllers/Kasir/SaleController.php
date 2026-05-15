@@ -338,6 +338,7 @@ class SaleController extends Controller
                 }
 
                 $sale->update([
+                    'user_id' => auth()->id(),
                     'payment_status' => 'paid',
                     'status' => 'completed',
                     'sale_shift_id' => $activeShift->id,
