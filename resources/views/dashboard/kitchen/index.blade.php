@@ -349,10 +349,11 @@
 
     function renderCard(sale, queueNo) {
       const now = new Date();
-      const createdAt = parseISOToDate(sale.created_at);
+      // Untuk pesanan QR, gunakan paid_at sebagai acuan waktu tunggu agar timer tidak mulai dari saat pelanggan baru pesan (pending)
+      const orderTime = parseISOToDate(sale.paid_at || sale.created_at);
       const startedAt = parseISOToDate(sale.kitchen_started_at);
       const doneAt = parseISOToDate(sale.kitchen_done_at);
-      const ageSec = diffSeconds(createdAt, now);
+      const ageSec = diffSeconds(orderTime, now);
       const ageMin = Math.floor(ageSec / 60);
 
       let cookSec = 0;
@@ -483,9 +484,9 @@
       const f = getCurrentFilters();
       if (f.sort === 'table_time') {
         const getT = s => (getOrderType(s) === 'dine_in' ? (getTableName(s) || '') : '~~~TA');
-        const getTime = which === 'done' ? (s => parseISOToDate(s.delivered_at) || parseISOToDate(s.kitchen_done_at) || parseISOToDate(s.created_at))
-                        : which === 'proc' ? (s => parseISOToDate(s.kitchen_started_at) || parseISOToDate(s.created_at))
-                        : (s => parseISOToDate(s.created_at));
+        const getTime = which === 'done' ? (s => parseISOToDate(s.delivered_at) || parseISOToDate(s.kitchen_done_at) || parseISOToDate(s.paid_at) || parseISOToDate(s.created_at))
+                        : which === 'proc' ? (s => parseISOToDate(s.kitchen_started_at) || parseISOToDate(s.paid_at) || parseISOToDate(s.created_at))
+                        : (s => parseISOToDate(s.paid_at) || parseISOToDate(s.created_at));
         return [...group].sort((a, b) => {
           const ta = getT(a).toLowerCase(); const tb = getT(b).toLowerCase();
           if (ta < tb) return -1; if (ta > tb) return 1;
@@ -493,9 +494,9 @@
           return (which === 'done') ? db - da : da - db;
         });
       }
-      if (which === 'new') return sortByDateAsc(group, s => parseISOToDate(s.created_at));
-      if (which === 'proc') return sortByDateAsc(group, s => parseISOToDate(s.kitchen_started_at) || parseISOToDate(s.created_at));
-      return sortByDateDesc(group, s => parseISOToDate(s.delivered_at) || parseISOToDate(s.kitchen_done_at) || parseISOToDate(s.created_at));
+      if (which === 'new') return sortByDateAsc(group, s => parseISOToDate(s.paid_at) || parseISOToDate(s.created_at));
+      if (which === 'proc') return sortByDateAsc(group, s => parseISOToDate(s.kitchen_started_at) || parseISOToDate(s.paid_at) || parseISOToDate(s.created_at));
+      return sortByDateDesc(group, s => parseISOToDate(s.delivered_at) || parseISOToDate(s.kitchen_done_at) || parseISOToDate(s.paid_at) || parseISOToDate(s.created_at));
     }
 
     function renderFromCache() {

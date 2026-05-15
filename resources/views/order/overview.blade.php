@@ -134,14 +134,14 @@
 
                 <div class="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
                     <label
-                        class="flex cursor-pointer items-center gap-3 rounded-xl border border-white/15 bg-black/20 px-4 py-3 text-sm text-white/90">
-                        <input type="radio" name="paymentMethod" value="qris" checked class="accent-yellow-400">
-                        <span>QRIS</span>
+                        class="flex cursor-not-allowed opacity-50 items-center gap-3 rounded-xl border border-white/15 bg-black/20 px-4 py-3 text-sm text-white/90">
+                        <input type="radio" name="paymentMethod" value="qris" disabled class="accent-yellow-400">
+                        <span>QRIS (Maintenance)</span>
                     </label>
 
                     <label
                         class="flex cursor-pointer items-center gap-3 rounded-xl border border-white/15 bg-black/20 px-4 py-3 text-sm text-white/90">
-                        <input type="radio" name="paymentMethod" value="cash" class="accent-yellow-400">
+                        <input type="radio" name="paymentMethod" value="cash" checked class="accent-yellow-400">
                         <span>Tunai di Kasir</span>
                     </label>
                 </div>
@@ -546,7 +546,7 @@
             }
 
             const selectedPaymentMethod =
-                document.querySelector('input[name="paymentMethod"]:checked')?.value || 'qris';
+                document.querySelector('input[name="paymentMethod"]:checked')?.value || 'cash';
 
             const items = entries.map(([id, it]) => ({
                 product_id: Number(id),

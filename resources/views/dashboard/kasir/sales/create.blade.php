@@ -343,13 +343,25 @@
                     </div>
 
                     {{-- Payment Form --}}
-                    <div class="space-y-4">
+                    <div class="space-y-6">
+                        <div>
+                            <label class="text-[10px] text-white/40 uppercase font-bold tracking-widest mb-3 block">Metode Pembayaran</label>
+                            <div class="grid grid-cols-2 gap-2 p-1 bg-white/5 rounded-2xl border border-white/10">
+                                <button @click="qrPaymentMethod = 'cash'" 
+                                        :class="qrPaymentMethod === 'cash' ? 'bg-accent-gold text-black shadow-lg shadow-accent-gold/20' : 'text-white/40 hover:text-white'" 
+                                        class="py-3 rounded-xl text-[10px] font-black transition-all uppercase tracking-widest">Tunai</button>
+                                <button @click="qrPaymentMethod = 'qris'; qrPaidAmount = pendingQrOrder?.total_amount" 
+                                        :class="qrPaymentMethod === 'qris' ? 'bg-accent-gold text-black shadow-lg shadow-accent-gold/20' : 'text-white/40 hover:text-white'" 
+                                        class="py-3 rounded-xl text-[10px] font-black transition-all uppercase tracking-widest">QRIS Statis</button>
+                            </div>
+                        </div>
+
                         <div class="grid grid-cols-2 gap-4">
                             <div>
                                 <label class="text-[10px] text-white/40 uppercase font-bold tracking-widest mb-2 block">Uang Diterima</label>
                                 <div class="relative">
                                     <div class="absolute left-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-white/20">RP</div>
-                                    <input type="number" x-model.number="qrPaidAmount" 
+                                    <input type="number" x-model.number="qrPaidAmount" :readonly="qrPaymentMethod === 'qris'" :class="qrPaymentMethod === 'qris' ? 'opacity-30' : ''"
                                            class="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-10 pr-4 text-lg font-black focus:outline-none focus:border-accent-gold/50 transition-all text-white">
                                 </div>
                             </div>
@@ -402,6 +414,7 @@ function posSystem() {
         qrInvoiceNo: '',
         pendingQrOrder: null,
         qrPaidAmount: 0,
+        qrPaymentMethod: 'cash',
         isSearchingQr: false,
 
         init() {
@@ -526,6 +539,7 @@ function posSystem() {
             this.qrInvoiceNo = '';
             this.pendingQrOrder = null;
             this.qrPaidAmount = 0;
+            this.qrPaymentMethod = 'cash';
         },
 
         async findPendingQrOrder() {
@@ -575,7 +589,8 @@ function posSystem() {
                     },
                     body: JSON.stringify({ 
                         invoice_no: this.pendingQrOrder.invoice_no,
-                        paid_amount: this.qrPaidAmount
+                        paid_amount: this.qrPaidAmount,
+                        payment_method: this.qrPaymentMethod
                     })
                 });
                 const data = await res.json();

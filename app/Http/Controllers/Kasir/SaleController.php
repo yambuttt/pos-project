@@ -303,6 +303,7 @@ class SaleController extends Controller
         $data = $request->validate([
             'invoice_no' => ['required', 'string', 'max:50'],
             'paid_amount' => ['required', 'integer', 'min:0'],
+            'payment_method' => ['nullable', 'string', 'in:cash,qris'],
         ]);
 
         try {
@@ -343,6 +344,7 @@ class SaleController extends Controller
                     'status' => 'completed',
                     'sale_shift_id' => $activeShift->id,
                     'paid_amount' => $paidAmount,
+                    'payment_method' => $data['payment_method'] ?? $sale->payment_method,
                     'change_amount' => $paidAmount - $totalAmount,
                     'paid_at' => now(),
                     'kitchen_status' => 'new',
