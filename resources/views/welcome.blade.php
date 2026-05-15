@@ -1,449 +1,378 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="id" class="scroll-smooth">
 
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Ayo Renne — Pesan Menu</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Ayo Renne — Experience Premium Dining</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     <style>
-        html {
-            scroll-behavior: smooth;
+        :root {
+            --brand-gold: #FACC15;
+            --brand-gold-muted: rgba(250, 204, 21, 0.15);
+            --bg-deep: #070708;
+            --bg-card: rgba(255, 255, 255, 0.04);
         }
 
         body {
-            overflow-x: hidden;
+            font-family: 'Inter', sans-serif;
+            -webkit-tap-highlight-color: transparent;
         }
 
-        @keyframes floaty {
-            0% {
-                transform: translate(-10px, 10px) scale(1);
-            }
-
-            50% {
-                transform: translate(30px, -25px) scale(1.05);
-            }
-
-            100% {
-                transform: translate(-10px, 10px) scale(1);
-            }
+        h1, h2, h3, h4, .font-heading {
+            font-family: 'Outfit', sans-serif;
         }
 
-        @keyframes pulseSoft {
-
-            0%,
-            100% {
-                transform: scale(1);
-                opacity: .85;
-            }
-
-            50% {
-                transform: scale(1.05);
-                opacity: 1;
-            }
+        .glass {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
         }
 
-        .hide-scrollbar::-webkit-scrollbar {
-            display: none;
+        .glass-gold {
+            background: rgba(250, 204, 21, 0.05);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(250, 204, 21, 0.15);
         }
 
-        .hide-scrollbar {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
+        @keyframes float {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-20px) scale(1.05); }
+        }
+
+        @keyframes reveal {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .animate-reveal {
+            animation: reveal 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+        }
+
+        .stagger-1 { animation-delay: 0.1s; }
+        .stagger-2 { animation-delay: 0.2s; }
+        .stagger-3 { animation-delay: 0.3s; }
+
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        .premium-gradient-text {
+            background: linear-gradient(135deg, #FFF 0%, #FACC15 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .card-hover {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .card-hover:hover {
+            transform: translateY(-8px) scale(1.02);
+            border-color: rgba(250, 204, 21, 0.4);
+            box-shadow: 0 20px 40px -15px rgba(0,0,0,0.5);
         }
     </style>
 </head>
 
-<body class="min-h-screen bg-[#070708] text-white">
-    {{-- Background --}}
-    <div
-        class="fixed inset-0 -z-10 bg-[radial-gradient(circle_at_top_left,rgba(250,204,21,.18),transparent_28%),radial-gradient(circle_at_top_right,rgba(255,255,255,.08),transparent_24%),linear-gradient(to_bottom,#070708,#0a0a0d)]">
-    </div>
-    <div class="pointer-events-none fixed -left-40 -top-40 -z-10 h-[420px] w-[420px] rounded-full bg-yellow-400/15 blur-[70px]"
-        style="animation: floaty 14s ease-in-out infinite;"></div>
-    <div class="pointer-events-none fixed right-[-120px] top-[80px] -z-10 h-[360px] w-[360px] rounded-full bg-white/10 blur-[80px]"
-        style="animation: floaty 16s ease-in-out infinite;"></div>
-    <div class="pointer-events-none fixed bottom-[-160px] left-[20%] -z-10 h-[320px] w-[320px] rounded-full bg-yellow-300/10 blur-[70px]"
-        style="animation: floaty 13s ease-in-out infinite;"></div>
+<body class="min-h-screen bg-[#070708] text-white selection:bg-yellow-400 selection:text-black">
+    {{-- Background Elements --}}
+    <div class="fixed inset-0 -z-10 bg-[radial-gradient(circle_at_top_left,rgba(250,204,21,0.1),transparent_40%),radial-gradient(circle_at_bottom_right,rgba(255,255,255,0.05),transparent_40%)]"></div>
+    <div class="fixed -left-20 -top-20 -z-10 h-96 w-96 rounded-full bg-yellow-400/10 blur-[100px] animate-pulse"></div>
+    <div class="fixed -bottom-20 -right-20 -z-10 h-96 w-96 rounded-full bg-white/5 blur-[100px] animate-pulse" style="animation-delay: 2s"></div>
 
-    <div class="mx-auto max-w-7xl px-4 pb-28 pt-5 sm:px-5 lg:px-6">
-        {{-- Top Bar --}}
-        <div class="mb-4 flex items-center justify-between gap-3">
-            <div class="flex min-w-0 items-center gap-3">
-                <div
-                    class="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-yellow-300/25 bg-yellow-400/10 shadow-lg shadow-yellow-400/10 backdrop-blur-2xl">
-                    <img src="{{ asset('images/landing/logo-ayo-renne.png') }}" alt="Ayo Renne"
-                        class="h-8 w-8 object-contain">
-                </div>
-                <div class="min-w-0">
-                    <div class="truncate text-[11px] font-semibold uppercase tracking-[0.28em] text-yellow-200/95">Ayo
-                        Renne</div>
-                    <div class="truncate text-xs text-white/60">Pesan menu cepat, rapi, dan nyaman</div>
-                </div>
-            </div>
-
-            <div
-                class="hidden items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-2 text-xs text-white/75 backdrop-blur-2xl sm:inline-flex">
-                <span class="h-2.5 w-2.5 rounded-full bg-yellow-400 shadow-[0_0_0_6px_rgba(250,204,21,0.12)]"
-                    style="animation:pulseSoft 2.2s ease-in-out infinite;"></span>
-                <span id="timeGreeting">Selamat datang</span>
-            </div>
-        </div>
-
-        {{-- Hero --}}
-        <section class="mb-5 grid grid-cols-1 gap-4 xl:grid-cols-[1.2fr_.8fr]">
-            <div
-                class="relative overflow-hidden rounded-[28px] border border-white/12 bg-white/[0.06] p-5 shadow-2xl backdrop-blur-2xl sm:p-7">
-                <div
-                    class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(250,204,21,.16),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(255,255,255,.08),transparent_26%)]">
-                </div>
-
-                <div class="relative">
-                    <div
-                        class="inline-flex items-center gap-2 rounded-full border border-yellow-300/20 bg-yellow-400/10 px-3 py-1 text-[11px] font-medium text-yellow-100/95">
-                        <span class="h-2 w-2 rounded-full bg-yellow-300"></span>
-                        Menu favorit tersedia hari ini
+    <div class="mx-auto max-w-7xl px-4 pb-28 pt-6 sm:px-6 lg:px-8">
+        {{-- Navigation Bar --}}
+        <nav class="mb-8 flex items-center justify-between gap-4 animate-reveal">
+            <div class="flex items-center gap-4">
+                <div class="group relative">
+                    <div class="absolute -inset-1 rounded-2xl bg-gradient-to-r from-yellow-400 to-yellow-600 opacity-25 blur transition duration-1000 group-hover:opacity-50"></div>
+                    <div class="relative flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-black shadow-2xl">
+                        <img src="{{ asset('images/landing/logo-ayo-renne.png') }}" alt="Ayo Renne" class="h-10 w-10 object-contain transition-transform duration-500 group-hover:scale-110">
                     </div>
+                </div>
+                <div class="hidden sm:block">
+                    <h1 class="text-lg font-black uppercase tracking-[0.2em] text-white">Ayo <span class="text-yellow-400">Renne</span></h1>
+                    <p class="text-[10px] font-bold uppercase tracking-widest text-white/40">Exclusive Dining Experience</p>
+                </div>
+            </div>
 
-                    <h1
-                        class="mt-4 max-w-3xl text-3xl font-bold leading-tight tracking-tight text-white sm:text-4xl lg:text-5xl">
-                        Pilih menu dengan
-                        <span class="text-yellow-300">lebih cepat</span>,
-                        lebih jelas, dan lebih nyaman.
-                    </h1>
+            <div class="flex items-center gap-3">
+                <div class="glass-gold hidden items-center gap-3 rounded-full px-5 py-2.5 text-[11px] font-black uppercase tracking-[0.15em] text-yellow-100/80 sm:flex">
+                    <span class="relative flex h-2 w-2">
+                        <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-yellow-400 opacity-75"></span>
+                        <span class="relative inline-flex h-2 w-2 rounded-full bg-yellow-400"></span>
+                    </span>
+                    <span id="timeGreeting">Welcome back</span>
+                </div>
+                <button onclick="openCart()" class="glass flex h-12 w-12 items-center justify-center rounded-2xl transition-all hover:border-yellow-400/50 hover:bg-white/5">
+                    <svg class="h-5 w-5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+                    </svg>
+                </button>
+            </div>
+        </nav>
 
-                    <p class="mt-3 max-w-2xl text-sm leading-7 text-white/68 sm:text-[15px]">
-                        Cari menu favoritmu, pilih kategori, masukkan ke keranjang, lalu lanjut checkout.
-                        Semua dibuat agar pelanggan lebih mudah memahami pilihan menu, baik di mobile maupun desktop.
+        <header class="mb-12 grid grid-cols-1 gap-6 lg:grid-cols-12">
+            <div class="glass relative overflow-hidden rounded-[32px] p-8 sm:p-12 lg:col-span-8 animate-reveal stagger-1">
+                <div class="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-yellow-400/10 blur-[80px]"></div>
+                
+                <div class="relative z-10">
+                    <div class="mb-6 inline-flex items-center gap-2 rounded-full border border-yellow-400/20 bg-yellow-400/10 px-4 py-1.5 text-[10px] font-black uppercase tracking-[0.2em] text-yellow-400">
+                        <span class="h-1.5 w-1.5 rounded-full bg-yellow-400"></span>
+                        Freshly Prepared Today
+                    </div>
+                    
+                    <h2 class="mb-6 text-4xl font-black leading-[1.1] tracking-tight text-white sm:text-6xl">
+                        Discover the Art of <br/>
+                        <span class="premium-gradient-text italic">Fine Dining</span>
+                    </h2>
+                    
+                    <p class="mb-8 max-w-xl text-sm leading-relaxed text-white/50 sm:text-base">
+                        Explore our curated selection of signature dishes and handcrafted beverages. 
+                        Every ingredient is chosen with precision to ensure an unforgettable culinary journey.
                     </p>
-
-                    <div class="mt-5 flex flex-wrap items-center gap-3">
-                        <button type="button"
-                            onclick="document.getElementById('menu-section').scrollIntoView({ behavior: 'smooth' })"
-                            class="rounded-2xl bg-yellow-400 px-5 py-3 text-sm font-semibold text-black shadow-lg shadow-yellow-400/10 transition hover:bg-yellow-300">
-                            Jelajahi Menu
+                    
+                    <div class="flex flex-wrap items-center gap-4">
+                        <button onclick="document.getElementById('menu-section').scrollIntoView({ behavior: 'smooth' })" class="group relative inline-flex items-center justify-center overflow-hidden rounded-2xl bg-yellow-400 px-8 py-4 text-xs font-black uppercase tracking-widest text-black transition-all hover:bg-yellow-300 active:scale-95">
+                            <span class="relative z-10">Start Ordering</span>
+                            <div class="absolute inset-0 -translate-x-full bg-gradient-to-r from-white/0 via-white/40 to-white/0 transition-transform duration-1000 group-hover:translate-x-full"></div>
                         </button>
-
-                        <button type="button" onclick="openCart()"
-                            class="rounded-2xl border border-white/12 bg-white/[0.05] px-5 py-3 text-sm font-semibold text-white/90 backdrop-blur-2xl transition hover:bg-white/[0.09]">
-                            Buka Keranjang
+                        <button onclick="openCart()" class="glass-gold px-8 py-4 rounded-2xl text-xs font-black uppercase tracking-widest text-white transition-all hover:bg-white/5 active:scale-95">
+                            View Cart
                         </button>
-
-                        <div class="text-xs text-white/48">
-                            Tampilan baru: modern • elegan • responsif
-                        </div>
                     </div>
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-1">
-                <div class="rounded-[28px] border border-white/12 bg-white/[0.06] p-5 shadow-2xl backdrop-blur-2xl">
-                    <div class="flex items-start justify-between gap-3">
-                        <div>
-                            <div class="text-[11px] uppercase tracking-[0.24em] text-white/55">Info Cepat</div>
-                            <div class="mt-2 text-base font-semibold text-white/92">Pesan lebih mudah</div>
-                        </div>
-                        <span class="text-yellow-300">●</span>
-                    </div>
-
-                    <ul class="mt-4 space-y-3 text-sm leading-6 text-white/70">
-                        <li>• Cari menu dengan kolom pencarian yang lebih jelas.</li>
-                        <li>• Filter kategori lebih mudah disentuh di HP.</li>
-                        <li>• Ringkasan keranjang selalu terlihat.</li>
+            <div class="flex flex-col gap-6 lg:col-span-4">
+                <div class="glass flex-1 rounded-[32px] p-8 animate-reveal stagger-2">
+                    <div class="mb-4 text-[10px] font-black uppercase tracking-[0.2em] text-white/30">Order Info</div>
+                    <h3 class="mb-4 text-xl font-bold text-white">Seamless Experience</h3>
+                    <ul class="space-y-4">
+                        @foreach(['Smart Search', 'Touch Optimized', 'Live Tracking'] as $info)
+                        <li class="flex items-center gap-3 text-xs font-medium text-white/60">
+                            <div class="flex h-6 w-6 items-center justify-center rounded-lg bg-yellow-400/10 text-yellow-400">
+                                <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                            </div>
+                            {{ $info }}
+                        </li>
+                        @endforeach
                     </ul>
                 </div>
 
-                <div class="rounded-[28px] border border-white/12 bg-white/[0.06] p-5 shadow-2xl backdrop-blur-2xl">
-                    <div class="text-[11px] uppercase tracking-[0.24em] text-white/55">Catatan</div>
-                    <p class="mt-3 text-sm leading-6 text-white/68">
-                        Jika tombol menu nonaktif, berarti stok bahan sedang tidak mencukupi.
-                        Sistem akan menonaktifkan item yang tidak bisa dipesan.
-                    </p>
-
-                    <div
-                        class="mt-4 inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/20 px-3 py-2 text-xs text-white/75">
-                        <span class="h-2 w-2 rounded-full bg-yellow-400"></span>
-                        <span id="menuCount">0 item</span>
+                <div class="glass-gold rounded-[32px] p-8 animate-reveal stagger-3">
+                    <div class="mb-2 flex items-center justify-between">
+                        <div class="text-[10px] font-black uppercase tracking-[0.2em] text-yellow-400/60">Status</div>
+                        <div class="h-2 w-2 animate-pulse rounded-full bg-yellow-400"></div>
                     </div>
+                    <div class="text-2xl font-black text-white" id="menuCount">0 Items</div>
+                    <p class="text-[10px] font-bold uppercase tracking-widest text-white/30 mt-1">Available to order</p>
                 </div>
             </div>
-        </section>
+        </header>
 
-        {{-- Sticky Search / Filter --}}
-        <section id="menu-section"
-            class="rounded-[28px] border border-white/12 bg-white/[0.06] p-4 shadow-2xl backdrop-blur-2xl sm:p-5">
-            <div class="flex flex-col gap-4">
-                <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                    <div>
-                        <div class="text-[11px] uppercase tracking-[0.28em] text-white/55">Menu</div>
-                        <div class="mt-1 text-lg font-semibold text-white/95">Pilih makanan & minuman favoritmu</div>
-                    </div>
-
-                    <div
-                        class="inline-flex items-center gap-2 self-start rounded-full border border-white/10 bg-black/20 px-3 py-2 text-xs text-white/78">
-                        <span
-                            class="h-2.5 w-2.5 rounded-full bg-yellow-400 shadow-[0_0_0_6px_rgba(250,204,21,0.12)]"></span>
-                        <span id="searchMeta">Semua menu ditampilkan</span>
-                    </div>
+        <section id="menu-section" class="relative z-10 animate-reveal" style="animation-delay: 0.4s">
+            <div class="mb-10 flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
+                <div class="max-w-md">
+                    <h2 class="text-3xl font-black text-white">Our Signature <span class="text-yellow-400">Menu</span></h2>
+                    <p class="mt-2 text-sm font-medium text-white/40 uppercase tracking-widest">Select your favorites from our collection</p>
                 </div>
 
-                <div class="grid grid-cols-1 gap-3 lg:grid-cols-[1fr_auto]">
-                    <div
-                        class="flex items-center gap-3 rounded-2xl border border-white/12 bg-black/20 px-4 py-3 backdrop-blur-2xl">
-                        <svg class="h-5 w-5 shrink-0 text-white/45" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                            <path d="M21 21l-4.3-4.3m1.8-5.2a7 7 0 11-14 0 7 7 0 0114 0z" stroke="currentColor"
-                                stroke-width="2" stroke-linecap="round" />
-                        </svg>
-                        <input id="searchInput" type="text" placeholder="Cari menu... misalnya ayam, kopi, cireng"
-                            class="w-full bg-transparent text-sm text-white placeholder:text-white/38 outline-none"
-                            autocomplete="off">
-                        <button id="clearSearch" type="button"
-                            class="hidden rounded-xl border border-white/12 bg-white/[0.04] px-3 py-2 text-xs font-semibold text-white/75 hover:bg-white/[0.08]">
-                            Clear
-                        </button>
+                <div class="relative w-full lg:max-w-md">
+                    <div class="absolute left-5 top-1/2 -translate-y-1/2 text-yellow-400">
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                     </div>
-
-                    <button type="button" onclick="openCart()"
-                        class="hidden rounded-2xl border border-white/12 bg-white/[0.05] px-4 py-3 text-sm font-semibold text-white/90 transition hover:bg-white/[0.09] lg:inline-flex lg:items-center lg:justify-center">
-                        Lihat Keranjang
-                    </button>
+                    <input id="searchInput" type="text" placeholder="Search our flavors..." 
+                           class="w-full rounded-[20px] border border-white/10 bg-white/[0.03] py-5 pl-14 pr-20 text-sm font-bold text-white placeholder:text-white/20 outline-none transition-all focus:border-yellow-400/50 focus:bg-white/[0.05] focus:ring-4 focus:ring-yellow-400/5 shadow-2xl">
+                    <button id="clearSearch" class="absolute right-4 top-1/2 -translate-y-1/2 hidden glass px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest text-white/60 hover:text-white">Clear</button>
                 </div>
+            </div>
 
-                <div id="filters" class="hide-scrollbar flex gap-2 overflow-x-auto pb-1">
-                    <button
-                        class="pill active whitespace-nowrap rounded-full border border-yellow-300/30 bg-yellow-400/12 px-4 py-2 text-xs font-medium text-white shadow-[0_0_0_6px_rgba(250,204,21,0.08)]"
-                        data-cat="__all" type="button">
-                        Semua
-                    </button>
+            <div class="sticky top-4 z-30 mb-10">
+                <div id="filters" class="glass flex gap-2 overflow-x-auto p-2 rounded-[24px] hide-scrollbar shadow-2xl">
+                    <button class="pill active whitespace-nowrap rounded-2xl border border-yellow-400 bg-yellow-400 px-8 py-3.5 text-[10px] font-black uppercase tracking-[0.2em] text-black shadow-lg shadow-yellow-400/20 transition-all"
+                            data-cat="__all" type="button">All Flavors</button>
                     @foreach($categories as $c)
-                        <button
-                            class="pill whitespace-nowrap rounded-full border border-white/12 bg-black/20 px-4 py-2 text-xs font-medium text-white/80 backdrop-blur-2xl transition hover:bg-white/[0.08]"
-                            data-cat="{{ $c }}" type="button">
-                            {{ $c }}
-                        </button>
+                        <button class="pill whitespace-nowrap rounded-2xl border border-white/5 bg-white/[0.02] px-8 py-3.5 text-[10px] font-black uppercase tracking-[0.2em] text-white/40 transition-all hover:bg-white/[0.06] hover:text-white"
+                                data-cat="{{ $c }}" type="button">{{ $c }}</button>
                     @endforeach
                 </div>
+            </div>
 
-                {{-- Menu Grid --}}
-                <div id="menuGrid" class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                    @foreach($products as $p)
-                        @php
-                            $max = (int) $p->maxServingsFromStock();
-                            $sellable = $max > 0;
-                            $cat = trim((string) ($p->category ?? 'Lainnya'));
-                            $img = $p->imageUrl();
-                        @endphp
-
-                        <article
-                            class="group relative overflow-hidden rounded-[24px] border border-white/10 bg-[#121214]/85 p-4 shadow-xl transition duration-200 hover:-translate-y-[2px] hover:border-white/18 hover:bg-[#151518]"
-                            data-cat="{{ $cat }}" data-id="{{ $p->id }}" data-name="{{ $p->name }}"
-                            data-price="{{ (int) $p->price }}" data-desc="{{ e($p->description ?? '') }}"
-                            data-img="{{ $img ? e($img) : '' }}" onclick="openProductModal({{ $p->id }})">
-
-                            <div
-                                class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,.08),transparent_24%),radial-gradient(circle_at_bottom_right,rgba(250,204,21,.10),transparent_20%)] opacity-80">
-                            </div>
-
-                            <div class="relative flex h-full flex-col">
-                                <div class="flex items-start gap-4">
-                                    <div
-                                        class="h-20 w-20 shrink-0 overflow-hidden rounded-2xl border border-white/10 bg-black/30">
-                                        @if($img)
-                                            <img src="{{ $img }}" alt="{{ $p->name }}" class="h-full w-full object-cover"
-                                                loading="lazy">
-                                        @else
-                                            <div
-                                                class="h-full w-full bg-gradient-to-br from-yellow-400/15 via-white/5 to-transparent">
-                                            </div>
-                                        @endif
-                                    </div>
-
-                                    <div class="min-w-0 flex-1">
-                                        <div class="flex items-start justify-between gap-3">
-                                            <div class="min-w-0">
-                                                <h3 class="line-clamp-2 text-base font-semibold leading-6 text-white/95">
-                                                    {{ $p->name }}
-                                                </h3>
-                                                <div
-                                                    class="mt-1 inline-flex items-center rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 text-[11px] text-white/62">
-                                                    {{ $cat }}
-                                                </div>
-                                            </div>
-
-                                            <div class="shrink-0 text-right">
-                                                <div class="text-sm font-bold text-yellow-300">
-                                                    Rp {{ number_format((int) $p->price, 0, ',', '.') }}
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <p class="mt-3 line-clamp-2 text-sm leading-6 text-white/62">
-                                            {{ $p->description ?: 'Belum ada deskripsi menu.' }}
-                                        </p>
-                                    </div>
-                                </div>
-
-                                <div class="mt-4 flex items-center justify-between gap-3">
-                                    <div class="text-xs text-white/45">
-                                        @if($sellable)
-                                            Siap dipesan
-                                        @else
-                                            Stok tidak tersedia
-                                        @endif
-                                    </div>
-
-                                    <button type="button" onclick="event.stopPropagation(); addToCart({{ $p->id }});"
-                                        @if(!$sellable) disabled @endif class="inline-flex items-center justify-center rounded-2xl px-4 py-2.5 text-sm font-semibold transition
-                                                    @if($sellable)
-                                                        bg-yellow-400 text-black shadow-lg shadow-yellow-400/10 hover:bg-yellow-300
-                                                    @else
-                                                        cursor-not-allowed border border-white/10 bg-black/20 text-white/35
-                                                    @endif">
-                                        @if($sellable)
-                                            + Tambah
-                                        @else
-                                            Habis
-                                        @endif
-                                    </button>
-                                </div>
-                            </div>
-                        </article>
-                    @endforeach
+            <div class="mb-6 flex items-center justify-between">
+                <div class="glass px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest text-white/40">
+                    <span id="searchMeta">Showing all items</span>
                 </div>
+            </div>
+            <div id="menuGrid" class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                @foreach($products as $p)
+                    @php
+                        $max = (int) $p->maxServingsFromStock();
+                        $sellable = $max > 0;
+                        $cat = trim((string) ($p->category ?? 'Lainnya'));
+                        $img = $p->imageUrl();
+                    @endphp
+
+                    <article class="card-hover group relative flex flex-col overflow-hidden rounded-[32px] border border-white/5 bg-white/[0.02] p-2 shadow-2xl transition-all animate-reveal"
+                             data-cat="{{ $cat }}" data-id="{{ $p->id }}" data-name="{{ $p->name }}"
+                             data-price="{{ (int) $p->price }}" data-desc="{{ e($p->description ?? '') }}"
+                             data-img="{{ $img ? e($img) : '' }}" onclick="openProductModal({{ $p->id }})">
+                        
+                        <div class="relative aspect-square overflow-hidden rounded-[26px] bg-white/[0.02]">
+                            @if($img)
+                                <img src="{{ $img }}" alt="{{ $p->name }}" class="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110" loading="lazy">
+                            @else
+                                <div class="flex h-full w-full items-center justify-center bg-gradient-to-br from-yellow-400/10 to-transparent">
+                                    <svg class="h-12 w-12 text-white/5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                </div>
+                            @endif
+                            
+                            <div class="absolute right-3 top-3">
+                                <div class="glass-gold rounded-full px-3 py-1 text-[9px] font-black uppercase tracking-widest text-yellow-400">
+                                    {{ $cat }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-1 flex-col p-4">
+                            <div class="mb-2 flex items-start justify-between gap-2">
+                                <h3 class="line-clamp-1 text-sm font-bold text-white group-hover:text-yellow-400 transition-colors uppercase tracking-tight">{{ $p->name }}</h3>
+                            </div>
+                            
+                            <p class="mb-4 line-clamp-2 text-[11px] leading-relaxed text-white/30 font-medium">
+                                {{ $p->description ?: 'Discover our signature taste prepared with passion.' }}
+                            </p>
+
+                            <div class="mt-auto flex items-center justify-between gap-3 pt-2">
+                                <div class="text-base font-black text-white">
+                                    <span class="text-xs text-yellow-400">Rp</span> {{ number_format((int) $p->price, 0, ',', '.') }}
+                                </div>
+
+                                <button type="button" onclick="event.stopPropagation(); addToCart({{ $p->id }});"
+                                        @if(!$sellable) disabled @endif 
+                                        class="flex h-10 w-10 items-center justify-center rounded-xl transition-all
+                                               @if($sellable)
+                                                   bg-yellow-400 text-black shadow-lg shadow-yellow-400/20 hover:bg-yellow-300 active:scale-90
+                                               @else
+                                                   cursor-not-allowed bg-white/5 text-white/10
+                                               @endif">
+                                    @if($sellable)
+                                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
+                                    @else
+                                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                    @endif
+                                </button>
+                            </div>
+                        </div>
+                    </article>
+                @endforeach
+            </div>
             </div>
         </section>
     </div>
 
-    {{-- Floating cart --}}
-    <button id="fabCart"
-        class="fixed bottom-5 right-4 z-50 inline-flex items-center gap-3 rounded-full border border-white/12 bg-black/55 px-4 py-3 text-sm font-semibold text-white shadow-2xl backdrop-blur-2xl transition hover:bg-white/[0.08] sm:right-6"
-        type="button" onclick="openCart()">
-        <span class="hidden sm:inline">Keranjang</span>
-        <span
-            class="inline-flex min-w-[30px] items-center justify-center rounded-full bg-yellow-400 px-2.5 py-1 text-xs font-extrabold text-black"
-            id="cartBadge">0</span>
-    </button>
-
-    {{-- Cart backdrop --}}
-    <div id="cartBackdrop" class="fixed inset-0 z-50 hidden bg-black/60 backdrop-blur-[2px]" onclick="closeCart()">
+    {{-- Floating Cart Action --}}
+    <div id="fabCart" class="fixed bottom-8 left-1/2 z-40 w-full max-w-md -translate-x-1/2 px-4 transition-all duration-500 sm:bottom-10 animate-reveal" style="animation-delay: 0.6s">
+        <button onclick="openCart()" class="group relative flex w-full items-center justify-between overflow-hidden rounded-[24px] bg-yellow-400 p-2 shadow-[0_20px_50px_rgba(250,204,21,0.3)] transition-all hover:bg-yellow-300 active:scale-95">
+            <div class="flex items-center gap-4 pl-4 text-black">
+                <div class="relative">
+                    <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
+                    <div id="cartBadge" class="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-black text-[10px] font-black text-yellow-400">0</div>
+                </div>
+                <div class="text-left">
+                    <div class="text-[10px] font-black uppercase tracking-widest opacity-40">Your Selection</div>
+                    <div class="text-sm font-black">View Cart Summary</div>
+                </div>
+            </div>
+            <div class="glass flex h-14 items-center px-6 rounded-2xl bg-black/5 border-none">
+                <span id="mobileCartTotal" class="text-sm font-black text-black">Rp 0</span>
+            </div>
+        </button>
     </div>
 
-    {{-- Cart drawer --}}
-    <aside id="cartDrawer"
-        class="fixed right-0 top-0 z-50 flex h-full w-full max-w-[430px] translate-x-full flex-col border-l border-white/12 bg-[#0b0b0d]/95 p-4 shadow-2xl backdrop-blur-2xl transition-transform duration-200"
-        role="dialog" aria-modal="true">
-        <div class="flex items-center justify-between gap-3">
-            <div>
-                <div class="text-[11px] uppercase tracking-[0.24em] text-white/55">Keranjang</div>
-                <div class="mt-1 text-lg font-semibold text-white/95">Pesanan Kamu</div>
-            </div>
+    {{-- Cart Backdrop --}}
+    <div id="cartBackdrop" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm transition-opacity duration-300" onclick="closeCart()"></div>
 
-            <div class="flex items-center gap-2">
-                <button type="button"
-                    class="rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-xs font-semibold text-white/80 hover:bg-white/[0.08]"
-                    onclick="clearCart()">
-                    Clear
-                </button>
-                <button type="button"
-                    class="rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-xs font-semibold text-white/80 hover:bg-white/[0.08]"
-                    onclick="closeCart()">
-                    Tutup
+    {{-- Cart Drawer --}}
+    <aside id="cartDrawer" class="fixed right-0 top-0 z-50 flex h-full w-full max-w-lg translate-x-full flex-col bg-[#070708] shadow-[-20px_0_60px_rgba(0,0,0,0.5)] transition-transform duration-500 ease-[cubic-bezier(0.2,0.8,0.2,1)]" role="dialog">
+        <div class="flex flex-col h-full border-l border-white/5">
+            <div class="flex items-center justify-between p-8">
+                <div>
+                    <h2 class="text-2xl font-black text-white tracking-tight">Your <span class="text-yellow-400 font-heading italic">Order</span></h2>
+                    <p class="text-[10px] font-bold uppercase tracking-[0.2em] text-white/30">Review your selection below</p>
+                </div>
+                <button onclick="closeCart()" class="glass flex h-12 w-12 items-center justify-center rounded-2xl text-white/40 hover:text-white hover:border-white/20 transition-all">
+                    <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
             </div>
-        </div>
 
-        <div id="cartList" class="mt-4 flex-1 space-y-3 overflow-auto pr-1"></div>
-
-        <div class="mt-4 rounded-2xl border border-white/10 bg-white/[0.04] p-4">
-            <div class="space-y-2 text-sm">
-                <div class="flex items-center justify-between text-white/68">
-                    <span>Subtotal</span>
-                    <span id="subtotal" class="font-semibold text-white/95">Rp 0</span>
-                </div>
-                <div class="flex items-center justify-between text-white/68">
-                    <span>Estimasi Pajak (11%)</span>
-                    <span id="tax" class="font-semibold text-white/95">Rp 0</span>
-                </div>
-                <div class="flex items-center justify-between border-t border-white/10 pt-3 text-white/80">
-                    <span class="font-medium">Total</span>
-                    <span id="total" class="text-base font-bold text-yellow-300">Rp 0</span>
-                </div>
+            <div id="cartList" class="flex-1 overflow-y-auto px-8 space-y-4 hide-scrollbar">
+                {{-- Dynamic Items --}}
             </div>
 
-            <button type="button" onclick="goToOverview()"
-                class="mt-4 w-full rounded-2xl bg-yellow-400 px-4 py-3 text-sm font-semibold text-black shadow-lg shadow-yellow-400/10 transition hover:bg-yellow-300">
-                Lanjut Checkout
-            </button>
+            <div class="p-8">
+                <div class="glass rounded-[32px] p-8 space-y-6">
+                    <div class="space-y-3">
+                        <div class="flex justify-between text-xs font-bold uppercase tracking-widest text-white/30">
+                            <span>Subtotal</span>
+                            <span id="subtotal" class="text-white">Rp 0</span>
+                        </div>
+                        <div class="flex justify-between text-xs font-bold uppercase tracking-widest text-white/30">
+                            <span>Tax (11%)</span>
+                            <span id="tax" class="text-white">Rp 0</span>
+                        </div>
+                        <div class="h-px bg-white/5 my-4"></div>
+                        <div class="flex justify-between items-end">
+                            <span class="text-sm font-black uppercase tracking-[0.2em] text-yellow-400">Total Bill</span>
+                            <span id="total" class="text-3xl font-black text-white tracking-tighter tracking-tight">Rp 0</span>
+                        </div>
+                    </div>
 
-            <p class="mt-2 text-xs leading-6 text-white/45">
-                Kamu akan diarahkan ke halaman overview untuk mengisi detail pesanan.
-            </p>
+                    <button onclick="goToOverview()" class="group relative w-full overflow-hidden rounded-2xl bg-yellow-400 py-5 text-xs font-black uppercase tracking-[0.2em] text-black transition-all hover:bg-yellow-300 active:scale-95 shadow-xl shadow-yellow-400/10">
+                        <span class="relative z-10">Proceed to Checkout</span>
+                        <div class="absolute inset-0 -translate-x-full bg-gradient-to-r from-white/0 via-white/40 to-white/0 transition-transform duration-1000 group-hover:translate-x-full"></div>
+                    </button>
+                </div>
+            </div>
         </div>
     </aside>
 
-    {{-- Product backdrop --}}
-    <div id="productBackdrop" class="fixed inset-0 z-50 hidden bg-black/70 backdrop-blur-[2px]"
-        onclick="closeProductModal()"></div>
-
-    {{-- Product modal --}}
-    <div id="productModal"
-        class="fixed left-1/2 top-1/2 z-50 hidden w-[92%] max-w-[560px] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-[28px] border border-white/12 bg-[#0b0b0d]/95 shadow-2xl backdrop-blur-2xl"
-        role="dialog" aria-modal="true">
-        <div class="relative">
-            <div id="pmImageWrap" class="h-[240px] w-full bg-black/30">
+    {{-- Product Modal --}}
+    <div id="productBackdrop" class="fixed inset-0 z-50 hidden bg-black/90 backdrop-blur-md transition-opacity duration-300" onclick="closeProductModal()"></div>
+    <div id="productModal" class="fixed left-1/2 top-1/2 z-50 hidden w-[92%] max-w-xl -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-[40px] border border-white/10 bg-[#070708] shadow-2xl transition-all duration-500 scale-95 opacity-0" role="dialog">
+        <div class="relative aspect-[4/3] overflow-hidden">
+            <div id="pmImageWrap" class="h-full w-full bg-white/[0.02]">
                 <img id="pmImage" class="hidden h-full w-full object-cover" alt="">
-                <div id="pmNoImage"
-                    class="h-full w-full bg-gradient-to-br from-yellow-400/20 via-white/5 to-transparent"></div>
+                <div id="pmNoImage" class="flex h-full w-full items-center justify-center bg-gradient-to-br from-yellow-400/10 to-transparent">
+                    <svg class="h-20 w-20 text-white/5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                </div>
             </div>
-
-            <button type="button" onclick="closeProductModal()"
-                class="absolute right-3 top-3 rounded-xl border border-white/12 bg-black/35 px-3 py-2 text-xs font-semibold text-white/90 backdrop-blur-2xl hover:bg-white/[0.08]">
-                Tutup
+            <button onclick="closeProductModal()" class="glass absolute right-6 top-6 flex h-10 w-10 items-center justify-center rounded-full text-white/40 hover:text-white transition-all">
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
             </button>
         </div>
 
-        <div class="p-5 sm:p-6">
-            <div class="flex items-start justify-between gap-4">
-                <div class="min-w-0">
-                    <div id="pmName" class="text-xl font-semibold text-white/95">Nama Produk</div>
-                    <div id="pmCategory"
-                        class="mt-2 inline-flex rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 text-xs text-white/60">
-                        Kategori
-                    </div>
+        <div class="p-8 sm:p-10">
+            <div class="mb-6 flex items-start justify-between gap-6">
+                <div class="flex-1">
+                    <div id="pmCategory" class="mb-2 text-[10px] font-black uppercase tracking-[0.2em] text-yellow-400/60">Category</div>
+                    <h3 id="pmName" class="text-3xl font-black text-white leading-tight">Product Name</h3>
                 </div>
-
-                <div id="pmPrice" class="shrink-0 text-lg font-bold text-yellow-300">Rp 0</div>
+                <div id="pmPrice" class="text-2xl font-black text-white">Rp 0</div>
             </div>
 
-            <p id="pmDesc" class="mt-4 text-sm leading-7 text-white/70"></p>
+            <p id="pmDesc" class="mb-10 text-sm leading-relaxed text-white/40 font-medium">Description</p>
 
-            <div class="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div class="text-xs text-white/45">
-                    Tambahkan langsung ke keranjang atau tutup untuk kembali ke daftar menu.
-                </div>
-                <button id="pmAddBtn" type="button"
-                    class="rounded-2xl bg-yellow-400 px-4 py-3 text-sm font-semibold text-black shadow-lg shadow-yellow-400/10 hover:bg-yellow-300 disabled:cursor-not-allowed disabled:opacity-40">
-                    + Tambah ke Keranjang
-                </button>
-            </div>
-        </div>
-    </div>
-
-    {{-- Mobile bottom helper --}}
-    <div
-        class="fixed bottom-0 left-0 right-0 z-40 border-t border-white/10 bg-black/65 px-4 py-3 backdrop-blur-2xl sm:hidden">
-        <div class="flex items-center justify-between gap-3">
-            <div class="min-w-0">
-                <div class="text-[11px] uppercase tracking-[0.18em] text-white/45">Keranjang</div>
-                <div class="truncate text-sm font-semibold text-white/90">
-                    <span id="mobileCartCount">0</span> item dipilih
-                </div>
-            </div>
-            <button type="button" onclick="openCart()"
-                class="rounded-2xl bg-yellow-400 px-4 py-2.5 text-sm font-semibold text-black">
-                Lihat
+            <button id="pmAddBtn" class="group relative w-full overflow-hidden rounded-2xl bg-yellow-400 py-5 text-xs font-black uppercase tracking-[0.2em] text-black transition-all hover:bg-yellow-300 active:scale-95 shadow-xl shadow-yellow-400/10">
+                <span class="relative z-10">Add to Order</span>
+                <div class="absolute inset-0 -translate-x-full bg-gradient-to-r from-white/0 via-white/40 to-white/0 transition-transform duration-1000 group-hover:translate-x-full"></div>
             </button>
         </div>
     </div>
@@ -581,12 +510,25 @@
 
         function updateCartBadge() {
             const count = cartItemCount(loadQtyCart());
-
             const badge = document.getElementById('cartBadge');
             if (badge) badge.textContent = String(count);
 
-            const mobile = document.getElementById('mobileCartCount');
-            if (mobile) mobile.textContent = String(count);
+            const mobileTotal = document.getElementById('mobileCartTotal');
+            if (mobileTotal) {
+                const totals = computeTotals(loadQtyCart());
+                mobileTotal.textContent = formatRp(totals.total);
+            }
+
+            const fab = document.getElementById('fabCart');
+            if (fab) {
+                if (count > 0) {
+                    fab.classList.remove('translate-y-32', 'opacity-0');
+                    fab.classList.add('translate-y-0', 'opacity-100');
+                } else {
+                    fab.classList.add('translate-y-32', 'opacity-0');
+                    fab.classList.remove('translate-y-0', 'opacity-100');
+                }
+            }
         }
 
         function formatRp(n) {
@@ -601,6 +543,7 @@
                 id: Number(id),
                 name: el.getAttribute('data-name'),
                 price: Number(el.getAttribute('data-price') || 0),
+                img: el.getAttribute('data-img') || '',
             };
         }
 
@@ -656,6 +599,7 @@
             if (!backdrop || !drawer) return;
 
             backdrop.classList.remove('hidden');
+            setTimeout(() => backdrop.classList.add('opacity-100'), 10);
             drawer.classList.remove('translate-x-full');
             renderCart();
         }
@@ -665,8 +609,9 @@
             const drawer = document.getElementById('cartDrawer');
             if (!backdrop || !drawer) return;
 
+            backdrop.classList.remove('opacity-100');
             drawer.classList.add('translate-x-full');
-            setTimeout(() => backdrop.classList.add('hidden'), 180);
+            setTimeout(() => backdrop.classList.add('hidden'), 300);
         }
 
         document.addEventListener('keydown', (e) => {
@@ -686,8 +631,12 @@
 
             if (entries.length === 0) {
                 list.innerHTML = `
-                    <div class="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-5 text-center text-sm text-white/60">
-                        Keranjang masih kosong. Yuk pilih menu dulu 🙂
+                    <div class="glass flex flex-col items-center justify-center rounded-[32px] p-12 text-center">
+                        <div class="mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-yellow-400/10 text-yellow-400">
+                            <svg class="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
+                        </div>
+                        <h3 class="mb-2 text-lg font-bold text-white uppercase tracking-tight">Your cart is empty</h3>
+                        <p class="text-xs font-medium text-white/30 uppercase tracking-widest">Select items to start ordering</p>
                     </div>
                 `;
             } else {
@@ -696,37 +645,26 @@
                     if (!p) continue;
 
                     const item = document.createElement('div');
-                    item.className = 'flex items-start justify-between gap-3 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3';
+                    item.className = 'glass group relative flex items-center gap-4 rounded-[24px] p-3 transition-all hover:bg-white/[0.05]';
                     item.innerHTML = `
-    <div class="min-w-0 flex-1">
-        <div class="truncate text-sm font-semibold text-white/92">${escapeHtml(p.name)}</div>
-
-        <div class="mt-2 space-y-1 text-xs text-white/60">
-            <div class="flex items-center justify-between gap-3">
-                <span>Harga satuan</span>
-                <span class="font-medium text-white/82">${formatRp(p.price)}</span>
-            </div>
-
-            <div class="flex items-center justify-between gap-3">
-                <span>Qty</span>
-                <span class="font-medium text-white/82">${qty}</span>
-            </div>
-
-            <div class="flex items-center justify-between gap-3 border-t border-white/8 pt-2">
-                <span class="text-white/72">Subtotal item</span>
-                <span class="font-semibold text-yellow-300">${formatRp(p.price * qty)}</span>
-            </div>
-        </div>
-    </div>
-
-    <div class="ml-3 flex items-center gap-2 self-start">
-        <button class="h-8 w-8 rounded-xl border border-white/12 bg-black/25 text-white/90 font-black hover:bg-white/[0.08]"
-                onclick="setQty(${p.id}, ${Number(qty) - 1})" type="button">−</button>
-        <div class="min-w-[22px] text-center text-sm font-bold text-white/95">${qty}</div>
-        <button class="h-8 w-8 rounded-xl border border-white/12 bg-black/25 text-white/90 font-black hover:bg-white/[0.08]"
-                onclick="setQty(${p.id}, ${Number(qty) + 1})" type="button">+</button>
-    </div>
-`;
+                        <div class="h-16 w-16 shrink-0 overflow-hidden rounded-2xl bg-white/5">
+                            <img src="${escapeHtml(p.img || '')}" class="h-full w-full object-cover opacity-60" 
+                                 onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22white%22 stroke-opacity=%220.1%22><rect width=%22100%25%22 height=%22100%25%22 fill=%22black%22/><path d=%22M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z%22/></svg>'">
+                        </div>
+                        <div class="min-w-0 flex-1">
+                            <div class="truncate text-[13px] font-black uppercase tracking-tight text-white">${escapeHtml(p.name)}</div>
+                            <div class="mt-1 text-[10px] font-black text-yellow-400/60 uppercase tracking-widest">${formatRp(p.price)}</div>
+                        </div>
+                        <div class="flex items-center gap-3 pr-2">
+                            <button onclick="setQty(${p.id}, ${Number(qty) - 1})" class="flex h-8 w-8 items-center justify-center rounded-xl bg-white/5 text-white/40 transition-all hover:bg-white/10 hover:text-white active:scale-90">
+                                <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M20 12H4"></path></svg>
+                            </button>
+                            <span class="min-w-[20px] text-center text-xs font-black text-white">${qty}</span>
+                            <button onclick="setQty(${p.id}, ${Number(qty) + 1})" class="flex h-8 w-8 items-center justify-center rounded-xl bg-yellow-400 text-black transition-all hover:bg-yellow-300 active:scale-90">
+                                <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
+                            </button>
+                        </div>
+                    `;
                     list.appendChild(item);
                 }
             }
@@ -782,36 +720,49 @@
             document.getElementById('pmName').textContent = name;
             document.getElementById('pmCategory').textContent = cat;
             document.getElementById('pmPrice').textContent = formatRp(price);
-            document.getElementById('pmDesc').textContent = desc.trim() ? desc : 'Belum ada deskripsi menu.';
+            document.getElementById('pmDesc').textContent = desc.trim() ? desc : 'Discover our signature taste prepared with passion.';
 
             const imgEl = document.getElementById('pmImage');
             const noImg = document.getElementById('pmNoImage');
 
             if (img) {
                 imgEl.src = img;
-                imgEl.alt = name;
                 imgEl.classList.remove('hidden');
                 noImg.classList.add('hidden');
             } else {
-                imgEl.src = '';
                 imgEl.classList.add('hidden');
                 noImg.classList.remove('hidden');
             }
 
-            const cardAddBtn = el.querySelector('button[onclick*="addToCart"]');
-            const sellable = cardAddBtn ? !cardAddBtn.disabled : true;
-
             const pmBtn = document.getElementById('pmAddBtn');
+            const sellable = !el.querySelector('button[disabled]');
             pmBtn.disabled = !sellable;
-            pmBtn.onclick = () => addToCart(id);
+            pmBtn.onclick = () => { addToCart(id); closeProductModal(); };
 
-            document.getElementById('productBackdrop').classList.remove('hidden');
-            document.getElementById('productModal').classList.remove('hidden');
+            const backdrop = document.getElementById('productBackdrop');
+            const modal = document.getElementById('productModal');
+            
+            backdrop.classList.remove('hidden');
+            setTimeout(() => backdrop.classList.add('opacity-100'), 10);
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('scale-95', 'opacity-0');
+                modal.classList.add('scale-100', 'opacity-100');
+            }, 10);
         }
 
         function closeProductModal() {
-            document.getElementById('productBackdrop')?.classList.add('hidden');
-            document.getElementById('productModal')?.classList.add('hidden');
+            const backdrop = document.getElementById('productBackdrop');
+            const modal = document.getElementById('productModal');
+            
+            backdrop.classList.remove('opacity-100');
+            modal.classList.remove('scale-100', 'opacity-100');
+            modal.classList.add('scale-95', 'opacity-0');
+            
+            setTimeout(() => {
+                backdrop.classList.add('hidden');
+                modal.classList.add('hidden');
+            }, 300);
         }
 
         // init
