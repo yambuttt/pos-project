@@ -82,7 +82,7 @@
     <div class="fixed inset-0 -z-10 bg-[radial-gradient(circle_at_50%_-20%,rgba(251,191,36,0.1),transparent_70%)]"></div>
     <div class="fixed inset-0 -z-10 bg-[radial-gradient(circle_at_0%_100%,rgba(251,191,36,0.05),transparent_50%)]"></div>
 
-    <div class="mx-auto max-w-2xl px-4 pb-20 pt-8">
+    <div class="mx-auto max-w-4xl px-4 pb-20 pt-8">
         <header class="mb-10 flex items-center justify-between gap-6 animate-reveal">
             <div>
                 <div class="mb-1 text-[10px] font-black uppercase tracking-[0.2em] text-yellow-400">Checkout Journey</div>
@@ -580,30 +580,30 @@
                 const note = (typeof it.note === 'string') ? it.note : '';
 
                 const row = document.createElement('div');
-                row.className = "glass group relative flex flex-col sm:flex-row sm:items-center gap-6 rounded-[28px] p-6 transition-all hover:bg-white/[0.05]";
+                row.className = "glass group relative flex flex-col lg:flex-row lg:items-center gap-6 rounded-[32px] p-6 transition-all hover:bg-white/[0.05]";
                 row.innerHTML = `
-                    <div class="flex flex-1 items-center gap-4">
+                    <div class="flex flex-[1.5] items-center gap-4 min-w-0">
                         <div class="h-16 w-16 shrink-0 overflow-hidden rounded-2xl bg-white/5">
                             <img src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=200&q=80" class="h-full w-full object-cover opacity-60" />
                         </div>
                         <div class="min-w-0 flex-1">
-                            <h4 class="truncate text-[15px] font-black uppercase tracking-tight text-white">${escapeHtml(name)}</h4>
-                            <p class="mt-1 text-[11px] font-black text-yellow-400/60 uppercase tracking-widest">${formatRp(price)} per item</p>
+                            <h4 class="text-[15px] font-black uppercase tracking-tight text-white leading-tight">${escapeHtml(name)}</h4>
+                            <p class="mt-1 text-[11px] font-black text-yellow-400/60 uppercase tracking-widest">${formatRp(price)}</p>
                         </div>
                     </div>
 
-                    <div class="flex flex-1 flex-col gap-3">
+                    <div class="flex-1 flex flex-col gap-2 lg:border-l lg:border-white/5 lg:pl-6">
                         <label class="text-[9px] font-black uppercase tracking-[0.2em] text-white/20">Chef Notes</label>
                         <input
                             type="text"
                             value="${escapeHtml(note)}"
                             oninput="setNote('${id}', this.value)"
-                            placeholder="Add your preferences..."
-                            class="w-full rounded-xl border border-white/5 bg-white/[0.02] px-4 py-2.5 text-xs font-bold text-white placeholder:text-white/20 outline-none transition-all"
+                            placeholder="Add preferences..."
+                            class="w-full rounded-xl border border-white/5 bg-white/[0.02] px-4 py-3 text-xs font-bold text-white placeholder:text-white/20 outline-none transition-all focus:bg-white/[0.05]"
                         />
                     </div>
 
-                    <div class="flex items-center justify-between sm:justify-end gap-6 pt-4 sm:pt-0 sm:border-l sm:border-white/5 sm:pl-6">
+                    <div class="flex shrink-0 items-center justify-between lg:justify-end gap-8 pt-4 lg:pt-0 lg:border-l lg:border-white/5 lg:pl-6">
                         <div class="flex items-center gap-4">
                             <button onclick="setQty('${id}', ${qty - 1})" class="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/5 text-white/40 transition-all hover:bg-white/10 hover:text-white active:scale-90">
                                 <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M20 12H4"></path></svg>
@@ -613,9 +613,9 @@
                                 <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4"></path></svg>
                             </button>
                         </div>
-                        <div class="text-right min-w-[100px]">
+                        <div class="text-right min-w-[110px]">
                             <div class="text-[9px] font-black uppercase tracking-widest text-white/20">Subtotal</div>
-                            <div class="text-sm font-black text-white tracking-tight">${formatRp(price * qty)}</div>
+                            <div class="text-[15px] font-black text-white tracking-tight">${formatRp(price * qty)}</div>
                         </div>
                     </div>
                 `;
