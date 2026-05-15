@@ -357,6 +357,10 @@
                     <span>Menu Total</span>
                     <span id="sumMenu" class="text-white">Rp 0</span>
                 </div>
+
+                <div id="checkoutDetails" class="pt-4 border-t border-white/5">
+                    <!-- Dynamic order details will appear here -->
+                </div>
                 <div class="flex items-center justify-between text-[11px] font-bold uppercase tracking-widest text-white/30">
                     <span>Rental Fee</span>
                     <span id="sumRental" class="text-white">Rp 0</span>
@@ -751,6 +755,40 @@
       document.getElementById('sumDp').textContent = fmtRp(grand * DP_RATIO);
 
       updateScheduleSummary();
+      updateCheckoutDetails();
+    }
+
+    function updateCheckoutDetails() {
+      const detailBox = document.getElementById('checkoutDetails');
+      if (!detailBox) return;
+      detailBox.innerHTML = '';
+
+      let hasDetails = false;
+
+      // Buffet detail
+      const buffet = document.querySelector('input[name="buffet_package_id"]:checked');
+      if (buffet) {
+        const label = buffet.closest('label');
+        const name = label.querySelector('.text-\[15px\]').textContent;
+        const row = document.createElement('div');
+        row.className = 'flex items-center justify-between text-[10px] font-black uppercase tracking-widest text-white/40 mb-2';
+        row.innerHTML = `<span>${name}</span><span>${fmtRp(calcBuffetTotal())}</span>`;
+        detailBox.appendChild(row);
+        hasDetails = true;
+      }
+
+      // Regular items
+      for (const it of cart.values()) {
+        if (it.qty > 0) {
+          const row = document.createElement('div');
+          row.className = 'flex items-center justify-between text-[10px] font-black uppercase tracking-widest text-white/40 mb-2';
+          row.innerHTML = `<span>${it.name} x ${it.qty}</span><span>${fmtRp(it.price * it.qty)}</span>`;
+          detailBox.appendChild(row);
+          hasDetails = true;
+        }
+      }
+
+      detailBox.classList.toggle('hidden', !hasDetails);
     }
 
     function renderCalendar() {
@@ -1128,6 +1166,18 @@
 
     document.querySelectorAll('input[name="buffet_package_id"]').forEach(el => {
       el.addEventListener('change', updateTotals);
+      
+      // Allow unselect
+      el.onclick = () => {
+        if (el.dataset.wasChecked === 'true') {
+          el.checked = false;
+          el.dataset.wasChecked = 'false';
+          updateTotals();
+        } else {
+          document.querySelectorAll('input[name="buffet_package_id"]').forEach(r => r.dataset.wasChecked = 'false');
+          el.dataset.wasChecked = 'true';
+        }
+      };
     });
 
     const paxInput = document.querySelector('input[name="pax"]');
