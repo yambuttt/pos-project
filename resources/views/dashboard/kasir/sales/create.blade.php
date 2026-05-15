@@ -16,6 +16,11 @@
                     <input type="text" x-model="search" placeholder="Cari menu atau kategori..." 
                            class="w-full bg-white/5 border border-white/10 rounded-2xl py-3.5 pl-12 pr-4 text-sm focus:outline-none focus:border-accent-gold/50 focus:ring-4 focus:ring-accent-gold/10 transition-all placeholder-white/20">
                 </div>
+                <button @click="openQrOrderModal()" 
+                        class="shrink-0 flex items-center gap-2 bg-accent-gold/10 hover:bg-accent-gold/20 border border-accent-gold/20 hover:border-accent-gold/50 px-5 py-3.5 rounded-2xl transition-all group">
+                    <svg class="w-5 h-5 text-accent-gold group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path></svg>
+                    <span class="text-xs font-black text-accent-gold uppercase tracking-wider">Konfirmasi Order QR</span>
+                </button>
                 <div class="flex items-center gap-2">
                     <button @click="viewMode = 'grid'" :class="viewMode === 'grid' ? 'bg-accent-gold text-black' : 'bg-white/5 text-white/40'" class="p-2.5 rounded-xl transition-all">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
@@ -273,6 +278,104 @@
         </div>
     </div>
 
+    {{-- Modal Konfirmasi Order QR --}}
+    <div x-show="showQrOrderModal" style="display:none" class="fixed inset-0 z-[100] flex items-center justify-center p-4">
+        <div x-show="showQrOrderModal" x-transition.opacity class="absolute inset-0 bg-black/95 backdrop-blur-md" @click="showQrOrderModal = false"></div>
+        <div x-show="showQrOrderModal" 
+             x-transition:enter="transition ease-out duration-300 transform" 
+             x-transition:enter-start="translate-y-8 opacity-0 scale-95" 
+             x-transition:enter-end="translate-y-0 opacity-100 scale-100"
+             class="relative bg-black border border-white/10 w-full max-w-lg rounded-[3rem] overflow-hidden flex flex-col shadow-2xl">
+            
+            <div class="p-8 border-b border-white/5 flex items-center justify-between">
+                <div>
+                    <h3 class="text-2xl font-bold tracking-tight text-white">Konfirmasi Order QR</h3>
+                    <p class="text-accent-gold text-[10px] mt-1 uppercase tracking-widest font-black">Cari pesanan dari meja</p>
+                </div>
+                <button @click="showQrOrderModal = false" class="text-white/20 hover:text-white transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+
+            <div class="p-8 space-y-6">
+                {{-- Search Box --}}
+                <div class="flex gap-3">
+                    <div class="relative flex-1">
+                        <input type="text" x-model="qrInvoiceNo" placeholder="Masukkan Nomor Invoice (misal: INV-2024...)" 
+                               class="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-6 text-sm focus:outline-none focus:border-accent-gold/50 transition-all placeholder-white/20 uppercase">
+                    </div>
+                    <button @click="findPendingQrOrder()" :disabled="isSearchingQr || !qrInvoiceNo" 
+                            class="bg-accent-gold text-black px-8 rounded-2xl text-xs font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all disabled:opacity-20">
+                        <span x-text="isSearchingQr ? '...' : 'Cari'"></span>
+                    </button>
+                </div>
+
+                {{-- Order Detail --}}
+                <div x-show="pendingQrOrder" x-transition class="space-y-6">
+                    <div class="bg-white/5 rounded-3xl p-6 border border-white/5 space-y-4">
+                        <div class="flex justify-between items-center pb-4 border-b border-white/5">
+                            <div>
+                                <div class="text-[10px] text-white/40 uppercase font-bold tracking-widest">Nomor Invoice</div>
+                                <div class="text-white font-black" x-text="pendingQrOrder?.invoice_no"></div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-[10px] text-white/40 uppercase font-bold tracking-widest">Meja</div>
+                                <div class="text-accent-gold font-black" x-text="pendingQrOrder?.dining_table || 'Take Away'"></div>
+                            </div>
+                        </div>
+
+                        <div class="space-y-3 max-h-48 overflow-y-auto custom-scrollbar pr-2">
+                            <template x-for="item in pendingQrOrder?.items" :key="item.product_name">
+                                <div class="flex justify-between text-sm">
+                                    <div class="flex-1">
+                                        <div class="text-white font-bold" x-text="item.product_name"></div>
+                                        <div class="text-[10px] text-white/20" x-text="item.qty + ' x ' + fmtRp(item.price)"></div>
+                                    </div>
+                                    <div class="text-white font-mono" x-text="fmtRp(item.subtotal)"></div>
+                                </div>
+                            </template>
+                        </div>
+
+                        <div class="pt-4 border-t border-white/5 flex justify-between items-end">
+                            <span class="text-xs font-bold text-white/40 uppercase">Total Tagihan</span>
+                            <span class="text-2xl font-black text-accent-gold" x-text="fmtRp(pendingQrOrder?.total_amount)"></span>
+                        </div>
+                    </div>
+
+                    {{-- Payment Form --}}
+                    <div class="space-y-4">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="text-[10px] text-white/40 uppercase font-bold tracking-widest mb-2 block">Uang Diterima</label>
+                                <div class="relative">
+                                    <div class="absolute left-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-white/20">RP</div>
+                                    <input type="number" x-model.number="qrPaidAmount" 
+                                           class="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-10 pr-4 text-lg font-black focus:outline-none focus:border-accent-gold/50 transition-all text-white">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="text-[10px] text-white/40 uppercase font-bold tracking-widest mb-2 block">Kembalian</label>
+                                <div class="py-4 text-lg font-black font-mono" :class="qrPaidAmount >= (pendingQrOrder?.total_amount || 0) ? 'text-accent-gold' : 'text-red-400'"
+                                     x-text="fmtRp(Math.max(0, qrPaidAmount - (pendingQrOrder?.total_amount || 0)))"></div>
+                            </div>
+                        </div>
+
+                        <button @click="confirmPendingQrOrder()" :disabled="isProcessing || qrPaidAmount < (pendingQrOrder?.total_amount || 0)"
+                                class="w-full btn-premium-primary py-5 rounded-3xl font-black text-xs uppercase tracking-[0.2em] disabled:opacity-20">
+                            <span x-text="isProcessing ? 'Memproses...' : 'Konfirmasi & Cetak Struk'"></span>
+                        </button>
+                    </div>
+                </div>
+
+                {{-- Empty State --}}
+                <div x-show="!pendingQrOrder && !isSearchingQr" class="py-12 text-center opacity-20">
+                    <svg class="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                    <p class="text-sm font-bold uppercase tracking-widest">Masukkan nomor invoice untuk mencari pesanan</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 <script>
@@ -293,6 +396,13 @@ function posSystem() {
         isProcessing: false,
         showTableSelector: false,
         showQrisModal: false,
+
+        // QR Order Confirmation
+        showQrOrderModal: false,
+        qrInvoiceNo: '',
+        pendingQrOrder: null,
+        qrPaidAmount: 0,
+        isSearchingQr: false,
 
         init() {
             const cats = new Set();
@@ -407,6 +517,76 @@ function posSystem() {
                 }
             } catch (e) {
                 alert('Gagal memproses transaksi.');
+                this.isProcessing = false;
+            }
+        },
+
+        openQrOrderModal() {
+            this.showQrOrderModal = true;
+            this.qrInvoiceNo = '';
+            this.pendingQrOrder = null;
+            this.qrPaidAmount = 0;
+        },
+
+        async findPendingQrOrder() {
+            if (!this.qrInvoiceNo || this.isSearchingQr) return;
+            this.isSearchingQr = true;
+            this.pendingQrOrder = null;
+
+            try {
+                const res = await fetch("{{ route('kasir.sales.find-pending-cash') }}", {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json', 
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    },
+                    body: JSON.stringify({ invoice_no: this.qrInvoiceNo })
+                });
+                const data = await res.json();
+                if (data.ok) {
+                    this.pendingQrOrder = data.sale;
+                    this.qrPaidAmount = data.sale.total_amount;
+                } else {
+                    alert(data.message || 'Pesanan tidak ditemukan.');
+                }
+            } catch (e) {
+                alert('Gagal mencari pesanan.');
+            } finally {
+                this.isSearchingQr = false;
+            }
+        },
+
+        async confirmPendingQrOrder() {
+            if (!this.pendingQrOrder || this.isProcessing) return;
+            if (this.qrPaidAmount < this.pendingQrOrder.total_amount) {
+                alert('Uang bayar kurang!');
+                return;
+            }
+
+            this.isProcessing = true;
+            try {
+                const res = await fetch("{{ route('kasir.sales.confirm-pending-cash') }}", {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json', 
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    },
+                    body: JSON.stringify({ 
+                        invoice_no: this.pendingQrOrder.invoice_no,
+                        paid_amount: this.qrPaidAmount
+                    })
+                });
+                const data = await res.json();
+                if (data.ok) {
+                    window.location.href = data.redirect_url;
+                } else {
+                    alert(data.message || 'Gagal mengonfirmasi pembayaran.');
+                    this.isProcessing = false;
+                }
+            } catch (e) {
+                alert('Terjadi kesalahan koneksi.');
                 this.isProcessing = false;
             }
         }
