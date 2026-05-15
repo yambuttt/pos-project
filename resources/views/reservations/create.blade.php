@@ -291,7 +291,7 @@
                       <div class="mt-1 flex items-center gap-2">
                         <span class="text-[10px] font-black text-yellow-400/60 uppercase tracking-widest">{{ $bp->pricing_type === 'per_pax' ? 'Per pax' : 'Per event' }}</span>
                         <span class="h-1 w-1 rounded-full bg-white/10"></span>
-                        <span class="text-[10px] font-black text-white/40 uppercase tracking-widest">{{ fmtRp($bp->price) }}</span>
+                        <span class="text-[10px] font-black text-white/40 uppercase tracking-widest">Rp {{ number_format($bp->price, 0, ',', '.') }}</span>
                       </div>
                     </div>
                     <div class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-white/10 peer-checked:border-yellow-400 transition-all">
