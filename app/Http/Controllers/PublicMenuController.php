@@ -316,38 +316,51 @@ class PublicMenuController extends Controller
             ->limit(6)
             ->get();
 
-        $galleryItems = [
-            [
-                'title' => 'Interior',
-                'image' => asset('images/landing/gallery-1.jpg'),
-                'size' => 'large',
-            ],
-            [
-                'title' => 'Beverage',
-                'image' => asset('images/landing/gallery-2.jpg'),
-                'size' => 'large',
-            ],
-            [
-                'title' => 'Ambiance',
-                'image' => asset('images/landing/gallery-3.jpg'),
-                'size' => 'large',
-            ],
-            [
-                'title' => 'Dessert',
-                'image' => asset('images/landing/gallery-4.jpg'),
-                'size' => 'medium',
-            ],
-            [
-                'title' => 'Dining Area',
-                'image' => asset('images/landing/gallery-5.jpg'),
-                'size' => 'medium',
-            ],
-            [
-                'title' => 'Premium Room',
-                'image' => asset('images/landing/gallery-6.jpg'),
-                'size' => 'medium',
-            ],
-        ];
+        $galleryItems = \App\Models\GalleryItem::where('is_active', true)
+            ->orderBy('sort_order')
+            ->get()
+            ->map(function($item) {
+                return [
+                    'title' => $item->title ?: 'Gallery Moment',
+                    'image' => $item->imageUrl(),
+                    'size' => 'large', // Default to large for dynamic grid
+                ];
+            })->toArray();
+
+        if (empty($galleryItems)) {
+            $galleryItems = [
+                [
+                    'title' => 'Interior',
+                    'image' => asset('images/landing/gallery-1.jpg'),
+                    'size' => 'large',
+                ],
+                [
+                    'title' => 'Beverage',
+                    'image' => asset('images/landing/gallery-2.jpg'),
+                    'size' => 'large',
+                ],
+                [
+                    'title' => 'Ambiance',
+                    'image' => asset('images/landing/gallery-3.jpg'),
+                    'size' => 'large',
+                ],
+                [
+                    'title' => 'Dessert',
+                    'image' => asset('images/landing/gallery-4.jpg'),
+                    'size' => 'medium',
+                ],
+                [
+                    'title' => 'Dining Area',
+                    'image' => asset('images/landing/gallery-5.jpg'),
+                    'size' => 'medium',
+                ],
+                [
+                    'title' => 'Premium Room',
+                    'image' => asset('images/landing/gallery-6.jpg'),
+                    'size' => 'medium',
+                ],
+            ];
+        }
 
         $testimonials = [
             [

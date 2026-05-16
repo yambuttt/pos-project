@@ -4,200 +4,226 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Login — Ayo Renne</title>
+    <title>Sistem Operasional — Ayo Renne Premium</title>
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     <style>
-        html {
-            scroll-behavior: smooth;
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap');
+
+        :root {
+            --gold-primary: #eab308;
+            --gold-light: #fef08a;
+            --gold-dark: #a16207;
+            --obsidian-950: #020617;
+            --obsidian-900: #0f172a;
         }
 
-        * {
-            box-sizing: border-box;
-        }
-
+        html { scroll-behavior: smooth; }
         body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--obsidian-950);
+            background-image: 
+                radial-gradient(circle at 0% 0%, rgba(234, 179, 8, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 100% 100%, rgba(234, 179, 8, 0.05) 0%, transparent 40%);
             overflow-x: hidden;
-            background:
-                radial-gradient(circle at top left, rgba(234, 179, 8, .10), transparent 28%),
-                radial-gradient(circle at bottom right, rgba(234, 179, 8, .08), transparent 24%),
-                linear-gradient(180deg, #030303 0%, #080808 100%);
         }
 
-        .font-display {
-            font-family: Georgia, "Times New Roman", serif;
+        .font-luxury { font-family: 'Playfair Display', serif; }
+        
+        .glass-container {
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(24px);
+            border: 1px solid rgba(234, 179, 8, 0.1);
         }
 
-        .glass-panel {
-            background: rgba(20, 20, 20, 0.78);
-            backdrop-filter: blur(14px);
+        .gold-gradient-text {
+            background: linear-gradient(to right, var(--gold-light), var(--gold-primary), var(--gold-dark));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
 
-        .gold-line {
-            background: linear-gradient(90deg, rgba(234, 179, 8, .95), rgba(234, 179, 8, .18));
+        .gold-button {
+            background: linear-gradient(135deg, var(--gold-primary), var(--gold-dark));
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
         }
 
-        .field-dark {
-            background: rgba(0, 0, 0, .35);
+        .gold-button::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 60%);
+            transform: scale(0);
+            transition: transform 0.6s;
         }
 
-        .field-dark:focus-within {
-            border-color: rgba(234, 179, 8, .40);
-            box-shadow: 0 0 0 3px rgba(234, 179, 8, .08);
+        .gold-button:hover::after {
+            transform: scale(1);
         }
+
+        .input-glass {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .input-glass:focus-within {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(234, 179, 8, 0.3);
+            box-shadow: 0 0 20px rgba(234, 179, 8, 0.05);
+        }
+
+        .role-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.4s ease;
+        }
+
+        .role-card:hover {
+            background: rgba(234, 179, 8, 0.03);
+            border-color: rgba(234, 179, 8, 0.15);
+            transform: translateY(-5px);
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+
+        .animate-float { animation: float 6s ease-in-out infinite; }
     </style>
 </head>
 
-<body class="min-h-screen text-white">
-    <div class="relative min-h-screen overflow-hidden">
-        <!-- ambient glow -->
-        <div
-            class="pointer-events-none absolute -left-20 top-0 h-[360px] w-[360px] rounded-full bg-yellow-500/10 blur-[120px]">
-        </div>
-        <div
-            class="pointer-events-none absolute bottom-0 right-0 h-[420px] w-[420px] rounded-full bg-yellow-400/10 blur-[140px]">
-        </div>
+<body class="min-h-screen flex items-center justify-center p-4 sm:p-6 lg:p-8">
+    <!-- BACKGROUND DECO -->
+    <div class="fixed inset-0 pointer-events-none overflow-hidden">
+        <div class="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] bg-gold-primary/5 blur-[120px] rounded-full animate-pulse"></div>
+        <div class="absolute -bottom-[10%] -right-[10%] w-[40%] h-[40%] bg-gold-primary/5 blur-[120px] rounded-full animate-pulse" style="animation-delay: 2s"></div>
+    </div>
 
-        <div
-            class="relative mx-auto flex min-h-screen w-full max-w-7xl items-center justify-center px-4 py-8 sm:px-6 lg:px-8">
-            <div
-                class="grid w-full max-w-6xl overflow-hidden rounded-[30px] border border-yellow-500/15 bg-white/[0.02] shadow-[0_20px_80px_rgba(0,0,0,.45)] lg:grid-cols-[1.02fr_.98fr]">
-                <!-- LEFT -->
-                <div class="glass-panel border-b border-yellow-500/10 p-6 sm:p-8 md:p-10 lg:border-b-0 lg:border-r">
-                    <div class="mx-auto w-full max-w-[520px]">
-                        <a href="{{ url('/') }}" class="inline-flex items-center gap-3">
-                            <img src="{{ asset('images/landing/logo-ayo-renne.png') }}" alt="Ayo Renne"
-                                class="h-14 w-auto object-contain sm:h-16">
-                        </a>
+    <div class="relative w-full max-w-6xl glass-container rounded-[3rem] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.6)] overflow-hidden flex flex-col lg:flex-row min-h-[700px]">
+        <!-- LEFT: LOGIN FORM -->
+        <div class="w-full lg:w-[45%] p-10 sm:p-14 lg:p-16 flex flex-col justify-center relative z-10">
+            <div class="mb-12">
+                <img src="{{ asset('images/landing/logo-ayo-renne.png') }}" alt="Ayo Renne" class="h-16 w-auto object-contain mb-8">
+                <div class="space-y-2">
+                    <span class="text-[10px] font-black uppercase tracking-[0.4em] text-gold-primary/60">Akses Internal</span>
+                    <h1 class="text-4xl font-black text-white italic tracking-tighter leading-none">Selamat Datang <br><span class="gold-gradient-text not-italic font-luxury text-5xl">Kembali.</span></h1>
+                    <p class="text-xs text-white/40 font-medium leading-relaxed max-w-[280px]">Otorisasi akses untuk memasuki ekosistem operasional <span class="text-white/60">Ayo Renne Premium.</span></p>
+                </div>
+            </div>
 
-                        <div class="mt-8">
-                            <p class="text-sm uppercase tracking-[0.24em] text-yellow-500">Akses Staff</p>
-                            <h1 class="font-display mt-3 text-4xl font-bold leading-tight text-white sm:text-5xl">
-                                Selamat Datang Kembali
-                            </h1>
-                            <p class="mt-4 max-w-md text-base leading-8 text-white/65 sm:text-lg">
-                                Masuk ke sistem Ayo Renne untuk mengakses dashboard admin, kasir, kitchen, dan pegawai.
-                            </p>
-                        </div>
+            @if ($errors->any())
+                <div class="mb-8 animate-fade-in rounded-2xl border border-red-500/20 bg-red-500/10 px-6 py-4 flex items-center gap-3 backdrop-blur-xl">
+                    <div class="w-2 h-2 rounded-full bg-red-500 shadow-lg shadow-red-500/50"></div>
+                    <p class="text-xs font-bold text-red-100 italic">{{ $errors->first() }}</p>
+                </div>
+            @endif
 
-                        <div class="mt-6 h-[2px] w-24 rounded-full gold-line"></div>
-
-                        @if ($errors->any())
-                            <div
-                                class="mt-6 rounded-2xl border border-red-400/20 bg-red-500/10 px-4 py-4 text-sm text-red-100">
-                                {{ $errors->first() }}
-                            </div>
-                        @endif
-
-                        <form class="mt-8 space-y-5" method="POST" action="{{ route('login.submit') }}">
-                            @csrf
-
-                            <div>
-                                <label for="email" class="mb-2 block text-sm font-medium text-white/85">
-                                    Email
-                                </label>
-                                <div
-                                    class="field-dark flex items-center gap-3 rounded-2xl border border-yellow-500/12 px-4 py-3.5 transition">
-                                    <span class="text-yellow-500">
-                                        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                                            <path d="M4 6h16v12H4z" stroke="currentColor" stroke-width="1.8"
-                                                stroke-linejoin="round" />
-                                            <path d="M4 8l8 6 8-6" stroke="currentColor" stroke-width="1.8"
-                                                stroke-linecap="round" stroke-linejoin="round" />
-                                        </svg>
-                                    </span>
-                                    <input id="email" name="email" type="email" value="{{ old('email') }}"
-                                        placeholder="Masukkan email"
-                                        class="w-full bg-transparent text-sm text-white outline-none placeholder:text-white/30 sm:text-base"
-                                        required />
-                                </div>
-                            </div>
-
-                            <div>
-                                <label for="password" class="mb-2 block text-sm font-medium text-white/85">
-                                    Password
-                                </label>
-                                <div
-                                    class="field-dark flex items-center gap-3 rounded-2xl border border-yellow-500/12 px-4 py-3.5 transition">
-                                    <span class="text-yellow-500">
-                                        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                                            <path d="M7 11V8a5 5 0 0 1 10 0v3" stroke="currentColor" stroke-width="1.8"
-                                                stroke-linecap="round" />
-                                            <rect x="5" y="11" width="14" height="10" rx="2" stroke="currentColor"
-                                                stroke-width="1.8" />
-                                        </svg>
-                                    </span>
-                                    <input id="password" name="password" type="password" placeholder="Masukkan password"
-                                        class="w-full bg-transparent text-sm text-white outline-none placeholder:text-white/30 sm:text-base"
-                                        required />
-                                </div>
-                            </div>
-
-                            <button type="submit"
-                                class="inline-flex w-full items-center justify-center rounded-2xl bg-yellow-500 px-5 py-4 text-sm font-semibold text-black transition hover:bg-yellow-400 active:scale-[0.995] sm:text-base">
-                                Log in
-                            </button>
-                        </form>
-
-                        <div class="mt-8">
-                            <a href="{{ url('/') }}" class="text-sm text-white/55 transition hover:text-yellow-500">
-                                ← Kembali ke beranda
-                            </a>
-                        </div>
+            <form action="{{ route('login.submit') }}" method="POST" class="space-y-6">
+                @csrf
+                
+                <div class="space-y-2 group">
+                    <label class="text-[9px] font-black uppercase tracking-widest text-white/20 ml-2 group-focus-within:text-gold-primary transition-colors">Credential Email</label>
+                    <div class="input-glass flex items-center gap-4 px-6 py-5 rounded-[1.5rem]">
+                        <svg class="h-5 w-5 text-white/20 group-focus-within:text-gold-primary transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.206" />
+                        </svg>
+                        <input type="email" name="email" value="{{ old('email') }}" required placeholder="yourname@ayorenne.com"
+                            class="bg-transparent border-none p-0 w-full text-sm font-bold text-white placeholder:text-white/10 focus:ring-0">
                     </div>
                 </div>
 
-                <!-- RIGHT -->
-                <div class="relative hidden lg:block">
-                    <div class="absolute inset-0">
-                        <img src="{{ asset('images/landing/hero-bg.jpg') }}" alt="Ayo Renne"
-                            class="h-full w-full object-cover">
-                        <div class="absolute inset-0 bg-gradient-to-br from-black/75 via-black/50 to-black/75"></div>
-                    </div>
-
-                    <div class="relative flex h-full items-end p-10 xl:p-12">
-                        <div class="w-full rounded-[28px] border border-yellow-500/16 bg-black/35 p-7 xl:p-8 backdrop-blur-md">
-                            <div
-                                class="inline-flex rounded-full border border-yellow-500/20 bg-yellow-500/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-yellow-500">
-                                Sistem Operasional
-                            </div>
-
-                            <h2 class="font-display mt-6 text-[52px] font-bold leading-[1.06] text-white">
-                                Akses dashboard sesuai peran Anda.
-                            </h2>
-
-                            <p class="mt-5 max-w-xl text-lg leading-8 text-white/72">
-                                Halaman ini digunakan untuk masuk ke sistem operasional Ayo Renne oleh admin, kasir,
-                                kitchen, dan pegawai.
-                            </p>
-
-                            <div class="mt-8 grid grid-cols-2 gap-4 xl:grid-cols-2">
-    <div class="rounded-2xl border border-yellow-500/12 bg-white/[0.04] px-4 py-4">
-        <div class="text-2xl font-bold leading-tight text-yellow-500">Admin</div>
-        <div class="mt-2 text-sm leading-6 text-white/60">Produk, stok, laporan</div>
-    </div>
-
-    <div class="rounded-2xl border border-yellow-500/12 bg-white/[0.04] px-4 py-4">
-        <div class="text-2xl font-bold leading-tight text-yellow-500">Kasir</div>
-        <div class="mt-2 text-sm leading-6 text-white/60">Transaksi dan pesanan</div>
-    </div>
-
-    <div class="rounded-2xl border border-yellow-500/12 bg-white/[0.04] px-4 py-4">
-        <div class="text-2xl font-bold leading-tight text-yellow-500">Kitchen</div>
-        <div class="mt-2 text-sm leading-6 text-white/60">Proses order masuk</div>
-    </div>
-
-    <div class="rounded-2xl border border-yellow-500/12 bg-white/[0.04] px-4 py-4">
-        <div class="text-2xl font-bold leading-tight text-yellow-500">Pegawai</div>
-        <div class="mt-2 text-sm leading-6 text-white/60">Absensi dan akses kerja</div>
-    </div>
-</div>
-                            </div>
-                        </div>
+                <div class="space-y-2 group">
+                    <label class="text-[9px] font-black uppercase tracking-widest text-white/20 ml-2 group-focus-within:text-gold-primary transition-colors">Secure Password</label>
+                    <div class="input-glass flex items-center gap-4 px-6 py-5 rounded-[1.5rem]">
+                        <svg class="h-5 w-5 text-white/20 group-focus-within:text-gold-primary transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                        </svg>
+                        <input type="password" name="password" required placeholder="••••••••"
+                            class="bg-transparent border-none p-0 w-full text-sm font-bold text-white placeholder:text-white/10 focus:ring-0 tracking-widest">
                     </div>
                 </div>
-                <!-- /RIGHT -->
+
+                <button type="submit" class="gold-button w-full py-5 rounded-[1.5rem] shadow-xl shadow-gold-primary/10 text-xs font-black uppercase tracking-[0.3em] text-obsidian-950 hover:scale-[1.02] active:scale-95">
+                    Authorize Access
+                </button>
+            </form>
+
+            <div class="mt-12 flex items-center justify-between">
+                <a href="{{ url('/') }}" class="text-[10px] font-black uppercase tracking-widest text-white/20 hover:text-gold-primary transition-colors">← Back to Landing</a>
+                <div class="flex items-center gap-1 opacity-10">
+                    <div class="w-1.5 h-1.5 rounded-full bg-white"></div>
+                    <div class="w-1.5 h-1.5 rounded-full bg-white"></div>
+                    <div class="w-1.5 h-1.5 rounded-full bg-white"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT: BRANDING & ROLES -->
+        <div class="hidden lg:flex flex-1 relative overflow-hidden bg-obsidian-900 border-l border-white/5">
+            <!-- BACKGROUND IMAGE -->
+            <div class="absolute inset-0">
+                <img src="{{ asset('images/landing/hero-bg.jpg') }}" class="w-full h-full object-cover scale-110 blur-[2px] opacity-40" alt="Background">
+                <div class="absolute inset-0 bg-gradient-to-t from-obsidian-950 via-obsidian-950/80 to-transparent"></div>
+            </div>
+
+            <div class="relative w-full h-full p-16 flex flex-col justify-end">
+                <div class="mb-12 max-w-md">
+                    <span class="px-3 py-1.5 rounded-xl bg-gold-primary/10 border border-gold-primary/20 text-[9px] font-black text-gold-primary uppercase tracking-[0.2em] mb-6 inline-block">Sistem Operasional v2.0</span>
+                    <h2 class="text-6xl font-black text-white italic leading-[0.95] tracking-tighter mb-6">
+                        Kendali Penuh <br><span class="gold-gradient-text not-italic font-luxury">Bisnis Anda.</span>
+                    </h2>
+                    <p class="text-sm text-white/40 leading-relaxed italic">Platform terintegrasi untuk manajemen reservasi, inventaris, dan pos dalam satu ekosistem eksklusif.</p>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="role-card p-6 rounded-[2rem]">
+                        <div class="w-8 h-8 rounded-xl bg-gold-primary/10 flex items-center justify-center text-gold-primary border border-gold-primary/20 mb-4">
+                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                            </svg>
+                        </div>
+                        <h4 class="text-xs font-black text-white uppercase tracking-widest mb-1">Administrator</h4>
+                        <p class="text-[9px] text-white/30 italic">Laporan & Audit Global</p>
+                    </div>
+
+                    <div class="role-card p-6 rounded-[2rem]">
+                        <div class="w-8 h-8 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-400 border border-blue-500/20 mb-4">
+                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                            </svg>
+                        </div>
+                        <h4 class="text-xs font-black text-white uppercase tracking-widest mb-1">Cashier Unit</h4>
+                        <p class="text-[9px] text-white/30 italic">Transaksi & Layanan Meja</p>
+                    </div>
+
+                    <div class="role-card p-6 rounded-[2rem]">
+                        <div class="w-8 h-8 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400 border border-emerald-500/20 mb-4">
+                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                            </svg>
+                        </div>
+                        <h4 class="text-xs font-black text-white uppercase tracking-widest mb-1">Kitchen Crew</h4>
+                        <p class="text-[9px] text-white/30 italic">Manajemen Pesanan Masuk</p>
+                    </div>
+
+                    <div class="role-card p-6 rounded-[2rem]">
+                        <div class="w-8 h-8 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-400 border border-purple-500/20 mb-4">
+                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                        <h4 class="text-xs font-black text-white uppercase tracking-widest mb-1">Employee</h4>
+                        <p class="text-[9px] text-white/30 italic">Absensi & Riwayat Kerja</p>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

@@ -344,6 +344,15 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
         return redirect()->route('admin.cashiers.edit', auth()->user());
     })->name('admin.account');
 
+    Route::resource('/admin/gallery', \App\Http\Controllers\Admin\GalleryController::class)->names([
+        'index' => 'admin.gallery.index',
+        'create' => 'admin.gallery.create',
+        'store' => 'admin.gallery.store',
+        'edit' => 'admin.gallery.edit',
+        'update' => 'admin.gallery.update',
+        'destroy' => 'admin.gallery.destroy',
+    ]);
+
 });
 
 Route::prefix('kasir')->name('kasir.')->middleware(['auth', 'role:kasir'])->group(function () {
