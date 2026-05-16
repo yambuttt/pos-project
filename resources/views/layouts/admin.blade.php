@@ -6,830 +6,439 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@yield('title', 'Admin Dashboard')</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
     <style>
+        :root {
+            --gold-primary: #D4AF37;
+            --gold-light: #F9E2AF;
+            --gold-dark: #996515;
+            --dark-bg: #050505;
+            --panel-bg: rgba(18, 18, 18, 0.7);
+            --sidebar-width-full: 280px;
+            --sidebar-width-mini: 80px;
+            --transition-speed: 0.4s;
+            --font-outfit: 'Outfit', sans-serif;
+        }
+
         html {
             scroll-behavior: smooth;
         }
 
-        * {
-            box-sizing: border-box;
-        }
-
         body {
+            font-family: var(--font-outfit);
+            background-color: var(--dark-bg);
+            color: #ffffff;
             overflow-x: hidden;
-            background:
-                radial-gradient(circle at top left, rgba(234, 179, 8, .08), transparent 26%),
-                radial-gradient(circle at bottom right, rgba(234, 179, 8, .06), transparent 24%),
-                linear-gradient(180deg, #030303 0%, #090909 100%);
+            background-image: 
+                radial-gradient(circle at 20% 20%, rgba(212, 175, 55, 0.05) 0%, transparent 40%),
+                radial-gradient(circle at 80% 80%, rgba(212, 175, 55, 0.03) 0%, transparent 40%);
         }
 
-        .admin-shell {
-            background:
-                linear-gradient(180deg, rgba(255, 255, 255, .01), rgba(255, 255, 255, .00));
+        /* Glassmorphism Classes */
+        .glass-panel {
+            background: var(--panel-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(212, 175, 55, 0.1);
         }
 
-        .panel-dark {
-            background: rgba(16, 16, 16, 0.86);
-            backdrop-filter: blur(12px);
+        .glass-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.3s ease;
         }
 
-        .panel-soft {
-            background: rgba(255, 255, 255, .03);
-            backdrop-filter: blur(10px);
+        .glass-card:hover {
+            border-color: rgba(212, 175, 55, 0.3);
+            background: rgba(212, 175, 55, 0.02);
         }
 
-        .gold-border {
-            border-color: rgba(234, 179, 8, 0.16);
+        /* Gold Gradient Text */
+        .text-gold-gradient {
+            background: linear-gradient(135deg, var(--gold-light) 0%, var(--gold-primary) 50%, var(--gold-dark) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
 
-        .gold-border-strong {
-            border-color: rgba(234, 179, 8, 0.30);
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
-        .gold-text {
-            color: rgb(234 179 8);
+        @keyframes glowPulse {
+            0% { box-shadow: 0 0 5px rgba(212, 175, 55, 0.2); }
+            50% { box-shadow: 0 0 15px rgba(212, 175, 55, 0.4); }
+            100% { box-shadow: 0 0 5px rgba(212, 175, 55, 0.2); }
         }
 
-        .sidebar-scroll::-webkit-scrollbar {
-            width: 8px;
+        .animate-fade-in {
+            animation: fadeIn 0.6s ease-out forwards;
         }
 
-        .sidebar-scroll::-webkit-scrollbar-thumb {
-            background: rgba(234, 179, 8, .18);
-            border-radius: 999px;
+        /* Sidebar Styling */
+        #adminSidebar {
+            transition: width var(--transition-speed) cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 50;
+        }
+
+        .sidebar-item {
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%) scaleX(0);
+            width: 4px;
+            height: 60%;
+            background: var(--gold-primary);
+            border-radius: 0 4px 4px 0;
+            transition: transform 0.3s ease;
+            transform-origin: left;
+        }
+
+        .sidebar-item.active::before {
+            transform: translateY(-50%) scaleX(1);
+        }
+
+        .sidebar-item.active {
+            background: rgba(212, 175, 55, 0.1);
+            color: var(--gold-primary);
+        }
+
+        .sidebar-item:hover:not(.active) {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .sidebar-label {
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            white-space: nowrap;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--gold-dark);
+            border-radius: 10px;
+        }
+
+        /* Mobile Adjustments */
+        @media (max-width: 1024px) {
+            #adminSidebar {
+                position: fixed !important;
+                left: -100% !important;
+                top: 0 !important;
+                height: 100vh !important;
+                width: var(--sidebar-width-full) !important;
+                margin: 0 !important;
+                border-radius: 0 !important;
+            }
+            #adminSidebar.mobile-open {
+                left: 0 !important;
+            }
+            #mainContent {
+                margin-left: 0 !important;
+            }
+        }
+
+        /* Hide Scrollbar */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
         }
     </style>
 </head>
 
-<body class="min-h-screen text-white">
-    <div class="relative min-h-screen overflow-hidden">
-        <!-- ambient -->
-        <div
-            class="pointer-events-none absolute -left-24 top-0 h-[380px] w-[380px] rounded-full bg-yellow-500/10 blur-[120px]">
-        </div>
-        <div
-            class="pointer-events-none absolute bottom-0 right-0 h-[440px] w-[440px] rounded-full bg-yellow-400/8 blur-[140px]">
-        </div>
-
-        <div class="relative min-h-screen admin-shell">
-            <div class="flex min-h-screen w-full">
-                @php
-                    $isDashboard = request()->routeIs('admin.dashboard');
-                    $isProducts = request()->routeIs('admin.products.*');
-                    $isSales = request()->routeIs('admin.sales.*');
-                    $isUsers = request()->routeIs('admin.cashiers.*');
-                    $isRawMaterials = request()->routeIs('admin.raw_materials.*');
-                    $isPurchases = request()->routeIs('admin.purchases.*');
-                    $isAttendanceQr = request()->routeIs('admin.attendance.qr*');
-                    $isAttendanceDevices = request()->routeIs('admin.attendance.devices*');
-                    $isAttendanceHistory = request()->routeIs('admin.attendance.history*');
-                    $isAttendanceExceptions = request()->routeIs('admin.attendance.exception_requests*');
-                    $isShiftSettings = request()->routeIs('admin.shifts.*');
-                    $isLeaveRequests = request()->routeIs('admin.leave_requests.*');
-                    $isLateRequests = request()->routeIs('admin.late_requests.*');
-                    $isCheckoutCorrections = request()->routeIs('admin.checkout_corrections.*');
-                    $isOvertimeRequests = request()->routeIs('admin.overtime_requests.*');
-                    $isUserGroup = $isUsers || $isAttendanceQr || $isAttendanceDevices || $isAttendanceHistory || $isAttendanceExceptions || $isShiftSettings || $isLeaveRequests || $isLateRequests || $isCheckoutCorrections || $isOvertimeRequests;
-
-                    $isWastes = request()->routeIs('admin.wastes.*');
-                    $isOpnames = request()->routeIs('admin.opnames.*');
-                    $isInvMovements = request()->routeIs('admin.inventory-movements.*');
-                    $isTables = request()->routeIs('admin.tables.*');
-                    $isInventory = $isRawMaterials || $isPurchases || $isWastes || $isOpnames || $isInvMovements || $isTables || $isAttendanceQr || $isAttendanceDevices;
-
-                    $isReservations = request()->routeIs('admin.reservations.*');
-                    $isReservationResources = request()->routeIs('admin.reservation_resources.*');
-                    $isReservationsGroup = $isReservations || $isReservationResources;
-
-                    $isBuffetPackages = request()->routeIs('admin.buffet_packages.*');
-                    $isReservationsGroup = $isReservations || $isReservationResources || $isBuffetPackages;
-                @endphp
-
-                <!-- DESKTOP SIDEBAR -->
-                <aside id="adminSidebarDesktop"
-                    class="panel-dark gold-border sidebar-scroll relative m-4 hidden h-[calc(100vh-2rem)] shrink-0 overflow-y-auto rounded-[28px] border shadow-[0_20px_60px_rgba(0,0,0,.35)] transition-all duration-200 ease-out lg:block w-16">
-
-                    <div class="flex h-full flex-col p-3">
-                        <div class="flex items-center justify-center">
-                            <button id="sidebarPinBtn" type="button"
-                                class="panel-soft gold-border flex h-10 w-10 items-center justify-center rounded-xl border hover:border-yellow-500/35"
-                                title="Pin sidebar" aria-label="Pin sidebar" data-pinned="0">
-                                <svg id="pinIconGear" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white/90"
-                                    fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                        d="M10.5 6h3M12 3v3m7.5 6a7.5 7.5 0 01-15 0 7.5 7.5 0 0115 0z" />
-                                </svg>
-
-                                <svg id="pinIconPinned" xmlns="http://www.w3.org/2000/svg"
-                                    class="hidden h-5 w-5 text-white/90" fill="none" viewBox="0 0 24 24"
-                                    stroke="currentColor" stroke-width="1.8">
-                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                        d="M15 11l4-4m0 0l-4-4m4 4H9a4 4 0 00-4 4v8" />
-                                </svg>
-                            </button>
-                        </div>
-
-                        <div class="mt-4 flex items-center gap-3 px-2">
-                            <img src="{{ asset('images/landing/logo-ayo-renne.png') }}" alt="Ayo Renne"
-                                class="sidebar-label hidden h-12 w-auto object-contain">
-                        </div>
-
-                        <div class="mt-5 space-y-2">
-                            <a href="{{ route('admin.dashboard') }}"
-                                class="relative flex items-center gap-3 rounded-xl px-3 py-3 transition
-                                {{ $isDashboard ? 'bg-yellow-500/12 text-white border border-yellow-500/30' : 'border gold-border bg-white/[0.02] hover:bg-white/[0.05] text-white/88' }}">
-                                @if ($isDashboard)
-                                    <span
-                                        class="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r bg-yellow-500"></span>
-                                @endif
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-500" fill="none"
-                                    viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                        d="M3 10.5L12 3l9 7.5v9a1.5 1.5 0 01-1.5 1.5h-15A1.5 1.5 0 013 19.5v-9z" />
-                                </svg>
-                                <span class="sidebar-label hidden text-sm font-medium">Dashboard</span>
-                            </a>
-
-                            <a href="{{ route('admin.products.index') }}"
-                                class="relative flex items-center gap-3 rounded-xl px-3 py-3 transition
-                                {{ $isProducts ? 'bg-yellow-500/12 text-white border border-yellow-500/30' : 'border gold-border bg-white/[0.02] hover:bg-white/[0.05] text-white/88' }}">
-                                @if ($isProducts)
-                                    <span
-                                        class="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r bg-yellow-500"></span>
-                                @endif
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-500" fill="none"
-                                    viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                        d="M3 7.5L12 3l9 4.5-9 4.5L3 7.5z" />
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 7.5v9L12 21l9-4.5v-9" />
-                                </svg>
-                                <span class="sidebar-label hidden text-sm font-medium">Produk</span>
-                            </a>
-
-                            <div class="mt-2">
-                                <button type="button" id="invToggleDesktop"
-                                    class="relative flex w-full items-center gap-3 rounded-xl px-3 py-3 transition
-                                    {{ $isInventory ? 'bg-yellow-500/12 border border-yellow-500/30' : 'border gold-border bg-white/[0.02] hover:bg-white/[0.05]' }}">
-                                    @if ($isInventory)
-                                        <span
-                                            class="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r bg-yellow-500"></span>
-                                    @endif
-
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-500" fill="none"
-                                        viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                            d="M3 7.5L12 3l9 4.5-9 4.5L3 7.5z" />
-                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                            d="M3 7.5v9L12 21l9-4.5v-9" />
-                                    </svg>
-
-                                    <span
-                                        class="sidebar-label hidden flex-1 text-left text-sm font-medium text-white/90">Inventory</span>
-
-                                    <svg id="invChevronDesktop" xmlns="http://www.w3.org/2000/svg"
-                                        class="sidebar-label hidden h-4 w-4 text-white/70 transition" fill="none"
-                                        viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
-                                    </svg>
-                                </button>
-
-                                <div id="invMenuDesktop" class="mt-2 space-y-2 pl-2 {{ $isInventory ? '' : 'hidden' }}">
-                                    <a href="{{ route('admin.raw_materials.index') }}"
-                                        class="relative flex items-center gap-3 rounded-xl px-3 py-2.5 transition
-                                        {{ $isRawMaterials ? 'bg-yellow-500/10 border border-yellow-500/25' : 'border gold-border bg-white/[0.02] hover:bg-white/[0.05]' }}">
-                                        @if ($isRawMaterials)
-                                            <span
-                                                class="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r bg-yellow-500"></span>
-                                        @endif
-                                        <span class="sidebar-label hidden text-sm font-medium text-white/90">Bahan
-                                            Baku</span>
-                                    </a>
-
-                                    <a href="{{ route('admin.purchases.index') }}"
-                                        class="relative flex items-center gap-3 rounded-xl px-3 py-2.5 transition
-                                        {{ $isPurchases ? 'bg-yellow-500/10 border border-yellow-500/25' : 'border gold-border bg-white/[0.02] hover:bg-white/[0.05]' }}">
-                                        @if ($isPurchases)
-                                            <span
-                                                class="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r bg-yellow-500"></span>
-                                        @endif
-                                        <span
-                                            class="sidebar-label hidden text-sm font-medium text-white/90">Purchases</span>
-                                    </a>
-
-                                    <a href="{{ route('admin.wastes.index') }}"
-                                        class="relative flex items-center gap-3 rounded-xl px-3 py-2.5 transition
-                                        {{ $isWastes ? 'bg-yellow-500/10 border border-yellow-500/25' : 'border gold-border bg-white/[0.02] hover:bg-white/[0.05]' }}">
-                                        @if ($isWastes)
-                                            <span
-                                                class="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r bg-yellow-500"></span>
-                                        @endif
-                                        <span
-                                            class="sidebar-label hidden text-sm font-medium text-white/90">Waste</span>
-                                    </a>
-
-                                    <a href="{{ route('admin.opnames.index') }}"
-                                        class="relative flex items-center gap-3 rounded-xl px-3 py-2.5 transition
-                                        {{ $isOpnames ? 'bg-yellow-500/10 border border-yellow-500/25' : 'border gold-border bg-white/[0.02] hover:bg-white/[0.05]' }}">
-                                        @if ($isOpnames)
-                                            <span
-                                                class="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r bg-yellow-500"></span>
-                                        @endif
-                                        <span class="sidebar-label hidden text-sm font-medium text-white/90">Stock
-                                            Opname</span>
-                                    </a>
-
-                                    <a href="{{ route('admin.inventory-movements.index') }}"
-                                        class="relative flex items-center gap-3 rounded-xl px-3 py-2.5 transition
-                                        {{ $isInvMovements ? 'bg-yellow-500/10 border border-yellow-500/25' : 'border gold-border bg-white/[0.02] hover:bg-white/[0.05]' }}">
-                                        @if ($isInvMovements)
-                                            <span
-                                                class="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r bg-yellow-500"></span>
-                                        @endif
-                                        <span class="sidebar-label hidden text-sm font-medium text-white/90">Inventory
-                                            Movement</span>
-                                    </a>
-                                </div>
-                            </div>
-
-                            <a href="{{ route('admin.sales.index') }}"
-                                class="relative flex items-center gap-3 rounded-xl px-3 py-3 transition
-                                {{ $isSales ? 'bg-yellow-500/12 text-white border border-yellow-500/30' : 'border gold-border bg-white/[0.02] hover:bg-white/[0.05] text-white/88' }}">
-                                @if ($isSales)
-                                    <span
-                                        class="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r bg-yellow-500"></span>
-                                @endif
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-500" fill="none"
-                                    viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                        d="M7.5 3h9a1.5 1.5 0 011.5 1.5v15a1.5 1.5 0 01-1.5 1.5h-9A1.5 1.5 0 016 19.5v-15A1.5 1.5 0 017.5 3z" />
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 7.5h6M9 11h6M9 14.5h3" />
-                                </svg>
-                                <span class="sidebar-label hidden text-sm font-medium">Transaksi</span>
-                            </a>
-
-
-                            {{-- RESERVASI (Desktop) --}}
-                            <div class="mt-2">
-                                <button type="button" id="resvToggleDesktop"
-                                    class="relative flex w-full items-center gap-3 rounded-xl px-3 py-3 transition
-    {{ $isReservationsGroup ? 'bg-yellow-500/12 border border-yellow-500/30' : 'border gold-border bg-white/[0.02] hover:bg-white/[0.05]' }}">
-                                    @if ($isReservationsGroup)
-                                        <span
-                                            class="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r bg-yellow-500"></span>
-                                    @endif
-
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-500" fill="none"
-                                        viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                            d="M8 7V6a2 2 0 012-2h4a2 2 0 012 2v1M5 9h14M6 9v10a2 2 0 002 2h8a2 2 0 002-2V9" />
-                                    </svg>
-
-                                    <span
-                                        class="sidebar-label hidden flex-1 text-left text-sm font-medium text-white/90">Reservasi</span>
-
-                                    <svg id="resvChevronDesktop" xmlns="http://www.w3.org/2000/svg"
-                                        class="sidebar-label hidden h-4 w-4 text-white/70 transition" fill="none"
-                                        viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
-                                    </svg>
-                                </button>
-
-                                <div id="resvMenuDesktop"
-                                    class="mt-2 space-y-2 pl-2 {{ $isReservationsGroup ? '' : 'hidden' }}">
-                                    <a href="{{ route('admin.reservations.index') }}"
-                                        class="relative flex items-center gap-3 rounded-xl px-3 py-2.5 transition
-      {{ $isReservations ? 'bg-yellow-500/10 border border-yellow-500/25' : 'border gold-border bg-white/[0.02] hover:bg-white/[0.05]' }}">
-                                        @if ($isReservations)
-                                            <span
-                                                class="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r bg-yellow-500"></span>
-                                        @endif
-                                        <span class="sidebar-label hidden text-sm font-medium text-white/90">Daftar
-                                            Reservasi</span>
-                                    </a>
-
-                                    <a href="{{ route('admin.reservation_resources.index') }}"
-                                        class="relative flex items-center gap-3 rounded-xl px-3 py-2.5 transition
-      {{ $isReservationResources ? 'bg-yellow-500/10 border border-yellow-500/25' : 'border gold-border bg-white/[0.02] hover:bg-white/[0.05]' }}">
-                                        @if ($isReservationResources)
-                                            <span
-                                                class="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r bg-yellow-500"></span>
-                                        @endif
-                                        <span class="sidebar-label hidden text-sm font-medium text-white/90">Resource
-                                            Reservasi</span>
-                                    </a>
-
-                                    <a href="{{ route('admin.buffet_packages.index') }}"
-                                        class="relative flex items-center gap-3 rounded-xl px-3 py-2.5 transition
-  {{ $isBuffetPackages ? 'bg-yellow-500/10 border border-yellow-500/25' : 'border gold-border bg-white/[0.02] hover:bg-white/[0.05]' }}">
-                                        @if ($isBuffetPackages)
-                                            <span
-                                                class="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r bg-yellow-500"></span>
-                                        @endif
-                                        <span class="sidebar-label hidden text-sm font-medium text-white/90">Paket
-                                            Buffet</span>
-                                    </a>
-
-                                </div>
-                            </div>
-
-
-                            <div class="mt-2">
-                                <button type="button" id="userToggleDesktop"
-                                    class="relative flex w-full items-center gap-3 rounded-xl px-3 py-3 transition
-     {{ $isUserGroup ? 'bg-yellow-500/12 border border-yellow-500/30' : 'border gold-border bg-white/[0.02] hover:bg-white/[0.05]' }}">
-                                    @if ($isUserGroup)
-                                        <span
-                                            class="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r bg-yellow-500"></span>
-                                    @endif
-
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-500" fill="none"
-                                        viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                            d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" />
-                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                            d="M4.5 20.25a8.25 8.25 0 0115 0" />
-                                    </svg>
-
-                                    <span
-                                        class="sidebar-label hidden flex-1 text-left text-sm font-medium text-white/90">User</span>
-
-                                    <svg id="userChevronDesktop" xmlns="http://www.w3.org/2000/svg"
-                                        class="sidebar-label hidden h-4 w-4 text-white/70 transition" fill="none"
-                                        viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
-                                    </svg>
-                                </button>
-
-                                <div id="userMenuDesktop"
-                                    class="mt-2 space-y-2 pl-2 {{ $isUserGroup ? '' : 'hidden' }}">
-                                    <a href="{{ route('admin.cashiers.index') }}"
-                                        class="relative flex items-center gap-3 rounded-xl px-3 py-2.5 transition
-       {{ $isUsers ? 'bg-yellow-500/10 border border-yellow-500/25' : 'border gold-border bg-white/[0.02] hover:bg-white/[0.05]' }}">
-                                        @if ($isUsers)
-                                            <span
-                                                class="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r bg-yellow-500"></span>
-                                        @endif
-                                        <span class="sidebar-label hidden text-sm font-medium text-white/90">Kelola
-                                            User</span>
-                                    </a>
-                                    <a href="{{ route('admin.overtime_requests.index') }}"
-                                        class="relative flex items-center gap-3 rounded-xl px-3 py-2.5 transition
-   {{ $isOvertimeRequests ? 'bg-yellow-500/10 border border-yellow-500/25' : 'border gold-border bg-white/[0.02] hover:bg-white/[0.05]' }}">
-                                        @if ($isOvertimeRequests)
-                                            <span
-                                                class="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r bg-yellow-500"></span>
-                                        @endif
-                                        <span class="sidebar-label hidden text-sm font-medium text-white/90">Pengajuan
-                                            Lembur</span>
-                                    </a>
-                                    <a href="{{ route('admin.attendance.exception_requests') }}"
-                                        class="relative flex items-center gap-3 rounded-xl px-3 py-2.5 transition
-   {{ $isAttendanceExceptions ? 'bg-yellow-500/10 border border-yellow-500/25' : 'border gold-border bg-white/[0.02] hover:bg-white/[0.05]' }}">
-                                        @if ($isAttendanceExceptions)
-                                            <span
-                                                class="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r bg-yellow-500"></span>
-                                        @endif
-                                        <span class="sidebar-label hidden text-sm font-medium text-white/90">Pengajuan
-                                            Absensi</span>
-                                    </a>
-                                    <a href="{{ route('admin.late_requests.index') }}"
-                                        class="relative flex items-center gap-3 rounded-xl px-3 py-2.5 transition
-  {{ $isLateRequests ? 'bg-yellow-500/10 border border-yellow-500/25' : 'border gold-border bg-white/[0.02] hover:bg-white/[0.05]' }}">
-                                        @if ($isLateRequests)
-                                            <span
-                                                class="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r bg-yellow-500"></span>
-                                        @endif
-                                        <span class="sidebar-label hidden text-sm font-medium text-white/90">Pengajuan
-                                            Telat</span>
-                                    </a>
-                                    <a href="{{ route('admin.checkout_corrections.index') }}"
-                                        class="relative flex items-center gap-3 rounded-xl px-3 py-2.5 transition
-   {{ $isCheckoutCorrections ? 'bg-yellow-500/10 border border-yellow-500/25' : 'border gold-border bg-white/[0.02] hover:bg-white/[0.05]' }}">
-                                        @if ($isCheckoutCorrections)
-                                            <span
-                                                class="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r bg-yellow-500"></span>
-                                        @endif
-                                        <span class="sidebar-label hidden text-sm font-medium text-white/90">Koreksi
-                                            Checkout</span>
-                                    </a>
-                                    <a href="{{ route('admin.shifts.index') }}"
-                                        class="relative flex items-center gap-3 rounded-xl px-3 py-2.5 transition
-   {{ $isShiftSettings ? 'bg-yellow-500/10 border border-yellow-500/25' : 'border gold-border bg-white/[0.02] hover:bg-white/[0.05]' }}">
-                                        @if ($isShiftSettings)
-                                            <span
-                                                class="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r bg-yellow-500"></span>
-                                        @endif
-                                        <span class="sidebar-label hidden text-sm font-medium text-white/90">Shift
-                                            Pegawai</span>
-                                    </a>
-
-                                    <a href="{{ route('admin.attendance.qr') }}"
-                                        class="relative flex items-center gap-3 rounded-xl px-3 py-2.5 transition
-       {{ $isAttendanceQr ? 'bg-yellow-500/10 border border-yellow-500/25' : 'border gold-border bg-white/[0.02] hover:bg-white/[0.05]' }}">
-                                        @if ($isAttendanceQr)
-                                            <span
-                                                class="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r bg-yellow-500"></span>
-                                        @endif
-                                        <span class="sidebar-label hidden text-sm font-medium text-white/90">Absensi
-                                            QR</span>
-                                    </a>
-
-                                    <a href="{{ route('admin.attendance.devices') }}"
-                                        class="relative flex items-center gap-3 rounded-xl px-3 py-2.5 transition
-       {{ $isAttendanceDevices ? 'bg-yellow-500/10 border border-yellow-500/25' : 'border gold-border bg-white/[0.02] hover:bg-white/[0.05]' }}">
-                                        @if ($isAttendanceDevices)
-                                            <span
-                                                class="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r bg-yellow-500"></span>
-                                        @endif
-                                        <span class="sidebar-label hidden text-sm font-medium text-white/90">Device
-                                            Absensi</span>
-                                    </a>
-                                    <a href="{{ route('admin.attendance.history') }}"
-                                        class="relative flex items-center gap-3 rounded-xl px-3 py-2.5 transition
-  {{ $isAttendanceHistory ? 'bg-yellow-500/10 border border-yellow-500/25' : 'border gold-border bg-white/[0.02] hover:bg-white/[0.05]' }}">
-                                        @if ($isAttendanceHistory)
-                                            <span
-                                                class="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r bg-yellow-500"></span>
-                                        @endif
-                                        <span class="sidebar-label hidden text-sm font-medium text-white/90">History
-                                            Absensi</span>
-                                    </a>
-                                    <a href="{{ route('admin.leave_requests.index') }}"
-                                        class="relative flex items-center gap-3 rounded-xl px-3 py-2.5 transition
-  {{ $isLeaveRequests ? 'bg-yellow-500/10 border border-yellow-500/25' : 'border gold-border bg-white/[0.02] hover:bg-white/[0.05]' }}">
-                                        @if ($isLeaveRequests)
-                                            <span
-                                                class="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r bg-yellow-500"></span>
-                                        @endif
-                                        <span class="sidebar-label hidden text-sm font-medium text-white/90">Permintaan
-                                            Cuti</span>
-                                    </a>
-
-                                </div>
-                            </div>
-
-                            <a href="{{ route('admin.tables.index') }}"
-                                class="relative flex items-center gap-3 rounded-xl px-3 py-3 transition
-                                {{ $isTables ? 'bg-yellow-500/12 text-white border border-yellow-500/30' : 'border gold-border bg-white/[0.02] hover:bg-white/[0.05] text-white/88' }}">
-                                @if ($isTables)
-                                    <span
-                                        class="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r bg-yellow-500"></span>
-                                @endif
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-500" fill="none"
-                                    viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                        d="M4.5 10.5h15M6 20.25V6.75A2.25 2.25 0 018.25 4.5h7.5A2.25 2.25 0 0118 6.75v13.5M7.5 20.25v-6h9v6" />
-                                </svg>
-                                <span class="sidebar-label hidden text-sm font-medium text-white/90">Meja</span>
-                            </a>
-
-                            <a href="#"
-                                class="flex items-center gap-3 rounded-xl border gold-border bg-white/[0.02] px-3 py-3 text-white/88 hover:bg-white/[0.05]">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-500" fill="none"
-                                    viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 3v18h18" />
-                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                        d="M7.5 14.25l3-3 3 3 4.5-4.5" />
-                                </svg>
-                                <span class="sidebar-label hidden text-sm font-medium text-white/90">Laporan</span>
-                            </a>
-                        </div>
-
-                        <div class="mt-auto space-y-3">
-                            <div class="rounded-2xl border gold-border bg-white/[0.03] p-3">
-                                <div class="sidebar-label hidden text-[11px] text-white/55">Role</div>
-                                <div class="sidebar-label hidden mt-1 text-sm font-semibold text-white">
-                                    {{ auth()->user()->role }}
-                                </div>
-                                <div class="sidebar-label hidden mt-2 text-[11px] text-white/45">
-                                    Panel operasional internal.
-                                </div>
-                            </div>
-
-                            <form method="POST" action="{{ route('logout') }}">
-                                @csrf
-                                <button
-                                    class="flex w-full items-center justify-center gap-3 rounded-xl bg-yellow-500 px-3 py-3 text-sm font-semibold text-black hover:bg-yellow-400">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none"
-                                        viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                            d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6A2.25 2.25 0 005.25 5.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15" />
-                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                            d="M18 12H9m9 0l-3-3m3 3l-3 3" />
-                                    </svg>
-                                    <span class="sidebar-label hidden">Logout</span>
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                </aside>
-
-                <!-- MOBILE/TABLET SIDEBAR -->
-                <div id="sidebarOverlay" class="fixed inset-0 z-40 hidden bg-black/60 lg:hidden"></div>
-
-                <aside id="adminSidebarMobile"
-                    class="panel-dark gold-border fixed left-0 top-0 z-50 hidden h-full w-[290px] border-r p-4 lg:hidden">
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center gap-3">
-                            <img src="{{ asset('images/landing/logo-ayo-renne.png') }}" alt="Ayo Renne"
-                                class="h-12 w-auto object-contain">
-                            <div>
-                                <div class="text-xs uppercase tracking-[0.22em] text-yellow-500">Admin Panel</div>
-                                <div class="text-sm font-semibold text-white">Ayo Renne</div>
-                            </div>
-                        </div>
-
-                        <button id="closeMobileSidebar"
-                            class="rounded-xl border gold-border bg-white/[0.04] px-3 py-2 hover:bg-white/[0.08]">
-                            ✕
-                        </button>
-                    </div>
-
-                    <div class="mt-5 space-y-2 text-sm">
-                        <a href="{{ route('admin.dashboard') }}"
-                            class="block rounded-xl px-3 py-3 {{ $isDashboard ? 'bg-yellow-500/12 border border-yellow-500/30' : 'border gold-border bg-white/[0.02]' }}">
-                            Dashboard
-                        </a>
-
-                        <a href="{{ route('admin.products.index') }}"
-                            class="block rounded-xl px-3 py-3 {{ $isProducts ? 'bg-yellow-500/12 border border-yellow-500/30' : 'border gold-border bg-white/[0.02]' }}">
-                            Produk
-                        </a>
-
-                        <div class="rounded-xl border gold-border bg-white/[0.02] p-2">
-                            <div class="px-2 py-2 text-sm font-semibold text-white/90">Inventory</div>
-
-                            <a href="{{ route('admin.raw_materials.index') }}"
-                                class="mt-1 block rounded-xl px-3 py-2 {{ $isRawMaterials ? 'bg-yellow-500/12' : 'hover:bg-white/[0.05]' }}">
-                                Bahan Baku
-                            </a>
-
-                            <a href="{{ route('admin.purchases.index') }}"
-                                class="mt-1 block rounded-xl px-3 py-2 {{ $isPurchases ? 'bg-yellow-500/12' : 'hover:bg-white/[0.05]' }}">
-                                Purchases
-                            </a>
-
-                            <a href="{{ route('admin.wastes.index') }}"
-                                class="mt-1 block rounded-xl px-3 py-2 {{ $isWastes ? 'bg-yellow-500/12' : 'hover:bg-white/[0.05]' }}">
-                                Waste
-                            </a>
-
-                            <a href="{{ route('admin.opnames.index') }}"
-                                class="mt-1 block rounded-xl px-3 py-2 {{ $isOpnames ? 'bg-yellow-500/12' : 'hover:bg-white/[0.05]' }}">
-                                Stock Opname
-                            </a>
-
-                            <a href="{{ route('admin.inventory-movements.index') }}"
-                                class="mt-1 block rounded-xl px-3 py-2 {{ $isInvMovements ? 'bg-yellow-500/12' : 'hover:bg-white/[0.05]' }}">
-                                Inventory Movement
-                            </a>
-                        </div>
-
-                        <a href="{{ route('admin.sales.index') }}"
-                            class="block rounded-xl px-3 py-3 {{ $isSales ? 'bg-yellow-500/12 border border-yellow-500/30' : 'border gold-border bg-white/[0.02]' }}">
-                            Transaksi
-                        </a>
-
-
-                        {{-- RESERVASI (Mobile) --}}
-                        <div class="rounded-xl border gold-border bg-white/[0.02] p-2">
-                            <div class="px-2 py-2 text-sm font-semibold text-white/90">Reservasi</div>
-
-                            <a href="{{ route('admin.reservations.index') }}"
-                                class="mt-1 block rounded-xl px-3 py-2 {{ $isReservations ? 'bg-yellow-500/12' : 'hover:bg-white/[0.05]' }}">
-                                Daftar Reservasi
-                            </a>
-
-                            <a href="{{ route('admin.reservation_resources.index') }}"
-                                class="mt-1 block rounded-xl px-3 py-2 {{ $isReservationResources ? 'bg-yellow-500/12' : 'hover:bg-white/[0.05]' }}">
-                                Resource Reservasi
-                            </a>
-
-                            <a href="{{ route('admin.buffet_packages.index') }}"
-                                class="mt-1 block rounded-xl px-3 py-2 {{ $isBuffetPackages ? 'bg-yellow-500/12' : 'hover:bg-white/[0.05]' }}">
-                                Paket Buffet
-                            </a>
-
-                        </div>
-
-
-
-                        <div class="rounded-xl border gold-border bg-white/[0.02] p-2">
-                            <div class="px-2 py-2 text-sm font-semibold text-white/90">User</div>
-
-                            <a href="{{ route('admin.cashiers.index') }}"
-                                class="mt-1 block rounded-xl px-3 py-2 {{ $isUsers ? 'bg-yellow-500/12' : 'hover:bg-white/[0.05]' }}">
-                                Kelola User
-                            </a>
-                            <a href="{{ route('admin.overtime_requests.index') }}"
-                                class="mt-1 block rounded-xl px-3 py-2 {{ $isOvertimeRequests ? 'bg-yellow-500/12' : 'hover:bg-white/[0.05]' }}">
-                                Pengajuan Lembur
-                            </a>
-
-                            <a href="{{ route('admin.attendance.exception_requests') }}"
-                                class="mt-1 block rounded-xl px-3 py-2 {{ $isAttendanceExceptions ? 'bg-yellow-500/12' : 'hover:bg-white/[0.05]' }}">
-                                Pengajuan Absensi
-                            </a>
-                            <a href="{{ route('admin.late_requests.index') }}"
-                                class="mt-1 block rounded-xl px-3 py-2 {{ $isLateRequests ? 'bg-yellow-500/12' : 'hover:bg-white/[0.05]' }}">
-                                Pengajuan Telat
-                            </a>
-                            <a href="{{ route('admin.checkout_corrections.index') }}"
-                                class="mt-1 block rounded-xl px-3 py-2 {{ $isCheckoutCorrections ? 'bg-yellow-500/12' : 'hover:bg-white/[0.05]' }}">
-                                Koreksi Checkout
-                            </a>
-
-                            <a href="{{ route('admin.shifts.index') }}"
-                                class="mt-1 block rounded-xl px-3 py-2 {{ $isShiftSettings ? 'bg-yellow-500/12' : 'hover:bg-white/[0.05]' }}">
-                                Shift Pegawai
-                            </a>
-
-                            <a href="{{ route('admin.attendance.qr') }}"
-                                class="mt-1 block rounded-xl px-3 py-2 {{ $isAttendanceQr ? 'bg-yellow-500/12' : 'hover:bg-white/[0.05]' }}">
-                                Absensi QR
-                            </a>
-
-                            <a href="{{ route('admin.attendance.devices') }}"
-                                class="mt-1 block rounded-xl px-3 py-2 {{ $isAttendanceDevices ? 'bg-yellow-500/12' : 'hover:bg-white/[0.05]' }}">
-                                Device Absensi
-                            </a>
-                            <a href="{{ route('admin.attendance.history') }}"
-                                class="mt-1 block rounded-xl px-3 py-2 {{ $isAttendanceHistory ? 'bg-yellow-500/12' : 'hover:bg-white/[0.05]' }}">
-                                History Absensi
-                            </a>
-                            <a href="{{ route('admin.leave_requests.index') }}"
-                                class="mt-1 block rounded-xl px-3 py-2 {{ $isLeaveRequests ? 'bg-yellow-500/12' : 'hover:bg-white/[0.05]' }}">
-                                Permintaan Cuti
-                            </a>
-                        </div>
-
-                        <a href="{{ route('admin.tables.index') }}"
-                            class="block rounded-xl px-3 py-3 {{ $isTables ? 'bg-yellow-500/12 border border-yellow-500/30' : 'border gold-border bg-white/[0.02]' }}">
-                            Meja
-                        </a>
-                    </div>
-
-                    <div class="mt-6 rounded-2xl border gold-border bg-white/[0.03] p-4">
-                        <div class="text-xs text-white/55">Login as</div>
-                        <div class="mt-1 text-sm font-semibold">{{ auth()->user()->name ?? 'Admin' }}</div>
-                        <div class="text-xs text-white/55">{{ auth()->user()->email }}</div>
-                    </div>
-                    <a href="{{ route('admin.account') }}"
-                        class="mt-3 inline-flex items-center justify-center rounded-xl border gold-border bg-white/[0.02] px-3 py-2 text-xs font-semibold text-white/85 hover:bg-white/[0.06]">
-                        ⚙️ Akun Saya
-                    </a>
-
-                    <div class="mt-auto pt-5">
-                        <form method="POST" action="{{ route('logout') }}">
-                            @csrf
-                            <button
-                                class="w-full rounded-xl bg-yellow-500 px-4 py-3 text-sm font-semibold text-black hover:bg-yellow-400">
-                                Logout
-                            </button>
-                        </form>
-                    </div>
-                </aside>
-
-                <!-- MAIN -->
-                <main id="adminMain" class="flex-1 p-4 lg:p-6">
-                    @yield('body')
-                </main>
+<body class="min-h-screen">
+    @php
+        $isDashboard = request()->routeIs('admin.dashboard');
+        $isProducts = request()->routeIs('admin.products.*');
+        $isSales = request()->routeIs('admin.sales.*');
+        $isUsers = request()->routeIs('admin.cashiers.*');
+        $isRawMaterials = request()->routeIs('admin.raw_materials.*');
+        $isPurchases = request()->routeIs('admin.purchases.*');
+        $isAttendanceQr = request()->routeIs('admin.attendance.qr*');
+        $isAttendanceDevices = request()->routeIs('admin.attendance.devices*');
+        $isAttendanceHistory = request()->routeIs('admin.attendance.history*');
+        $isAttendanceExceptions = request()->routeIs('admin.attendance.exception_requests*');
+        $isShiftSettings = request()->routeIs('admin.shifts.*');
+        $isLeaveRequests = request()->routeIs('admin.leave_requests.*');
+        $isLateRequests = request()->routeIs('admin.late_requests.*');
+        $isCheckoutCorrections = request()->routeIs('admin.checkout_corrections.*');
+        $isOvertimeRequests = request()->routeIs('admin.overtime_requests.*');
+        $isUserGroup = $isUsers || $isAttendanceQr || $isAttendanceDevices || $isAttendanceHistory || $isAttendanceExceptions || $isShiftSettings || $isLeaveRequests || $isLateRequests || $isCheckoutCorrections || $isOvertimeRequests;
+
+        $isWastes = request()->routeIs('admin.wastes.*');
+        $isOpnames = request()->routeIs('admin.opnames.*');
+        $isInvMovements = request()->routeIs('admin.inventory-movements.*');
+        $isTables = request()->routeIs('admin.tables.*');
+        $isInventory = $isRawMaterials || $isPurchases || $isWastes || $isOpnames || $isInvMovements || $isTables || $isAttendanceQr || $isAttendanceDevices;
+
+        $isReservations = request()->routeIs('admin.reservations.*');
+        $isReservationResources = request()->routeIs('admin.reservation_resources.*');
+        $isBuffetPackages = request()->routeIs('admin.buffet_packages.*');
+        $isReservationsGroup = $isReservations || $isReservationResources || $isBuffetPackages;
+    @endphp
+
+    <div class="flex">
+        <!-- SIDEBAR -->
+        <aside id="adminSidebar" class="glass-panel fixed h-[calc(100vh-2rem)] m-4 rounded-[2rem] overflow-hidden flex flex-col w-[280px]">
+            <!-- Header/Logo -->
+            <div class="p-6 flex items-center gap-4">
+                <div class="h-12 w-12 rounded-2xl bg-gradient-to-br from-gold-primary to-gold-dark flex items-center justify-center shadow-lg shadow-gold-primary/20 shrink-0">
+                    <img src="{{ asset('images/landing/logo-ayo-renne.png') }}" alt="Logo" class="h-8 w-auto">
+                </div>
+                <div class="sidebar-label overflow-hidden">
+                    <h1 class="text-gold-gradient font-bold text-lg leading-tight truncate">AYO RENNE</h1>
+                    <p class="text-white/40 text-[10px] uppercase tracking-widest">Premium Admin</p>
+                </div>
             </div>
-        </div>
+
+            <!-- Navigation -->
+            <nav class="flex-1 px-4 py-2 space-y-2 overflow-y-auto no-scrollbar">
+                <!-- Dashboard -->
+                <a href="{{ route('admin.dashboard') }}" class="sidebar-item group flex items-center gap-4 px-4 py-3.5 rounded-2xl {{ $isDashboard ? 'active' : '' }}">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 shrink-0 {{ $isDashboard ? 'text-gold-primary' : 'text-white/60 group-hover:text-gold-primary' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                    </svg>
+                    <span class="sidebar-label font-medium">Dashboard</span>
+                </a>
+
+                <!-- Produk -->
+                <a href="{{ route('admin.products.index') }}" class="sidebar-item group flex items-center gap-4 px-4 py-3.5 rounded-2xl {{ $isProducts ? 'active' : '' }}">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 shrink-0 {{ $isProducts ? 'text-gold-primary' : 'text-white/60 group-hover:text-gold-primary' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                    </svg>
+                    <span class="sidebar-label font-medium">Produk</span>
+                </a>
+
+                <!-- Inventory Group -->
+                <div class="space-y-1">
+                    <button type="button" class="sidebar-item group flex w-full items-center gap-4 px-4 py-3.5 rounded-2xl {{ $isInventory ? 'active' : '' }}" onclick="toggleDropdown('inventoryMenu', this)">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 shrink-0 {{ $isInventory ? 'text-gold-primary' : 'text-white/60 group-hover:text-gold-primary' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                        </svg>
+                        <span class="sidebar-label flex-1 text-left font-medium">Inventory</span>
+                        <svg id="chevron-inventoryMenu" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 transition-transform {{ $isInventory ? 'rotate-180' : '' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </button>
+                    <div id="inventoryMenu" class="{{ $isInventory ? 'block' : 'hidden' }} pl-14 space-y-1 overflow-hidden transition-all duration-300">
+                        <a href="{{ route('admin.raw_materials.index') }}" class="block py-2 text-sm {{ $isRawMaterials ? 'text-gold-primary' : 'text-white/50 hover:text-white' }}">Bahan Baku</a>
+                        <a href="{{ route('admin.purchases.index') }}" class="block py-2 text-sm {{ $isPurchases ? 'text-gold-primary' : 'text-white/50 hover:text-white' }}">Purchases</a>
+                        <a href="{{ route('admin.wastes.index') }}" class="block py-2 text-sm {{ $isWastes ? 'text-gold-primary' : 'text-white/50 hover:text-white' }}">Waste</a>
+                        <a href="{{ route('admin.opnames.index') }}" class="block py-2 text-sm {{ $isOpnames ? 'text-gold-primary' : 'text-white/50 hover:text-white' }}">Stock Opname</a>
+                        <a href="{{ route('admin.inventory-movements.index') }}" class="block py-2 text-sm {{ $isInvMovements ? 'text-gold-primary' : 'text-white/50 hover:text-white' }}">Movements</a>
+                    </div>
+                </div>
+
+                <!-- Sales -->
+                <a href="{{ route('admin.sales.index') }}" class="sidebar-item group flex items-center gap-4 px-4 py-3.5 rounded-2xl {{ $isSales ? 'active' : '' }}">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 shrink-0 {{ $isSales ? 'text-gold-primary' : 'text-white/60 group-hover:text-gold-primary' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span class="sidebar-label font-medium">Transaksi</span>
+                </a>
+
+                <!-- Reservasi Group -->
+                <div class="space-y-1">
+                    <button type="button" class="sidebar-item group flex w-full items-center gap-4 px-4 py-3.5 rounded-2xl {{ $isReservationsGroup ? 'active' : '' }}" onclick="toggleDropdown('resMenu', this)">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 shrink-0 {{ $isReservationsGroup ? 'text-gold-primary' : 'text-white/60 group-hover:text-gold-primary' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V6a2 2 0 012-2h4a2 2 0 012 2v1M5 9h14M6 9v10a2 2 0 002 2h8a2 2 0 002-2V9" />
+                        </svg>
+                        <span class="sidebar-label flex-1 text-left font-medium">Reservasi</span>
+                        <svg id="chevron-resMenu" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 transition-transform {{ $isReservationsGroup ? 'rotate-180' : '' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </button>
+                    <div id="resMenu" class="{{ $isReservationsGroup ? 'block' : 'hidden' }} pl-14 space-y-1 overflow-hidden transition-all duration-300">
+                        <a href="{{ route('admin.reservations.index') }}" class="block py-2 text-sm {{ $isReservations ? 'text-gold-primary' : 'text-white/50 hover:text-white' }}">Daftar Reservasi</a>
+                        <a href="{{ route('admin.reservation_resources.index') }}" class="block py-2 text-sm {{ $isReservationResources ? 'text-gold-primary' : 'text-white/50 hover:text-white' }}">Resource</a>
+                        <a href="{{ route('admin.buffet_packages.index') }}" class="block py-2 text-sm {{ $isBuffetPackages ? 'text-gold-primary' : 'text-white/50 hover:text-white' }}">Paket Buffet</a>
+                    </div>
+                </div>
+
+                <!-- User Group -->
+                <div class="space-y-1">
+                    <button type="button" class="sidebar-item group flex w-full items-center gap-4 px-4 py-3.5 rounded-2xl {{ $isUserGroup ? 'active' : '' }}" onclick="toggleDropdown('userMenu', this)">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 shrink-0 {{ $isUserGroup ? 'text-gold-primary' : 'text-white/60 group-hover:text-gold-primary' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                        </svg>
+                        <span class="sidebar-label flex-1 text-left font-medium">User & HRM</span>
+                        <svg id="chevron-userMenu" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 transition-transform {{ $isUserGroup ? 'rotate-180' : '' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </button>
+                    <div id="userMenu" class="{{ $isUserGroup ? 'block' : 'hidden' }} pl-14 space-y-1 overflow-hidden transition-all duration-300">
+                        <a href="{{ route('admin.cashiers.index') }}" class="block py-2 text-sm {{ $isUsers ? 'text-gold-primary' : 'text-white/50 hover:text-white' }}">Kelola User</a>
+                        <a href="{{ route('admin.attendance.history') }}" class="block py-2 text-sm {{ $isAttendanceHistory ? 'text-gold-primary' : 'text-white/50 hover:text-white' }}">History Absensi</a>
+                        <a href="{{ route('admin.leave_requests.index') }}" class="block py-2 text-sm {{ $isLeaveRequests ? 'text-gold-primary' : 'text-white/50 hover:text-white' }}">Permintaan Cuti</a>
+                        <a href="{{ route('admin.shifts.index') }}" class="block py-2 text-sm {{ $isShiftSettings ? 'text-gold-primary' : 'text-white/50 hover:text-white' }}">Shift Pegawai</a>
+                    </div>
+                </div>
+
+                <!-- Tables -->
+                <a href="{{ route('admin.tables.index') }}" class="sidebar-item group flex items-center gap-4 px-4 py-3.5 rounded-2xl {{ $isTables ? 'active' : '' }}">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 shrink-0 {{ $isTables ? 'text-gold-primary' : 'text-white/60 group-hover:text-gold-primary' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 10h16M4 14h16M4 18h16M4 6h16" />
+                    </svg>
+                    <span class="sidebar-label font-medium">Manajemen Meja</span>
+                </a>
+            </nav>
+
+            <!-- Footer -->
+            <div class="p-6 space-y-4">
+                <div class="glass-card rounded-2xl p-4 sidebar-label">
+                    <div class="flex items-center gap-3">
+                        <div class="h-10 w-10 rounded-full bg-gold-primary/20 flex items-center justify-center border border-gold-primary/30">
+                            <span class="text-gold-primary font-bold">{{ substr(auth()->user()->name ?? 'A', 0, 1) }}</span>
+                        </div>
+                        <div class="overflow-hidden">
+                            <p class="text-xs font-bold truncate">{{ auth()->user()->name ?? 'Administrator' }}</p>
+                            <p class="text-[10px] text-white/40 uppercase tracking-tight">{{ auth()->user()->role ?? 'Admin' }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <form method="POST" action="{{ route('logout') }}">
+                    @csrf
+                    <button class="w-full flex items-center justify-center gap-3 px-4 py-3 rounded-2xl bg-gradient-to-r from-gold-primary to-gold-dark text-black font-bold text-sm transition-all hover:scale-[1.02] active:scale-95 shadow-lg shadow-gold-primary/20">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                        </svg>
+                        <span class="sidebar-label">LOGOUT SYSTEM</span>
+                    </button>
+                </form>
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT -->
+        <main id="mainContent" class="flex-1 min-h-screen lg:ml-[312px] p-4 lg:p-8 transition-all duration-300">
+            <!-- TOP NAVBAR -->
+            <header class="glass-panel sticky top-4 mb-8 rounded-[2rem] px-8 py-4 flex items-center justify-between z-40">
+                <div class="flex items-center gap-6">
+                    <button id="toggleSidebar" class="p-2 rounded-xl hover:bg-white/5 transition-colors" onclick="toggleSidebar()">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gold-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
+                        </svg>
+                    </button>
+                    <div>
+                        <h2 class="text-xl font-bold tracking-tight">@yield('title', 'Admin Dashboard')</h2>
+                        <p class="text-xs text-white/40">Selamat datang kembali, <span class="text-gold-primary">{{ auth()->user()->name }}</span></p>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-4">
+                    <div class="hidden md:flex items-center gap-2 glass-card px-4 py-2 rounded-xl text-xs text-white/60">
+                        <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                        System Active
+                    </div>
+                    <div id="currentTime" class="text-sm font-medium text-white/80 tabular-nums"></div>
+                </div>
+            </header>
+
+            <!-- PAGE BODY -->
+            <div class="animate-fade-in">
+                @yield('body')
+            </div>
+        </main>
     </div>
 
+    <!-- Mobile Overlay -->
+    <div id="mobileOverlay" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 hidden" onclick="toggleSidebar()"></div>
+
     <script>
-        (function () {
-            const sidebarD = document.getElementById('adminSidebarDesktop');
-            const main = document.getElementById('adminMain');
-            const pinBtn = document.getElementById('sidebarPinBtn');
-            const pinIconGear = document.getElementById('pinIconGear');
-            const pinIconPinned = document.getElementById('pinIconPinned');
+        // Real-time Clock
+        function updateClock() {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('id-ID', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            const dateStr = now.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
+            const clockEl = document.getElementById('currentTime');
+            if(clockEl) clockEl.innerText = `${dateStr} • ${timeStr}`;
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
 
-            if (sidebarD && main && pinBtn) {
-                let pinned = false;
+        // Sidebar Control
+        const sidebar = document.getElementById('adminSidebar');
+        const mainContent = document.getElementById('mainContent');
+        const overlay = document.getElementById('mobileOverlay');
+        let isCollapsed = false;
 
-                function openSidebar() {
-                    sidebarD.classList.remove('w-16');
-                    sidebarD.classList.add('w-72');
-                    sidebarD.querySelectorAll('.sidebar-label').forEach(el => el.classList.remove('hidden'));
+        function toggleSidebar() {
+            const isMobile = window.innerWidth < 1024;
+            
+            if (isMobile) {
+                sidebar.classList.toggle('mobile-open');
+                overlay.classList.toggle('hidden');
+            } else {
+                isCollapsed = !isCollapsed;
+                if (isCollapsed) {
+                    sidebar.style.width = '100px';
+                    mainContent.style.marginLeft = '132px';
+                    document.querySelectorAll('.sidebar-label').forEach(el => el.style.opacity = '0');
+                    setTimeout(() => {
+                        document.querySelectorAll('.sidebar-label').forEach(el => el.classList.add('hidden'));
+                    }, 200);
+                } else {
+                    sidebar.style.width = '280px';
+                    mainContent.style.marginLeft = '312px';
+                    document.querySelectorAll('.sidebar-label').forEach(el => el.classList.remove('hidden'));
+                    setTimeout(() => {
+                        document.querySelectorAll('.sidebar-label').forEach(el => el.style.opacity = '1');
+                    }, 50);
                 }
-
-                function closeSidebar() {
-                    sidebarD.classList.add('w-16');
-                    sidebarD.classList.remove('w-72');
-                    sidebarD.querySelectorAll('.sidebar-label').forEach(el => el.classList.add('hidden'));
-                }
-
-                function setPinnedState(isPinned) {
-                    pinned = isPinned;
-                    pinBtn.dataset.pinned = pinned ? "1" : "0";
-                    if (pinIconGear && pinIconPinned) {
-                        pinIconGear.classList.toggle('hidden', pinned);
-                        pinIconPinned.classList.toggle('hidden', !pinned);
-                    }
-                    pinBtn.title = pinned ? 'Unpin sidebar' : 'Pin sidebar';
-                }
-
-                closeSidebar();
-                setPinnedState(false);
-
-                sidebarD.addEventListener('mouseenter', () => {
-                    if (!pinned) openSidebar();
-                });
-                sidebarD.addEventListener('mouseleave', () => {
-                    if (!pinned) closeSidebar();
-                });
-                main.addEventListener('mouseenter', () => {
-                    if (!pinned) closeSidebar();
-                });
-
-                pinBtn.addEventListener('click', () => {
-                    setPinnedState(!pinned);
-                    if (pinned) openSidebar();
-                    else closeSidebar();
-                });
-            }
-
-            const openBtn = document.getElementById('openMobileSidebar');
-            const closeBtn = document.getElementById('closeMobileSidebar');
-            const overlay = document.getElementById('sidebarOverlay');
-            const sidebarM = document.getElementById('adminSidebarMobile');
-
-            function openMobile() {
-                if (!overlay || !sidebarM) return;
-                overlay.classList.remove('hidden');
-                sidebarM.classList.remove('hidden');
-            }
-
-            function closeMobile() {
-                if (!overlay || !sidebarM) return;
-                overlay.classList.add('hidden');
-                sidebarM.classList.add('hidden');
-            }
-
-            if (sidebarM) {
-                sidebarM.querySelectorAll('a').forEach(a => a.addEventListener('click', closeMobile));
-            }
-
-            if (openBtn) openBtn.addEventListener('click', openMobile);
-            if (closeBtn) closeBtn.addEventListener('click', closeMobile);
-            if (overlay) overlay.addEventListener('click', closeMobile);
-
-            document.addEventListener('keydown', (e) => {
-                if (e.key === 'Escape') closeMobile();
-            });
-
-            const invToggle = document.getElementById('invToggleDesktop');
-            const invMenu = document.getElementById('invMenuDesktop');
-            const invChevron = document.getElementById('invChevronDesktop');
-
-            if (invToggle && invMenu && invChevron) {
-                invToggle.addEventListener('click', () => {
-                    const isHidden = invMenu.classList.contains('hidden');
-                    invMenu.classList.toggle('hidden');
-                    invChevron.classList.toggle('rotate-90', isHidden);
-                });
-
-                if (!invMenu.classList.contains('hidden')) {
-                    invChevron.classList.add('rotate-90');
-                }
-            }
-
-            const userToggle = document.getElementById('userToggleDesktop');
-            const userMenu = document.getElementById('userMenuDesktop');
-            const userChevron = document.getElementById('userChevronDesktop');
-
-            if (userToggle && userMenu && userChevron) {
-                userToggle.addEventListener('click', () => {
-                    const isHidden = userMenu.classList.contains('hidden');
-                    userMenu.classList.toggle('hidden');
-                    userChevron.classList.toggle('rotate-90', isHidden);
-                });
-
-                if (!userMenu.classList.contains('hidden')) {
-                    userChevron.classList.add('rotate-90');
-                }
-            }
-        })();
-    </script>
-    <script>
-        const resvToggle = document.getElementById('resvToggleDesktop');
-        const resvMenu = document.getElementById('resvMenuDesktop');
-        const resvChevron = document.getElementById('resvChevronDesktop');
-
-        if (resvToggle && resvMenu && resvChevron) {
-            resvToggle.addEventListener('click', () => {
-                const isHidden = resvMenu.classList.contains('hidden');
-                resvMenu.classList.toggle('hidden');
-                resvChevron.classList.toggle('rotate-90', isHidden);
-            });
-
-            if (!resvMenu.classList.contains('hidden')) {
-                resvChevron.classList.add('rotate-90');
             }
         }
+
+        // Dropdown Control
+        function toggleDropdown(menuId, btn) {
+            const menu = document.getElementById(menuId);
+            const chevron = document.getElementById('chevron-' + menuId);
+            const isHidden = menu.classList.contains('hidden');
+
+            // Close other dropdowns
+            document.querySelectorAll('[id$="Menu"]').forEach(otherMenu => {
+                if (otherMenu.id !== menuId && !otherMenu.classList.contains('hidden')) {
+                    otherMenu.classList.add('hidden');
+                    const otherChevron = document.getElementById('chevron-' + otherMenu.id);
+                    if (otherChevron) otherChevron.classList.remove('rotate-180');
+                }
+            });
+
+            if (isHidden) {
+                menu.classList.remove('hidden');
+                chevron.classList.add('rotate-180');
+            } else {
+                menu.classList.add('hidden');
+                chevron.classList.remove('rotate-180');
+            }
+        }
+
+        // Auto-close mobile sidebar on resize
+        window.addEventListener('resize', () => {
+            if (window.innerWidth >= 1024) {
+                sidebar.classList.remove('mobile-open');
+                overlay.classList.add('hidden');
+                sidebar.style.left = '0';
+            } else {
+                sidebar.style.left = '';
+            }
+        });
     </script>
 </body>
 

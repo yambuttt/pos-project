@@ -769,7 +769,7 @@
       const buffet = document.querySelector('input[name="buffet_package_id"]:checked');
       if (buffet) {
         const label = buffet.closest('label');
-        const name = label.querySelector('.text-\[15px\]').textContent;
+        const name = label.querySelector('.font-black.uppercase.text-white').textContent.trim();
         const row = document.createElement('div');
         row.className = 'flex items-center justify-between text-[10px] font-black uppercase tracking-widest text-white/40 mb-2';
         row.innerHTML = `<span>${name}</span><span>${fmtRp(calcBuffetTotal())}</span>`;
