@@ -68,12 +68,6 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        @keyframes glowPulse {
-            0% { box-shadow: 0 0 5px rgba(212, 175, 55, 0.2); }
-            50% { box-shadow: 0 0 15px rgba(212, 175, 55, 0.4); }
-            100% { box-shadow: 0 0 5px rgba(212, 175, 55, 0.2); }
-        }
-
         .animate-fade-in {
             animation: fadeIn 0.6s ease-out forwards;
         }
@@ -213,7 +207,7 @@
                 <!-- Dashboard -->
                 <a href="{{ route('admin.dashboard') }}" class="sidebar-item group flex items-center gap-4 px-4 py-3.5 rounded-2xl {{ $isDashboard ? 'active' : '' }}">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 shrink-0 {{ $isDashboard ? 'text-gold-primary' : 'text-white/60 group-hover:text-gold-primary' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                     </svg>
                     <span class="sidebar-label font-medium">Dashboard</span>
                 </a>
@@ -237,7 +231,7 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                         </svg>
                     </button>
-                    <div id="inventoryMenu" class="{{ $isInventory ? 'block' : 'hidden' }} pl-14 space-y-1 overflow-hidden transition-all duration-300">
+                    <div id="inventoryMenu" class="{{ $isInventory ? 'block' : 'hidden' }} pl-14 space-y-1 overflow-hidden">
                         <a href="{{ route('admin.raw_materials.index') }}" class="block py-2 text-sm {{ $isRawMaterials ? 'text-gold-primary' : 'text-white/50 hover:text-white' }}">Bahan Baku</a>
                         <a href="{{ route('admin.purchases.index') }}" class="block py-2 text-sm {{ $isPurchases ? 'text-gold-primary' : 'text-white/50 hover:text-white' }}">Purchases</a>
                         <a href="{{ route('admin.wastes.index') }}" class="block py-2 text-sm {{ $isWastes ? 'text-gold-primary' : 'text-white/50 hover:text-white' }}">Waste</a>
@@ -249,7 +243,7 @@
                 <!-- Sales -->
                 <a href="{{ route('admin.sales.index') }}" class="sidebar-item group flex items-center gap-4 px-4 py-3.5 rounded-2xl {{ $isSales ? 'active' : '' }}">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 shrink-0 {{ $isSales ? 'text-gold-primary' : 'text-white/60 group-hover:text-gold-primary' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                     </svg>
                     <span class="sidebar-label font-medium">Transaksi</span>
                 </a>
@@ -265,14 +259,14 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                         </svg>
                     </button>
-                    <div id="resMenu" class="{{ $isReservationsGroup ? 'block' : 'hidden' }} pl-14 space-y-1 overflow-hidden transition-all duration-300">
+                    <div id="resMenu" class="{{ $isReservationsGroup ? 'block' : 'hidden' }} pl-14 space-y-1 overflow-hidden">
                         <a href="{{ route('admin.reservations.index') }}" class="block py-2 text-sm {{ $isReservations ? 'text-gold-primary' : 'text-white/50 hover:text-white' }}">Daftar Reservasi</a>
                         <a href="{{ route('admin.reservation_resources.index') }}" class="block py-2 text-sm {{ $isReservationResources ? 'text-gold-primary' : 'text-white/50 hover:text-white' }}">Resource</a>
                         <a href="{{ route('admin.buffet_packages.index') }}" class="block py-2 text-sm {{ $isBuffetPackages ? 'text-gold-primary' : 'text-white/50 hover:text-white' }}">Paket Buffet</a>
                     </div>
                 </div>
 
-                <!-- User Group -->
+                <!-- User & HRM Group -->
                 <div class="space-y-1">
                     <button type="button" class="sidebar-item group flex w-full items-center gap-4 px-4 py-3.5 rounded-2xl {{ $isUserGroup ? 'active' : '' }}" onclick="toggleDropdown('userMenu', this)">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 shrink-0 {{ $isUserGroup ? 'text-gold-primary' : 'text-white/60 group-hover:text-gold-primary' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -283,11 +277,17 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                         </svg>
                     </button>
-                    <div id="userMenu" class="{{ $isUserGroup ? 'block' : 'hidden' }} pl-14 space-y-1 overflow-hidden transition-all duration-300">
+                    <div id="userMenu" class="{{ $isUserGroup ? 'block' : 'hidden' }} pl-14 space-y-1 overflow-hidden">
                         <a href="{{ route('admin.cashiers.index') }}" class="block py-2 text-sm {{ $isUsers ? 'text-gold-primary' : 'text-white/50 hover:text-white' }}">Kelola User</a>
+                        <a href="{{ route('admin.overtime_requests.index') }}" class="block py-2 text-sm {{ $isOvertimeRequests ? 'text-gold-primary' : 'text-white/50 hover:text-white' }}">Pengajuan Lembur</a>
+                        <a href="{{ route('admin.attendance.exception_requests') }}" class="block py-2 text-sm {{ $isAttendanceExceptions ? 'text-gold-primary' : 'text-white/50 hover:text-white' }}">Pengajuan Absensi</a>
+                        <a href="{{ route('admin.late_requests.index') }}" class="block py-2 text-sm {{ $isLateRequests ? 'text-gold-primary' : 'text-white/50 hover:text-white' }}">Pengajuan Telat</a>
+                        <a href="{{ route('admin.checkout_corrections.index') }}" class="block py-2 text-sm {{ $isCheckoutCorrections ? 'text-gold-primary' : 'text-white/50 hover:text-white' }}">Koreksi Checkout</a>
+                        <a href="{{ route('admin.shifts.index') }}" class="block py-2 text-sm {{ $isShiftSettings ? 'text-gold-primary' : 'text-white/50 hover:text-white' }}">Shift Pegawai</a>
+                        <a href="{{ route('admin.attendance.qr') }}" class="block py-2 text-sm {{ $isAttendanceQr ? 'text-gold-primary' : 'text-white/50 hover:text-white' }}">Absensi QR</a>
+                        <a href="{{ route('admin.attendance.devices') }}" class="block py-2 text-sm {{ $isAttendanceDevices ? 'text-gold-primary' : 'text-white/50 hover:text-white' }}">Device Absensi</a>
                         <a href="{{ route('admin.attendance.history') }}" class="block py-2 text-sm {{ $isAttendanceHistory ? 'text-gold-primary' : 'text-white/50 hover:text-white' }}">History Absensi</a>
                         <a href="{{ route('admin.leave_requests.index') }}" class="block py-2 text-sm {{ $isLeaveRequests ? 'text-gold-primary' : 'text-white/50 hover:text-white' }}">Permintaan Cuti</a>
-                        <a href="{{ route('admin.shifts.index') }}" class="block py-2 text-sm {{ $isShiftSettings ? 'text-gold-primary' : 'text-white/50 hover:text-white' }}">Shift Pegawai</a>
                     </div>
                 </div>
 
@@ -296,7 +296,15 @@
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 shrink-0 {{ $isTables ? 'text-gold-primary' : 'text-white/60 group-hover:text-gold-primary' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 10h16M4 14h16M4 18h16M4 6h16" />
                     </svg>
-                    <span class="sidebar-label font-medium">Manajemen Meja</span>
+                    <span class="sidebar-label font-medium">Meja</span>
+                </a>
+
+                <!-- Laporan -->
+                <a href="#" class="sidebar-item group flex items-center gap-4 px-4 py-3.5 rounded-2xl text-white/88 hover:bg-white/[0.05]">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 shrink-0 text-white/60 group-hover:text-gold-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                    <span class="sidebar-label font-medium">Laporan</span>
                 </a>
             </nav>
 
