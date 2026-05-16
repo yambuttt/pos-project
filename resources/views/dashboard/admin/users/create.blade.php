@@ -1,309 +1,211 @@
 @extends('layouts.admin')
-@section('title', 'Buat User')
+@section('title', 'Buat User Baru')
 
 @section('body')
-    <div class="mx-auto w-full max-w-6xl">
-        <!-- HEADER -->
-        <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div class="flex items-start gap-3">
-                <button id="openMobileSidebar" type="button"
-                    class="inline-flex items-center justify-center rounded-xl border border-white/20 bg-white/10 px-3 py-2 text-sm backdrop-blur-xl hover:bg-white/15 lg:hidden">
-                    ☰
-                </button>
-
-                <div>
-                    <div class="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs text-white/70">
-                        <span class="h-1.5 w-1.5 rounded-full bg-blue-400"></span>
-                        Admin • User Management
-                    </div>
-
-                    <h1 class="mt-2 text-xl font-semibold">Buat Akun User</h1>
-                    <p class="mt-1 text-sm text-white/70">
-                        Buat akun untuk <span class="font-semibold text-white/85">Kasir / Kitchen / Pegawai</span>.
-                        Tercatat dibuat oleh admin yang sedang login.
-                    </p>
-                </div>
-            </div>
-
-            <a href="{{ route('admin.cashiers.index') }}"
-                class="inline-flex items-center justify-center rounded-xl border border-white/20 bg-white/10 px-4 py-2 text-sm font-semibold backdrop-blur-xl hover:bg-white/15">
-                ← Kembali
-            </a>
-        </div>
-
-        <!-- CONTENT -->
-        <div class="mt-5 grid grid-cols-1 gap-5 lg:grid-cols-[1.2fr_0.8fr]">
-
-            <!-- FORM -->
-            <div class="rounded-[26px] border border-white/20 bg-white/10 p-5 backdrop-blur-2xl sm:p-7">
-                <div class="flex items-center justify-between gap-3">
-                    <div>
-                        <div class="text-sm font-semibold">Data User</div>
-                        <div class="mt-1 text-xs text-white/65">Isi data di bawah, lalu klik “Buat Akun User”.</div>
-                    </div>
-
-                    <div class="hidden sm:flex items-center gap-2 text-xs text-white/60">
-                        <span class="inline-flex h-6 w-6 items-center justify-center rounded-full border border-white/15 bg-white/5">1</span>
-                        <span class="inline-flex h-6 w-6 items-center justify-center rounded-full border border-white/15 bg-white/5">2</span>
-                        <span class="inline-flex h-6 w-6 items-center justify-center rounded-full border border-white/15 bg-white/5">3</span>
-                    </div>
-                </div>
-
-                <div class="mt-5 rounded-2xl border border-white/15 bg-white/5 p-4">
-                    <div class="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-                        <div class="text-sm font-semibold">Kredensial</div>
-                        <div class="text-xs text-white/60">Email harus unik • Password terenkripsi</div>
-                    </div>
-
-                    <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
-                        <div class="sm:col-span-1">
-                            <label class="text-sm text-white/80">Nama</label>
-                            <div class="mt-2 flex items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-4 py-3 focus-within:border-white/40">
-                                <span class="text-white/50">👤</span>
-                                <input name="name" value="{{ old('name') }}"
-                                    class="w-full bg-transparent text-sm outline-none placeholder:text-white/40"
-                                    placeholder="Nama user" />
-                            </div>
-                            @error('name') <p class="mt-2 text-xs text-red-100/90">{{ $message }}</p> @enderror
-                        </div>
-
-                        <div class="sm:col-span-1">
-                            <label class="text-sm text-white/80">Email</label>
-                            <div class="mt-2 flex items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-4 py-3 focus-within:border-white/40">
-                                <span class="text-white/50">✉️</span>
-                                <input name="email" value="{{ old('email') }}" type="email"
-                                    class="w-full bg-transparent text-sm outline-none placeholder:text-white/40"
-                                    placeholder="user@example.com" />
-                            </div>
-                            @error('email') <p class="mt-2 text-xs text-red-100/90">{{ $message }}</p> @enderror
-                        </div>
-
-                        <div class="sm:col-span-2">
-                            <label class="text-sm text-white/80">Role</label>
-                            <div class="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-3">
-                                <label class="group relative flex cursor-pointer items-center gap-3 rounded-2xl border border-white/15 bg-white/5 p-4 hover:bg-white/10">
-                                    <input type="radio" name="role" value="kasir" class="peer sr-only"
-                                        {{ old('role', 'kasir') === 'kasir' ? 'checked' : '' }}>
-                                    <div class="flex h-10 w-10 items-center justify-center rounded-xl border border-white/15 bg-white/5 text-lg">🧾</div>
-                                    <div class="min-w-0">
-                                        <div class="text-sm font-semibold">Kasir</div>
-                                        <div class="text-xs text-white/65">Transaksi & pembayaran</div>
-                                    </div>
-                                    <div class="absolute inset-0 rounded-2xl ring-0 ring-blue-400/40 peer-checked:ring-2"></div>
-                                </label>
-
-                                <label class="group relative flex cursor-pointer items-center gap-3 rounded-2xl border border-white/15 bg-white/5 p-4 hover:bg-white/10">
-                                    <input type="radio" name="role" value="kitchen" class="peer sr-only"
-                                        {{ old('role') === 'kitchen' ? 'checked' : '' }}>
-                                    <div class="flex h-10 w-10 items-center justify-center rounded-xl border border-white/15 bg-white/5 text-lg">🍳</div>
-                                    <div class="min-w-0">
-                                        <div class="text-sm font-semibold">Kitchen</div>
-                                        <div class="text-xs text-white/65">Proses pesanan</div>
-                                    </div>
-                                    <div class="absolute inset-0 rounded-2xl ring-0 ring-blue-400/40 peer-checked:ring-2"></div>
-                                </label>
-
-                                <label class="group relative flex cursor-pointer items-center gap-3 rounded-2xl border border-white/15 bg-white/5 p-4 hover:bg-white/10">
-                                    <input type="radio" name="role" value="pegawai" class="peer sr-only"
-                                        {{ old('role') === 'pegawai' ? 'checked' : '' }}>
-                                    <div class="flex h-10 w-10 items-center justify-center rounded-xl border border-white/15 bg-white/5 text-lg">🧑‍💼</div>
-                                    <div class="min-w-0">
-                                        <div class="text-sm font-semibold">Pegawai</div>
-                                        <div class="text-xs text-white/65">Absensi & aktivitas</div>
-                                    </div>
-                                    <div class="absolute inset-0 rounded-2xl ring-0 ring-blue-400/40 peer-checked:ring-2"></div>
-                                </label>
-                            </div>
-                            @error('role') <p class="mt-2 text-xs text-red-100/90">{{ $message }}</p> @enderror
-                        </div>
-                    </div>
-                </div>
-
-                <form method="POST" action="{{ route('admin.cashiers.store') }}" class="mt-5 space-y-4">
-                    @csrf
-
-                    {{-- Hidden inputs for name/email/role from above styled inputs --}}
-                    {{-- NOTE: Karena input name/email di atas berada di luar form, kita duplikasi field di sini (tetap 1 sumber data dengan JS). --}}
-                    <input type="hidden" name="name" id="hidden_name" value="{{ old('name') }}">
-                    <input type="hidden" name="email" id="hidden_email" value="{{ old('email') }}">
-                    <input type="hidden" name="role" id="hidden_role" value="{{ old('role', 'kasir') }}">
-
-                    <div class="rounded-2xl border border-white/15 bg-white/5 p-4">
-                        <div class="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-                            <div class="text-sm font-semibold">Password</div>
-                            <div class="text-xs text-white/60">Minimal 6 karakter • Gunakan kombinasi huruf & angka</div>
-                        </div>
-
-                        <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
-                            <div>
-                                <label class="text-sm text-white/80">Password</label>
-                                <div
-                                    class="mt-2 flex items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-4 py-3 focus-within:border-white/40">
-                                    <input id="password" name="password" type="password"
-                                        class="w-full bg-transparent text-sm outline-none placeholder:text-white/40"
-                                        placeholder="Minimal 6 karakter" />
-
-                                    <button type="button" id="togglePassword"
-                                        class="rounded-lg border border-white/20 bg-white/10 px-2 py-1 hover:bg-white/15"
-                                        title="Lihat/Sembunyikan password">
-                                        <svg id="eyeOpen" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white/80" fill="none"
-                                            viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-                                            <path stroke-linecap="round" stroke-linejoin="round"
-                                                d="M2.25 12s3.75-7.5 9.75-7.5S21.75 12 21.75 12s-3.75 7.5-9.75 7.5S2.25 12 2.25 12z" />
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                        </svg>
-
-                                        <svg id="eyeClosed" xmlns="http://www.w3.org/2000/svg" class="hidden h-5 w-5 text-white/80"
-                                            fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 3l18 18" />
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 10.7a2.9 2.9 0 003.8 3.8" />
-                                            <path stroke-linecap="round" stroke-linejoin="round"
-                                                d="M9.88 4.24A10.5 10.5 0 0112 4.5c6 0 9.75 7.5 9.75 7.5a18.7 18.7 0 01-3.1 4.3" />
-                                            <path stroke-linecap="round" stroke-linejoin="round"
-                                                d="M6.4 6.4C3.6 8.4 2.25 12 2.25 12S6 19.5 12 19.5c1.08 0 2.1-.2 3.04-.54" />
-                                        </svg>
-                                    </button>
-                                </div>
-                                @error('password') <p class="mt-2 text-xs text-red-100/90">{{ $message }}</p> @enderror
-                            </div>
-
-                            <div>
-                                <label class="text-sm text-white/80">Ulangi Password</label>
-                                <div
-                                    class="mt-2 flex items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-4 py-3 focus-within:border-white/40">
-                                    <input id="password_confirmation" name="password_confirmation" type="password"
-                                        class="w-full bg-transparent text-sm outline-none placeholder:text-white/40"
-                                        placeholder="Ketik ulang password" />
-
-                                    <button type="button" id="togglePasswordConfirm"
-                                        class="rounded-lg border border-white/20 bg-white/10 px-2 py-1 hover:bg-white/15"
-                                        title="Lihat/Sembunyikan password">
-                                        <svg id="eyeOpen2" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white/80" fill="none"
-                                            viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-                                            <path stroke-linecap="round" stroke-linejoin="round"
-                                                d="M2.25 12s3.75-7.5 9.75-7.5S21.75 12 21.75 12s-3.75 7.5-9.75 7.5S2.25 12 2.25 12z" />
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                        </svg>
-
-                                        <svg id="eyeClosed2" xmlns="http://www.w3.org/2000/svg" class="hidden h-5 w-5 text-white/80"
-                                            fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 3l18 18" />
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 10.7a2.9 2.9 0 003.8 3.8" />
-                                            <path stroke-linecap="round" stroke-linejoin="round"
-                                                d="M9.88 4.24A10.5 10.5 0 0112 4.5c6 0 9.75 7.5 9.75 7.5a18.7 18.7 0 01-3.1 4.3" />
-                                            <path stroke-linecap="round" stroke-linejoin="round"
-                                                d="M6.4 6.4C3.6 8.4 2.25 12 2.25 12S6 19.5 12 19.5c1.08 0 2.1-.2 3.04-.54" />
-                                        </svg>
-                                    </button>
-                                </div>
-                                @error('password_confirmation') <p class="mt-2 text-xs text-red-100/90">{{ $message }}</p> @enderror
-                            </div>
-                        </div>
-                    </div>
-
-                    <button
-                        class="w-full rounded-xl bg-blue-600/85 px-5 py-3 text-sm font-semibold shadow-lg shadow-blue-900/25 hover:bg-blue-500/85">
-                        Buat Akun User
-                    </button>
-
-                    <div class="text-center text-xs text-white/55">
-                        Dengan membuat user, sistem akan menyimpan <span class="font-semibold text-white/75">created_by</span> admin yang login.
-                    </div>
-                </form>
-            </div>
-
-            <!-- INFO CARD -->
-            <div class="space-y-5">
-                <div class="rounded-[26px] border border-white/20 bg-white/10 p-5 backdrop-blur-2xl sm:p-6">
-                    <div class="text-sm font-semibold">Akan dibuat oleh</div>
-                    <div class="mt-3 rounded-2xl border border-white/15 bg-white/10 p-4">
-                        <div class="flex items-start justify-between gap-3">
-                            <div>
-                                <div class="text-sm font-semibold">{{ auth()->user()->name }}</div>
-                                <div class="text-xs text-white/70">{{ auth()->user()->email }}</div>
-                            </div>
-                            <span class="rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs text-white/70">
-                                admin
-                            </span>
-                        </div>
-
-                        <div class="mt-3 text-xs text-white/70">
-                            Saat user dibuat, sistem menyimpan <span class="font-semibold">created_by</span> dari admin ini.
-                        </div>
-                    </div>
-                </div>
-
-                <div class="rounded-[26px] border border-white/20 bg-white/10 p-5 backdrop-blur-2xl sm:p-6">
-                    <div class="text-sm font-semibold">Catatan</div>
-                    <ul class="mt-3 space-y-2 text-sm text-white/70">
-                        <li>• Role dipilih dari form (Kasir / Kitchen / Pegawai)</li>
-                        <li>• Email harus unik</li>
-                        <li>• Password disimpan terenkripsi</li>
-                        <li>• Jika user lupa password, admin bisa reset melalui fitur edit user</li>
-                    </ul>
-
-                    <div class="mt-4 rounded-2xl border border-white/15 bg-white/5 p-4 text-xs text-white/65">
-                        <div class="font-semibold text-white/80">Tips</div>
-                        <div class="mt-1">
-                            Gunakan email asli untuk user internal. Jangan gunakan role <span class="font-semibold">guest</span> untuk user operasional.
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-        </div>
-
-        <script>
-            (function () {
-                // Sinkronisasi input yang "bagus" (di luar form) ke hidden input (yang dikirim ke server)
-                const nameInput = document.querySelector('input[placeholder="Nama user"]');
-                const emailInput = document.querySelector('input[placeholder="user@example.com"]');
-                const roleRadios = document.querySelectorAll('input[name="role"][type="radio"]');
-
-                const hiddenName = document.getElementById('hidden_name');
-                const hiddenEmail = document.getElementById('hidden_email');
-                const hiddenRole = document.getElementById('hidden_role');
-
-                if (nameInput && hiddenName) {
-                    nameInput.addEventListener('input', () => hiddenName.value = nameInput.value);
-                    // init
-                    hiddenName.value = nameInput.value || hiddenName.value || '';
-                }
-
-                if (emailInput && hiddenEmail) {
-                    emailInput.addEventListener('input', () => hiddenEmail.value = emailInput.value);
-                    // init
-                    hiddenEmail.value = emailInput.value || hiddenEmail.value || '';
-                }
-
-                if (roleRadios && hiddenRole) {
-                    roleRadios.forEach(r => {
-                        r.addEventListener('change', () => {
-                            if (r.checked) hiddenRole.value = r.value;
-                        });
-                        if (r.checked) hiddenRole.value = r.value;
-                    });
-                }
-
-                // Toggle password visibility
-                function setupToggle(inputId, btnId, eyeOpenId, eyeClosedId) {
-                    const input = document.getElementById(inputId);
-                    const btn = document.getElementById(btnId);
-                    const eyeOpen = document.getElementById(eyeOpenId);
-                    const eyeClosed = document.getElementById(eyeClosedId);
-                    if (!input || !btn || !eyeOpen || !eyeClosed) return;
-
-                    btn.addEventListener('click', () => {
-                        const isPassword = input.type === 'password';
-                        input.type = isPassword ? 'text' : 'password';
-                        eyeOpen.classList.toggle('hidden', isPassword);
-                        eyeClosed.classList.toggle('hidden', !isPassword);
-                    });
-                }
-
-                setupToggle('password', 'togglePassword', 'eyeOpen', 'eyeClosed');
-                setupToggle('password_confirmation', 'togglePasswordConfirm', 'eyeOpen2', 'eyeClosed2');
-            })();
-        </script>
+  <!-- HEADER -->
+  <div class="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between mb-8">
+    <div class="flex items-center gap-4">
+      <button id="openMobileSidebar" type="button"
+        class="inline-flex lg:hidden items-center justify-center w-10 h-10 rounded-xl border border-white/10 bg-white/5 text-white/70 hover:bg-white/10 transition-all">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
+        </svg>
+      </button>
+      <div>
+        <h1 class="text-3xl font-bold text-gold-gradient">Buat User</h1>
+        <p class="text-sm text-white/40 font-medium italic">Menambahkan personil operasional <span class="text-gold-primary font-bold not-italic">baru ke sistem.</span></p>
+      </div>
     </div>
+
+    <a href="{{ route('admin.cashiers.index') }}"
+      class="flex items-center gap-2 rounded-2xl bg-white/5 border border-white/10 px-6 py-3.5 text-xs font-black text-white uppercase tracking-widest hover:bg-white/10 transition-all active:scale-95">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+      </svg>
+      Kembali
+    </a>
+  </div>
+
+  <div class="grid grid-cols-1 gap-8 lg:grid-cols-[1.3fr_0.7fr]">
+    <!-- LEFT: FORM -->
+    <div class="glass-panel p-8 sm:p-10 rounded-[2.5rem] relative overflow-hidden h-fit">
+        <div class="absolute -top-10 -right-10 w-64 h-64 bg-gold-primary/5 blur-[100px] rounded-full"></div>
+        
+        <div class="relative z-10 space-y-10">
+            <!-- SECTION 1: KREDENSIAL -->
+            <div class="space-y-6">
+                <div class="flex items-center gap-3">
+                   <div class="w-8 h-8 rounded-lg bg-gold-primary/10 flex items-center justify-center text-gold-primary border border-gold-primary/20">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
+                   </div>
+                   <h3 class="text-[11px] font-black text-white uppercase tracking-[0.2em]">Data Akun & Kredensial</h3>
+                </div>
+
+                <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                    <div class="space-y-2">
+                        <label class="text-[9px] uppercase tracking-widest text-white/40 font-black ml-1">Nama Lengkap</label>
+                        <input type="text" id="visible_name" value="{{ old('name') }}" placeholder="Masukkan nama..."
+                            class="w-full rounded-xl border border-white/5 bg-white/[0.03] px-4 py-3.5 text-sm text-white outline-none placeholder:text-white/20 focus:border-gold-primary/30 transition-all">
+                        @error('name') <p class="text-[10px] text-red-400 italic font-medium ml-1 mt-1">{{ $message }}</p> @enderror
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-[9px] uppercase tracking-widest text-white/40 font-black ml-1">Email (Unik)</label>
+                        <input type="email" id="visible_email" value="{{ old('email') }}" placeholder="user@example.com"
+                            class="w-full rounded-xl border border-white/5 bg-white/[0.03] px-4 py-3.5 text-sm text-white outline-none placeholder:text-white/20 focus:border-gold-primary/30 transition-all">
+                        @error('email') <p class="text-[10px] text-red-400 italic font-medium ml-1 mt-1">{{ $message }}</p> @enderror
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION 2: ROLE -->
+            <div class="space-y-6">
+                <div class="flex items-center gap-3">
+                   <div class="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-400 border border-blue-500/20">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                      </svg>
+                   </div>
+                   <h3 class="text-[11px] font-black text-white uppercase tracking-[0.2em]">Pilih Hak Akses (Role)</h3>
+                </div>
+
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                    <label class="relative group cursor-pointer">
+                        <input type="radio" name="role_radio" value="kasir" class="peer sr-only" {{ old('role', 'kasir') === 'kasir' ? 'checked' : '' }}>
+                        <div class="p-4 rounded-2xl border border-white/5 bg-white/[0.02] text-center transition-all peer-checked:border-gold-primary peer-checked:bg-gold-primary/[0.05] group-hover:bg-white/[0.05]">
+                           <div class="text-2xl mb-2 grayscale group-hover:grayscale-0 peer-checked:grayscale-0 transition-all">🧾</div>
+                           <div class="text-[10px] font-black text-white/40 uppercase tracking-widest peer-checked:text-gold-primary">Kasir</div>
+                           <div class="text-[8px] text-white/20 italic mt-1">Transaksi & Bayar</div>
+                        </div>
+                    </label>
+
+                    <label class="relative group cursor-pointer">
+                        <input type="radio" name="role_radio" value="kitchen" class="peer sr-only" {{ old('role') === 'kitchen' ? 'checked' : '' }}>
+                        <div class="p-4 rounded-2xl border border-white/5 bg-white/[0.02] text-center transition-all peer-checked:border-emerald-500 peer-checked:bg-emerald-500/[0.05] group-hover:bg-white/[0.05]">
+                           <div class="text-2xl mb-2 grayscale group-hover:grayscale-0 peer-checked:grayscale-0 transition-all">🍳</div>
+                           <div class="text-[10px] font-black text-white/40 uppercase tracking-widest peer-checked:text-emerald-500">Kitchen</div>
+                           <div class="text-[8px] text-white/20 italic mt-1">Proses Menu</div>
+                        </div>
+                    </label>
+
+                    <label class="relative group cursor-pointer">
+                        <input type="radio" name="role_radio" value="pegawai" class="peer sr-only" {{ old('role') === 'pegawai' ? 'checked' : '' }}>
+                        <div class="p-4 rounded-2xl border border-white/5 bg-white/[0.02] text-center transition-all peer-checked:border-blue-500 peer-checked:bg-blue-500/[0.05] group-hover:bg-white/[0.05]">
+                           <div class="text-2xl mb-2 grayscale group-hover:grayscale-0 peer-checked:grayscale-0 transition-all">🧑‍💼</div>
+                           <div class="text-[10px] font-black text-white/40 uppercase tracking-widest peer-checked:text-blue-500">Pegawai</div>
+                           <div class="text-[8px] text-white/20 italic mt-1">Absensi Saja</div>
+                        </div>
+                    </label>
+                </div>
+                @error('role') <p class="text-[10px] text-red-400 italic font-medium ml-1 mt-1">{{ $message }}</p> @enderror
+            </div>
+
+            <!-- ACTUAL FORM -->
+            <form method="POST" action="{{ route('admin.cashiers.store') }}" class="space-y-10">
+                @csrf
+                <input type="hidden" name="name" id="hidden_name" value="{{ old('name') }}">
+                <input type="hidden" name="email" id="hidden_email" value="{{ old('email') }}">
+                <input type="hidden" name="role" id="hidden_role" value="{{ old('role', 'kasir') }}">
+
+                <!-- PASSWORD SECTION -->
+                <div class="space-y-6">
+                    <div class="flex items-center gap-3">
+                       <div class="w-8 h-8 rounded-lg bg-red-500/10 flex items-center justify-center text-red-400 border border-red-500/20">
+                          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                          </svg>
+                       </div>
+                       <h3 class="text-[11px] font-black text-white uppercase tracking-[0.2em]">Keamanan (Password)</h3>
+                    </div>
+
+                    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                        <div class="space-y-2">
+                            <label class="text-[9px] uppercase tracking-widest text-white/40 font-black ml-1">Password Baru</label>
+                            <input type="password" name="password" placeholder="Min. 6 karakter"
+                                class="w-full rounded-xl border border-white/5 bg-white/[0.03] px-4 py-3.5 text-sm text-white outline-none focus:border-gold-primary/30 transition-all">
+                            @error('password') <p class="text-[10px] text-red-400 italic font-medium ml-1 mt-1">{{ $message }}</p> @enderror
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-[9px] uppercase tracking-widest text-white/40 font-black ml-1">Ulangi Password</label>
+                            <input type="password" name="password_confirmation" placeholder="Ketik ulang..."
+                                class="w-full rounded-xl border border-white/5 bg-white/[0.03] px-4 py-3.5 text-sm text-white outline-none focus:border-gold-primary/30 transition-all">
+                        </div>
+                    </div>
+                </div>
+
+                <button class="w-full rounded-2xl bg-gradient-to-r from-gold-primary via-gold-primary to-gold-dark py-5 text-sm font-black text-obsidian-950 uppercase tracking-[0.3em] shadow-2xl shadow-gold-primary/20 hover:shadow-[0_0_30px_rgba(212,175,55,0.4)] hover:scale-[1.01] transition-all active:scale-[0.98] border border-gold-light/20">
+                    Daftarkan Akun User
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- RIGHT: INFO & CREATOR -->
+    <div class="space-y-6">
+        <div class="glass-panel p-8 rounded-[2.5rem] relative overflow-hidden">
+            <div class="text-[10px] font-black text-white/20 uppercase tracking-widest mb-6">Penanggung Jawab</div>
+            <div class="p-6 rounded-2xl bg-white/[0.02] border border-white/5 flex items-center gap-4">
+               <div class="w-12 h-12 rounded-xl bg-gold-primary/10 flex items-center justify-center text-gold-primary border border-gold-primary/20">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.99 7.99 0 0120 13a7.99 7.99 0 01-2.343 5.657z" />
+                  </svg>
+               </div>
+               <div>
+                  <div class="text-sm font-bold text-white">{{ auth()->user()->name }}</div>
+                  <div class="text-[10px] text-white/30 italic uppercase tracking-tighter">Current Admin</div>
+               </div>
+            </div>
+            <p class="mt-4 text-[10px] text-white/30 italic text-center">Setiap pembuatan user akan diaudit & dicatat sebagai buatan Anda.</p>
+        </div>
+
+        <div class="premium-card p-8 border-white/5 bg-white/[0.02] space-y-6">
+            <h4 class="text-[11px] font-black text-white uppercase tracking-[0.2em]">Panduan Cepat</h4>
+            <ul class="space-y-4">
+               <li class="flex items-start gap-3">
+                  <span class="w-5 h-5 rounded-md bg-white/5 border border-white/10 flex items-center justify-center text-[10px] text-gold-primary font-black shrink-0">1</span>
+                  <p class="text-[11px] text-white/40 leading-relaxed italic"><span class="text-white font-medium not-italic">Email</span> harus unik dan belum pernah terdaftar di sistem.</p>
+               </li>
+               <li class="flex items-start gap-3">
+                  <span class="w-5 h-5 rounded-md bg-white/5 border border-white/10 flex items-center justify-center text-[10px] text-gold-primary font-black shrink-0">2</span>
+                  <p class="text-[11px] text-white/40 leading-relaxed italic"><span class="text-white font-medium not-italic">Role</span> menentukan fitur apa saja yang bisa diakses user.</p>
+               </li>
+               <li class="flex items-start gap-3">
+                  <span class="w-5 h-5 rounded-md bg-white/5 border border-white/10 flex items-center justify-center text-[10px] text-gold-primary font-black shrink-0">3</span>
+                  <p class="text-[11px] text-white/40 leading-relaxed italic"><span class="text-white font-medium not-italic">Keamanan</span>: Gunakan minimal 6 karakter kombinasi yang kuat.</p>
+               </li>
+            </ul>
+        </div>
+    </div>
+  </div>
+
+  <script>
+      (function () {
+          const visibleName = document.getElementById('visible_name');
+          const visibleEmail = document.getElementById('visible_email');
+          const roleRadios = document.querySelectorAll('input[name="role_radio"]');
+
+          const hiddenName = document.getElementById('hidden_name');
+          const hiddenEmail = document.getElementById('hidden_email');
+          const hiddenRole = document.getElementById('hidden_role');
+
+          function sync() {
+              if(visibleName && hiddenName) hiddenName.value = visibleName.value;
+              if(visibleEmail && hiddenEmail) hiddenEmail.value = visibleEmail.value;
+          }
+
+          visibleName.addEventListener('input', sync);
+          visibleEmail.addEventListener('input', sync);
+          
+          roleRadios.forEach(r => {
+              r.addEventListener('change', () => {
+                  if(r.checked) hiddenRole.value = r.value;
+              });
+              if(r.checked) hiddenRole.value = r.value;
+          });
+
+          // Initial sync
+          sync();
+      })();
+  </script>
 @endsection

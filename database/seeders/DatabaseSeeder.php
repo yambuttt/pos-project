@@ -16,7 +16,6 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call(UsersRoleSeeder::class);
-        $this->call(DummyPurchaseSeeder::class);
         $this->call(\Database\Seeders\ShiftSeeder::class);
     }
 }

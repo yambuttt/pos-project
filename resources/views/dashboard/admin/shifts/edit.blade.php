@@ -1,237 +1,269 @@
 @extends('layouts.admin')
-@section('title', 'Edit Shift Pegawai')
+@section('title', 'Konfigurasi Shift Pegawai')
 
 @section('body')
-  <div class="mx-auto w-full max-w-6xl">
-    <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+  <!-- HEADER -->
+  <div class="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between mb-8">
+    <div class="flex items-center gap-4">
+      <button id="openMobileSidebar" type="button"
+        class="inline-flex lg:hidden items-center justify-center w-10 h-10 rounded-xl border border-white/10 bg-white/5 text-white/70 hover:bg-white/10 transition-all">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
+        </svg>
+      </button>
       <div>
-        <div class="text-lg font-semibold text-white">Edit Shift Pegawai</div>
-        <div class="mt-1 text-sm text-white/60">{{ $user->name }} • {{ $user->email }}</div>
+        <h1 class="text-3xl font-bold text-gold-gradient">Konfigurasi Shift</h1>
+        <p class="text-sm text-white/40 font-medium italic">Personil: <span class="text-gold-primary font-bold not-italic">{{ $user->name }}</span> <span class="mx-2 text-white/10">•</span> {{ $user->email }}</p>
       </div>
-
-      <a href="{{ route('admin.shifts.index') }}"
-         class="rounded-xl border border-yellow-500/20 bg-white/[0.04] px-4 py-2 text-sm text-yellow-400 hover:bg-white/[0.08]">
-        ← Kembali
-      </a>
     </div>
 
-    @if (session('ok'))
-      <div class="mt-4 rounded-2xl border border-emerald-400/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100">
-        {{ session('ok') }}
+    <a href="{{ route('admin.shifts.index') }}"
+      class="flex items-center gap-2 rounded-2xl bg-white/5 border border-white/10 px-6 py-3.5 text-xs font-black text-white uppercase tracking-widest hover:bg-white/10 transition-all active:scale-95">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+      </svg>
+      Kembali ke Daftar
+    </a>
+  </div>
+
+  @if (session('ok'))
+    <div class="mb-8 animate-fade-in rounded-2xl border border-green-500/20 bg-green-500/10 px-6 py-4 flex items-center gap-3 backdrop-blur-xl">
+      <div class="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center text-green-500">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+        </svg>
       </div>
-    @endif
-    @if (session('error'))
-      <div class="mt-4 rounded-2xl border border-red-400/20 bg-red-500/10 px-4 py-3 text-sm text-red-100">
-        {{ session('error') }}
-      </div>
-    @endif
+      <p class="text-sm font-bold text-green-100">{{ session('ok') }}</p>
+    </div>
+  @endif
 
-    {{-- 2 COLUMN LAYOUT --}}
-    <div class="mt-6 grid grid-cols-1 gap-5 lg:grid-cols-[1.2fr_.8fr]">
-      {{-- LEFT: SHIFT SETTINGS --}}
-      <div class="rounded-[26px] border border-white/20 bg-white/10 p-5 backdrop-blur-2xl sm:p-7">
-        <form method="POST" action="{{ route('admin.shifts.update', $user) }}" class="space-y-5">
-          @csrf
-          @method('PUT')
+  <div class="grid grid-cols-1 gap-10 lg:grid-cols-[1.2fr_.8fr] items-start">
+    <!-- LEFT: SHIFT SCHEME SETTINGS -->
+    <div class="glass-panel p-8 sm:p-10 rounded-[3rem] relative overflow-hidden">
+        <div class="absolute -top-10 -right-10 w-40 h-40 bg-gold-primary/5 blur-3xl rounded-full"></div>
+        
+        <form method="POST" action="{{ route('admin.shifts.update', $user) }}" class="relative z-10 space-y-10">
+           @csrf
+           @method('PUT')
 
-          <div>
-            <label class="text-sm text-white/80">Skema Shift</label>
-            <select id="shift_scheme" name="shift_scheme"
-              class="mt-2 w-full rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm outline-none focus:border-white/40">
-              <option value="fixed" {{ old('shift_scheme', $user->shift_scheme ?? 'fixed') === 'fixed' ? 'selected' : '' }}>
-                Fixed (tetap)
-              </option>
-              <option value="rotation" {{ old('shift_scheme', $user->shift_scheme ?? 'fixed') === 'rotation' ? 'selected' : '' }}>
-                Rotation (ABAB / Mingguan)
-              </option>
-            </select>
-          </div>
-
-          <div>
-            <label class="text-sm text-white/80">Default Shift (fallback)</label>
-            <select name="default_shift_id"
-              class="mt-2 w-full rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm outline-none focus:border-white/40">
-              <option value="">-</option>
-              @foreach($shifts as $s)
-                <option value="{{ $s->id }}" {{ (string) old('default_shift_id', $user->default_shift_id) === (string) $s->id ? 'selected' : '' }}>
-                  {{ $s->name }}
-                </option>
-              @endforeach
-            </select>
-            <div class="mt-2 text-xs text-white/60">
-              Dipakai jika tidak ada rotation/override untuk hari itu.
-            </div>
-          </div>
-
-          {{-- Rotation box --}}
-          @php
-            $scheme = old('shift_scheme', $user->shift_scheme ?? 'fixed');
-            $rotType = old('rotation_type', $rotation?->rotation_type);
-            $rotStart = old('rotation_start_date', $rotation?->start_date?->toDateString());
-            $rotFirst = old('rotation_first_shift_id', $rotation?->first_shift_id);
-            $weekStart = old('rotation_week_starts_on', $rotation?->week_starts_on ?? 'monday');
-          @endphp
-
-          <div id="rotationBox"
-            class="rounded-2xl border border-white/15 bg-white/5 p-5 {{ $scheme === 'rotation' ? '' : 'hidden' }}">
-            <div class="text-sm font-semibold text-white">Rotation Settings</div>
-            <div class="mt-1 text-xs text-white/70">
-              Pilih pola rotasi. Override tanggal tertentu tetap bisa dibuat di kanan.
-            </div>
-
-            <div class="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <div>
-                <label class="text-sm text-white/80">Tipe Rotation</label>
-                <select name="rotation_type"
-                  class="mt-2 w-full rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm outline-none focus:border-white/40">
-                  <option value="">- pilih -</option>
-                  <option value="daily_alternate" {{ $rotType === 'daily_alternate' ? 'selected' : '' }}>
-                    Selang-seling harian (A B A B)
-                  </option>
-                  <option value="weekly_alternate" {{ $rotType === 'weekly_alternate' ? 'selected' : '' }}>
-                    Seminggu A, seminggu B
-                  </option>
-                </select>
+           <div class="space-y-6">
+              <div class="flex items-center gap-3">
+                 <div class="w-2 h-2 rounded-full bg-gold-primary shadow-lg shadow-gold-primary/20"></div>
+                 <h3 class="text-xs font-black text-white uppercase tracking-[0.3em]">Core Scheduling</h3>
               </div>
 
-              <div>
-                <label class="text-sm text-white/80">Tanggal Mulai</label>
-                <input type="date" name="rotation_start_date" value="{{ $rotStart }}"
-                  class="mt-2 w-full rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm outline-none focus:border-white/40" />
-              </div>
-
-              <div>
-                <label class="text-sm text-white/80">Shift Awal</label>
-                <select name="rotation_first_shift_id"
-                  class="mt-2 w-full rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm outline-none focus:border-white/40">
-                  <option value="">- pilih -</option>
-                  @foreach($shifts as $s)
-                    <option value="{{ $s->id }}" {{ (string) $rotFirst === (string) $s->id ? 'selected' : '' }}>
-                      {{ $s->name }}
-                    </option>
-                  @endforeach
-                </select>
-              </div>
-
-              <div>
-                <label class="text-sm text-white/80">Patokan minggu mulai</label>
-                <select name="rotation_week_starts_on"
-                  class="mt-2 w-full rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm outline-none focus:border-white/40">
-                  <option value="monday" {{ $weekStart === 'monday' ? 'selected' : '' }}>Senin</option>
-                  <option value="sunday" {{ $weekStart === 'sunday' ? 'selected' : '' }}>Minggu</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          <button class="w-full rounded-xl bg-yellow-500 px-5 py-3 text-sm font-semibold text-black hover:bg-yellow-400">
-            Simpan Setting Shift
-          </button>
-        </form>
-      </div>
-
-      {{-- RIGHT: OVERRIDES --}}
-      <div class="space-y-5">
-        <div class="rounded-[26px] border border-white/20 bg-white/10 p-5 backdrop-blur-2xl sm:p-6">
-          <div class="text-sm font-semibold">Override Shift (Tukeran / Khusus)</div>
-          <div class="mt-1 text-xs text-white/70">
-            Override menang atas fixed/rotation untuk tanggal tertentu.
-          </div>
-
-          <form method="POST" action="{{ route('admin.shifts.override.store', $user) }}" class="mt-4 space-y-3">
-            @csrf
-
-            <div>
-              <label class="text-sm text-white/80">Tanggal</label>
-              <input type="date" name="date" value="{{ old('date') }}"
-                class="mt-2 w-full rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm outline-none focus:border-white/40" />
-            </div>
-
-            <div>
-              <label class="text-sm text-white/80">Shift</label>
-              <select name="shift_id"
-                class="mt-2 w-full rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm outline-none focus:border-white/40">
-                @foreach($shifts as $s)
-                  <option value="{{ $s->id }}">{{ $s->name }}</option>
-                @endforeach
-              </select>
-            </div>
-
-            <div>
-              <label class="text-sm text-white/80">Alasan (opsional)</label>
-              <input name="reason" value="{{ old('reason') }}"
-                class="mt-2 w-full rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm outline-none placeholder:text-white/40 focus:border-white/40"
-                placeholder="Contoh: Tukeran shift / kebutuhan operasional" />
-            </div>
-
-            <button class="w-full rounded-xl border border-white/15 bg-white/[0.04] px-4 py-3 text-sm font-semibold text-white/85 hover:bg-white/[0.08]">
-              Simpan Override
-            </button>
-          </form>
-        </div>
-
-        <div class="rounded-[26px] border border-white/20 bg-white/10 p-5 backdrop-blur-2xl sm:p-6">
-          <div class="text-sm font-semibold">Riwayat Override (Terbaru)</div>
-          <div class="mt-4 space-y-3">
-            @forelse($overrides as $ov)
-              <div class="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-                <div class="flex items-start justify-between gap-3">
-                  <div class="min-w-0">
-                    <div class="text-sm font-semibold text-white">{{ $ov->date?->format('d M Y') }}</div>
-                    <div class="mt-1 text-xs text-white/70">
-                      Shift: <span class="text-white/85">{{ $ov->shift?->name ?? '-' }}</span>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                 <div class="space-y-3">
+                    <label class="text-[10px] font-black text-white/20 uppercase tracking-widest ml-1">System Scheme</label>
+                    <div class="relative">
+                       <select id="shift_scheme" name="shift_scheme" class="w-full rounded-2xl bg-white/5 border border-white/10 px-5 py-4 text-xs font-bold text-white outline-none focus:border-gold-primary/30 transition-all appearance-none pr-10">
+                          <option value="fixed" {{ old('shift_scheme', $user->shift_scheme ?? 'fixed') === 'fixed' ? 'selected' : '' }} class="bg-obsidian-900">Fixed Pattern (Statis)</option>
+                          <option value="rotation" {{ old('shift_scheme', $user->shift_scheme ?? 'fixed') === 'rotation' ? 'selected' : '' }} class="bg-obsidian-900">Dynamic Rotation (ABAB)</option>
+                       </select>
+                       <div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-white/20">
+                          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                          </svg>
+                       </div>
                     </div>
-                    <div class="mt-1 text-xs text-white/60">{{ $ov->reason ?? '-' }}</div>
-                  </div>
+                 </div>
 
-                  <form method="POST" action="{{ route('admin.shifts.override.delete', $ov) }}">
-                    @csrf
-                    @method('DELETE')
-                    <button class="rounded-xl border border-white/15 bg-white/[0.04] px-3 py-2 text-xs text-white/85 hover:bg-white/[0.08]">
-                      Hapus
-                    </button>
-                  </form>
-                </div>
+                 <div class="space-y-3">
+                    <label class="text-[10px] font-black text-white/20 uppercase tracking-widest ml-1">Fallback Allocation</label>
+                    <div class="relative">
+                       <select name="default_shift_id" class="w-full rounded-2xl bg-white/5 border border-white/10 px-5 py-4 text-xs font-bold text-white outline-none focus:border-gold-primary/30 transition-all appearance-none pr-10">
+                          <option value="" class="bg-obsidian-900">- Select Shift -</option>
+                          @foreach($shifts as $s)
+                             <option value="{{ $s->id }}" {{ (string) old('default_shift_id', $user->default_shift_id) === (string) $s->id ? 'selected' : '' }} class="bg-obsidian-900">{{ $s->name }}</option>
+                          @endforeach
+                       </select>
+                       <div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-white/20">
+                          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                          </svg>
+                       </div>
+                    </div>
+                 </div>
               </div>
-            @empty
-              <div class="text-sm text-white/60">Belum ada override.</div>
-            @endforelse
-          </div>
-        </div>
-      </div>
+           </div>
+
+           <!-- ROTATION SETTINGS -->
+           @php
+             $scheme = old('shift_scheme', $user->shift_scheme ?? 'fixed');
+             $rotType = old('rotation_type', $rotation?->rotation_type);
+             $rotStart = old('rotation_start_date', $rotation?->start_date?->toDateString());
+             $rotFirst = old('rotation_first_shift_id', $rotation?->first_shift_id);
+             $weekStart = old('rotation_week_starts_on', $rotation?->week_starts_on ?? 'monday');
+           @endphp
+
+           <div id="rotationBox" class="p-8 rounded-[2.5rem] bg-black/40 border border-white/5 space-y-8 {{ $scheme === 'rotation' ? '' : 'hidden' }}">
+              <div class="flex items-center gap-3">
+                 <div class="w-8 h-8 rounded-xl bg-gold-primary/10 flex items-center justify-center text-gold-primary border border-gold-primary/20">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                 </div>
+                 <h3 class="text-xs font-black text-white uppercase tracking-[0.2em]">Rotation Logic</h3>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                 <div class="space-y-3">
+                    <label class="text-[10px] font-black text-white/20 uppercase tracking-widest ml-1">Rotation Type</label>
+                    <select name="rotation_type" class="w-full rounded-2xl bg-white/5 border border-white/10 px-5 py-4 text-xs font-bold text-white outline-none focus:border-gold-primary/30 transition-all appearance-none pr-10">
+                       <option value="" class="bg-obsidian-900">- Select Mode -</option>
+                       <option value="daily_alternate" {{ $rotType === 'daily_alternate' ? 'selected' : '' }} class="bg-obsidian-900">Daily Alternate (A B A B)</option>
+                       <option value="weekly_alternate" {{ $rotType === 'weekly_alternate' ? 'selected' : '' }} class="bg-obsidian-900">Weekly Flip (7A -> 7B)</option>
+                    </select>
+                 </div>
+                 <div class="space-y-3">
+                    <label class="text-[10px] font-black text-white/20 uppercase tracking-widest ml-1">Cycle Starts From</label>
+                    <input type="date" name="rotation_start_date" value="{{ $rotStart }}" class="w-full rounded-2xl bg-white/5 border border-white/10 px-5 py-4 text-xs font-bold text-white outline-none focus:border-gold-primary/30 transition-all">
+                 </div>
+                 <div class="space-y-3">
+                    <label class="text-[10px] font-black text-white/20 uppercase tracking-widest ml-1">Initial Primary Shift (A)</label>
+                    <select name="rotation_first_shift_id" class="w-full rounded-2xl bg-white/5 border border-white/10 px-5 py-4 text-xs font-bold text-white outline-none focus:border-gold-primary/30 transition-all appearance-none pr-10">
+                       <option value="" class="bg-obsidian-900">- Select First Shift -</option>
+                       @foreach($shifts as $s)
+                          <option value="{{ $s->id }}" {{ (string) $rotFirst === (string) $s->id ? 'selected' : '' }} class="bg-obsidian-900">{{ $s->name }}</option>
+                       @endforeach
+                    </select>
+                 </div>
+                 <div class="space-y-3">
+                    <label class="text-[10px] font-black text-white/20 uppercase tracking-widest ml-1">Week Anchor</label>
+                    <select name="rotation_week_starts_on" class="w-full rounded-2xl bg-white/5 border border-white/10 px-5 py-4 text-xs font-bold text-white outline-none focus:border-gold-primary/30 transition-all appearance-none pr-10">
+                       <option value="monday" {{ $weekStart === 'monday' ? 'selected' : '' }} class="bg-obsidian-900">Monday (Senin)</option>
+                       <option value="sunday" {{ $weekStart === 'sunday' ? 'selected' : '' }} class="bg-obsidian-900">Sunday (Minggu)</option>
+                    </select>
+                 </div>
+              </div>
+           </div>
+
+           <button class="w-full py-5 rounded-3xl bg-gradient-to-r from-gold-primary to-gold-dark text-xs font-black text-obsidian-950 uppercase tracking-[0.3em] shadow-2xl shadow-gold-primary/20 hover:scale-[1.02] active:scale-95 transition-all">
+              Update Configuration
+           </button>
+        </form>
     </div>
-    {{-- END GRID --}}
 
-    {{-- FULL WIDTH CALENDAR --}}
-    <div class="mt-6 rounded-[26px] border border-white/20 bg-white/10 p-5 backdrop-blur-2xl sm:p-7">
-      <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <div class="text-sm font-semibold">Kalender Shift</div>
-          <div class="mt-1 text-xs text-white/70">Shift harian + status (Hadir/Alpha/Cuti/Sakit). OVR = Override.</div>
+    <!-- RIGHT: OVERRIDES -->
+    <div class="space-y-10">
+        <!-- ADD OVERRIDE -->
+        <div class="glass-panel p-8 rounded-[3rem] border-white/5 relative overflow-hidden">
+            <div class="absolute -top-10 -right-10 w-24 h-24 bg-gold-primary/5 blur-2xl rounded-full"></div>
+            
+            <div class="relative z-10 space-y-6">
+                <div class="flex items-center gap-3">
+                   <div class="w-8 h-8 rounded-xl bg-gold-primary/10 flex items-center justify-center text-gold-primary border border-gold-primary/20">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                   </div>
+                   <h3 class="text-xs font-black text-white uppercase tracking-[0.2em]">Manual Override</h3>
+                </div>
+
+                <form method="POST" action="{{ route('admin.shifts.override.store', $user) }}" class="space-y-6">
+                    @csrf
+                    <div class="grid grid-cols-2 gap-4">
+                       <div class="space-y-2">
+                          <label class="text-[8px] font-black text-white/20 uppercase tracking-widest ml-1">Target Date</label>
+                          <input type="date" name="date" value="{{ old('date') }}" class="w-full rounded-2xl bg-white/5 border border-white/10 px-4 py-3 text-xs font-bold text-white outline-none focus:border-gold-primary/30 transition-all">
+                       </div>
+                       <div class="space-y-2">
+                          <label class="text-[8px] font-black text-white/20 uppercase tracking-widest ml-1">New Shift</label>
+                          <select name="shift_id" class="w-full rounded-2xl bg-white/5 border border-white/10 px-4 py-3 text-xs font-bold text-white outline-none focus:border-gold-primary/30 transition-all appearance-none pr-8">
+                             @foreach($shifts as $s)
+                                <option value="{{ $s->id }}" class="bg-obsidian-900">{{ $s->name }}</option>
+                             @endforeach
+                          </select>
+                       </div>
+                    </div>
+                    <div class="space-y-2">
+                       <label class="text-[8px] font-black text-white/20 uppercase tracking-widest ml-1">Official Justification</label>
+                       <input name="reason" value="{{ old('reason') }}" placeholder="Ex: Tukeran Shift / Maintenance..." class="w-full rounded-2xl bg-white/5 border border-white/10 px-4 py-3 text-xs font-bold text-white placeholder:text-white/20 outline-none focus:border-gold-primary/30 transition-all">
+                    </div>
+                    <button class="w-full py-4 rounded-2xl bg-white/5 border border-white/10 text-[10px] font-black text-gold-primary uppercase tracking-[0.2em] hover:bg-gold-primary/10 active:scale-95 transition-all">
+                       Apply Override
+                    </button>
+                </form>
+            </div>
         </div>
 
-        <div class="flex flex-wrap gap-2 text-[11px] sm:text-xs">
-          <span class="rounded-full px-3 py-1 font-semibold text-black" style="background:#22c55e">Shift A (10–19)</span>
-          <span class="rounded-full px-3 py-1 font-semibold text-black" style="background:#f59e0b">Shift B (13–22)</span>
-          <span class="rounded-full px-3 py-1 font-semibold text-white" style="background:#3b82f6">HADIR</span>
-          <span class="rounded-full px-3 py-1 font-semibold text-white" style="background:#6b7280">ALPHA</span>
-          <span class="rounded-full px-3 py-1 font-semibold text-white" style="background:#a855f7">CUTI</span>
-          <span class="rounded-full px-3 py-1 font-semibold text-white" style="background:#ef4444">SAKIT</span>
-          <span class="rounded-full px-3 py-1 font-semibold text-black" style="background:#f472b6">OVR</span>
+        <!-- HISTORY OVERRIDES -->
+        <div class="glass-panel p-8 rounded-[3rem] border-white/5 relative overflow-hidden">
+            <div class="flex items-center justify-between mb-6">
+                <div class="flex items-center gap-3">
+                   <div class="w-8 h-8 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-400 border border-blue-500/20">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                   </div>
+                   <h3 class="text-xs font-black text-white uppercase tracking-[0.2em]">Recent Incidents</h3>
+                </div>
+                <span class="text-[9px] font-black text-white/20 uppercase tracking-widest">{{ count($overrides) }} OVR</span>
+            </div>
+
+            <div class="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+               @forelse($overrides as $ov)
+                  <div class="p-5 rounded-3xl bg-white/[0.02] border border-white/5 flex items-center justify-between group">
+                     <div>
+                        <div class="text-[11px] font-bold text-white">{{ $ov->date?->format('d M Y') }}</div>
+                        <div class="text-[9px] text-white/30 italic uppercase mt-0.5">{{ $ov->shift?->name ?: 'System Shift' }}</div>
+                        @if($ov->reason)
+                           <div class="text-[8px] text-gold-primary/40 font-medium mt-1 truncate max-w-[120px]">"{{ $ov->reason }}"</div>
+                        @endif
+                     </div>
+                     <form method="POST" action="{{ route('admin.shifts.override.delete', $ov) }}">
+                        @csrf
+                        @method('DELETE')
+                        <button class="p-2.5 rounded-xl bg-white/5 border border-white/10 text-white/20 hover:text-red-400 hover:border-red-500/20 active:scale-90 transition-all">
+                           <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                           </svg>
+                        </button>
+                     </form>
+                  </div>
+               @empty
+                  <div class="text-center py-10">
+                     <div class="text-[9px] font-black text-white/10 uppercase tracking-widest italic">All Scheduled as Planned</div>
+                  </div>
+               @endforelse
+            </div>
         </div>
-      </div>
-
-      <div class="mt-4 rounded-2xl border border-white/10 bg-white/[0.03] p-3">
-        <div id="shiftCalendar"></div>
-      </div>
-
-      <div id="shiftCalHint" class="mt-3 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-white/85">
-        Klik event untuk melihat detail.
-      </div>
     </div>
   </div>
 
-  {{-- Script: toggle rotation box --}}
+  <!-- FULL WIDTH CALENDAR -->
+  <div class="mt-10 glass-panel p-8 sm:p-10 rounded-[3rem] border-white/5 relative overflow-hidden">
+      <div class="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between mb-8">
+          <div>
+             <div class="flex items-center gap-3 mb-2">
+                <div class="w-8 h-8 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400 border border-emerald-500/20">
+                   <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                   </svg>
+                </div>
+                <h3 class="text-xs font-black text-white uppercase tracking-[0.2em]">Deployment Calendar</h3>
+             </div>
+             <p class="text-[10px] text-white/30 italic">Visualisasi jadwal shift harian beserta riwayat kehadiran personil.</p>
+          </div>
+
+          <div class="flex flex-wrap gap-2">
+              <span class="px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-[9px] font-black text-emerald-400 uppercase tracking-widest">Hadir</span>
+              <span class="px-3 py-1.5 rounded-xl bg-red-500/10 border border-red-500/20 text-[9px] font-black text-red-400 uppercase tracking-widest">Alpha</span>
+              <span class="px-3 py-1.5 rounded-xl bg-purple-500/10 border border-purple-500/20 text-[9px] font-black text-purple-400 uppercase tracking-widest">Cuti</span>
+              <span class="px-3 py-1.5 rounded-xl bg-blue-500/10 border border-blue-500/20 text-[9px] font-black text-blue-400 uppercase tracking-widest">Sakit</span>
+              <span class="px-3 py-1.5 rounded-xl bg-gold-primary/10 border border-gold-primary/20 text-[9px] font-black text-gold-primary uppercase tracking-widest">Override</span>
+          </div>
+      </div>
+
+      <div class="rounded-[2.5rem] bg-black/40 border border-white/5 p-6 sm:p-8">
+          <div id="shiftCalendar"></div>
+      </div>
+
+      <div id="shiftCalHint" class="mt-8 p-6 rounded-3xl bg-white/[0.02] border border-white/5 text-[11px] text-white/40 italic text-center">
+         <span class="not-italic opacity-100 font-bold text-gold-primary uppercase tracking-[0.1em] mr-2">Pro Tip:</span> Klik pada event kalender untuk melihat detail metadata absensi harian.
+      </div>
+  </div>
+
   <script>
     (function () {
       const scheme = document.getElementById('shift_scheme');
@@ -240,8 +272,12 @@
 
       function sync() {
         const v = scheme.value;
-        if (v === 'rotation') box.classList.remove('hidden');
-        else box.classList.add('hidden');
+        if (v === 'rotation') {
+            box.classList.remove('hidden');
+            box.classList.add('animate-fade-in');
+        } else {
+            box.classList.add('hidden');
+        }
       }
 
       scheme.addEventListener('change', sync);
@@ -249,49 +285,62 @@
     })();
   </script>
 
-  {{-- FullCalendar (gunakan unpkg agar tidak kena MIME block) --}}
   <link rel="stylesheet" href="https://unpkg.com/fullcalendar@6.1.15/index.global.min.css">
   <script src="https://unpkg.com/fullcalendar@6.1.15/index.global.min.js"></script>
 
   <style>
     .fc {
-      --fc-border-color: rgba(255,255,255,.10);
+      --fc-border-color: rgba(255,255,255,.05);
       --fc-page-bg-color: transparent;
       --fc-neutral-bg-color: rgba(255,255,255,.02);
-      --fc-today-bg-color: rgba(234,179,8,.10);
-      color: rgba(255,255,255,.90);
+      --fc-today-bg-color: rgba(234,179,8,.05);
+      color: rgba(255,255,255,.8);
+      font-family: inherit;
     }
-    .fc .fc-toolbar-title { font-weight: 800; color:#fff; font-size:18px; }
+    .fc .fc-toolbar-title { font-weight: 900; color:#fff; font-size:18px; text-transform: uppercase; letter-spacing: 0.1em; }
     .fc .fc-button {
-      background: rgba(255,255,255,.06);
-      border: 1px solid rgba(234,179,8,.18);
-      color: rgba(255,255,255,.9);
-      border-radius: 12px;
-      padding: 6px 10px;
+      background: rgba(255,255,255,.03) !important;
+      border: 1px solid rgba(255,255,255,.05) !important;
+      color: rgba(255,255,255,.6) !important;
+      border-radius: 12px !important;
+      font-weight: 800 !important;
+      font-size: 10px !important;
+      text-transform: uppercase !important;
+      letter-spacing: 0.1em !important;
+      padding: 8px 16px !important;
+      box-shadow: none !important;
     }
-    .fc .fc-button:hover { background: rgba(255,255,255,.10); }
+    .fc .fc-button:hover { background: rgba(255,255,255,.08) !important; color:#fff !important; }
     .fc .fc-button-primary:not(:disabled).fc-button-active {
-      background: rgba(234,179,8,.22);
-      border-color: rgba(234,179,8,.35);
+      background: rgba(234,179,8,.1) !important;
+      border-color: rgba(234,179,8,.2) !important;
+      color: #eab308 !important;
     }
-    .fc .fc-col-header-cell-cushion { color: rgba(255,255,255,.85); font-weight:700; font-size:12px; }
-    .fc .fc-daygrid-day-number { color: rgba(255,255,255,.75); font-weight:700; padding:6px; }
-
+    .fc .fc-col-header-cell-cushion { color: rgba(255,255,255,.2); font-weight:900; font-size:9px; text-transform: uppercase; letter-spacing: 0.2em; padding: 15px 0 !important; }
+    .fc .fc-daygrid-day-number { color: rgba(255,255,255,.3); font-weight:900; font-size:10px; padding:12px; }
     .fc .fc-daygrid-event {
-      border-radius: 999px;
-      padding: 3px 8px;
-      font-size: 12px;
-      font-weight: 800;
-      line-height: 1.2;
-      margin: 3px 4px;
+      border-radius: 12px !important;
+      padding: 6px 12px !important;
+      font-size: 10px !important;
+      font-weight: 900 !important;
+      letter-spacing: 0.05em !important;
+      margin: 4px 6px !important;
+      border: none !important;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     }
-    .fc .fc-daygrid-day-frame { min-height: 88px; }
-
+    .fc .fc-daygrid-day-frame { min-height: 110px; }
     .fc-pill{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .fc .fc-daygrid-more-link { font-size: 10px; font-weight: 800; color: #eab308; }
+    
     @media (max-width:640px){
-      .fc .fc-daygrid-event{ padding:2px 6px; font-size:11px; margin:2px 2px; }
-      .fc .fc-daygrid-day-frame{ min-height:72px; }
+      .fc .fc-daygrid-event{ padding:4px 8px !important; font-size:9px !important; margin:2px 4px !important; }
+      .fc .fc-daygrid-day-frame{ min-height:80px; }
+      .fc .fc-toolbar-title { font-size:14px; }
     }
+    
+    .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: rgba(255,255,255,0.02); }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.05); border-radius: 10px; }
   </style>
 
   <script>
@@ -321,20 +370,30 @@
 
         eventClick: function(info) {
           const p = info.event.extendedProps || {};
-          const date = info.event.start ? info.event.start.toLocaleDateString('id-ID') : '';
+          const date = info.event.start ? info.event.start.toLocaleDateString('id-ID', { day:'numeric', month:'long', year:'numeric' }) : '';
           const shiftName = p.shift_name || info.event.title;
           const status = p.status || '-';
-          const emoji = { HADIR:'✅', ALPHA:'❌', CUTI:'🟣', SAKIT:'🩺', SCHEDULE:'🗓️' }[status] || '🗓️';
-
-          let msg = `${emoji} ${date}\n${shiftName}\nStatus: ${status}`;
           
-          if (p.check_in_at) msg += `\nCheck-in: ${p.check_in_at}`;
-          if (p.check_out_at) msg += `\nCheck-out: ${p.check_out_at}`;
+          let meta = `<div class="flex flex-col gap-1">
+             <div class="text-gold-primary font-black uppercase tracking-widest text-[10px] mb-2">${date}</div>
+             <div class="text-white font-bold text-sm mb-1">${shiftName}</div>
+             <div class="flex items-center gap-2">
+                <span class="text-[9px] font-black text-white/20 uppercase">Status:</span>
+                <span class="text-[9px] font-black text-white uppercase">${status}</span>
+             </div>`;
           
-          if (p.status_reason) msg += `\nKeterangan: ${p.status_reason}`;
-          if (p.is_override) msg += `\nOverride: ya\nAlasan override: ${p.override_reason || '-'}`;
-
-          if (hint) hint.textContent = msg;
+          if (p.check_in_at) meta += `<div class="flex items-center gap-2"><span class="text-[9px] font-black text-white/20 uppercase">In:</span><span class="text-[9px] font-bold text-emerald-400">${p.check_in_at}</span></div>`;
+          if (p.check_out_at) meta += `<div class="flex items-center gap-2"><span class="text-[9px] font-black text-white/20 uppercase">Out:</span><span class="text-[9px] font-bold text-blue-400">${p.check_out_at}</span></div>`;
+          if (p.status_reason) meta += `<div class="mt-2 text-[9px] text-white/40 italic border-t border-white/5 pt-2">Note: ${p.status_reason}</div>`;
+          if (p.is_override) meta += `<div class="mt-1 text-[9px] text-gold-primary/60 font-black italic">! Manual Override Applied</div>`;
+          
+          meta += `</div>`;
+          
+          if (hint) {
+              hint.innerHTML = meta;
+              hint.classList.remove('text-white/40', 'italic', 'text-center');
+              hint.classList.add('text-left', 'bg-gold-primary/5', 'border-gold-primary/20');
+          }
         },
 
         eventContent: function(arg) {
@@ -350,10 +409,10 @@
 
           if (isMobile) {
             text = shortStatus ? `${shiftCode} ${shortStatus}` : `${shiftCode}`;
-            if (p.is_override) text = `OVR ${text}`;
+            if (p.is_override) text = `! ${text}`;
           }
 
-          return { html: `<div class="fc-pill">${text}</div>` };
+          return { html: `<div class="fc-pill truncate">${text}</div>` };
         },
       });
 
