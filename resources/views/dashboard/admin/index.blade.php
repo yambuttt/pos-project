@@ -3,9 +3,7 @@
 
 @section('body')
     <div class="flex items-center justify-between gap-3">
-        <button id="openMobileSidebar" type="button"
-            class="inline-flex items-center justify-center rounded-xl border border-yellow-500/20 bg-white/[0.04] px-3 py-2 text-sm text-white backdrop-blur-xl hover:bg-white/[0.08] lg:hidden"
-            title="Menu">☰</button>
+
 
         <div class="rounded-2xl border border-yellow-500/16 bg-white/[0.03] px-4 py-3 backdrop-blur-xl">
             <div class="text-xs uppercase tracking-[0.18em] text-yellow-500">Admin Panel</div>
