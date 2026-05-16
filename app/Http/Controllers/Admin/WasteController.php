@@ -16,7 +16,7 @@ class WasteController extends Controller
     public function index()
     {
         $wastes = Waste::query()
-            ->with(['creator'])
+            ->with(['creator', 'items.rawMaterial'])
             ->latest()
             ->paginate(10);
 
@@ -32,10 +32,11 @@ class WasteController extends Controller
 
         $materialsJson = $materials->map(function ($m) {
             return [
-                'id' => $m->id,
+                'id' => (int) $m->id,
                 'name' => $m->name,
                 'unit' => $m->unit,
-                'stock' => $m->stock_on_hand,
+                'stock' => (float) $m->stock_on_hand,
+                'default_cost' => (float) ($m->default_cost ?? 0),
             ];
         })->values();
 

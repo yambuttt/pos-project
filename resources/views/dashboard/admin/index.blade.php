@@ -1,193 +1,174 @@
 @extends('layouts.admin')
-@section('title', 'Dashboard Admin')
+@section('title', 'Admin Overview')
 
 @section('body')
-    <div class="flex items-center justify-between gap-3">
-
-
-        <div class="rounded-2xl border border-yellow-500/16 bg-white/[0.03] px-4 py-3 backdrop-blur-xl">
-            <div class="text-xs uppercase tracking-[0.18em] text-yellow-500">Admin Panel</div>
-            <div class="text-sm font-semibold text-white">POS Dashboard</div>
-        </div>
-
-        <div class="flex items-center gap-2 sm:gap-3">
-            <div class="hidden rounded-2xl border border-yellow-500/16 bg-white/[0.03] px-4 py-2 text-sm text-white/85 backdrop-blur-xl sm:block">
-                {{ auth()->user()->name ?? 'Admin' }} • <span class="text-white/50">{{ auth()->user()->email }}</span>
-            </div>
-            <button
-                class="rounded-xl border border-yellow-500/16 bg-white/[0.03] px-3 py-2 text-sm text-yellow-500 backdrop-blur-xl hover:bg-white/[0.08]">🔔</button>
-        </div>
-    </div>
-
     @php
         $isUp = $pctSales >= 0;
         $pctText = number_format(abs($pctSales), 1);
     @endphp
 
-    <section class="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 2xl:grid-cols-4">
-        <div class="rounded-[24px] border border-yellow-500/16 bg-[#121212]/90 p-5 backdrop-blur-xl">
-            <div class="text-xs uppercase tracking-[0.16em] text-white/50">Penjualan Hari Ini</div>
-            <div class="mt-2 text-2xl font-semibold text-white">Rp {{ number_format($omzetToday, 0, ',', '.') }}</div>
-            <div class="mt-3 text-xs {{ $isUp ? 'text-emerald-300' : 'text-rose-300' }}">
-                {{ $isUp ? '▲' : '▼' }} {{ $pctText }}% vs kemarin
+    <!-- TOP STATISTICS -->
+    <section class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4 mb-8">
+        <!-- Sales Today -->
+        <div class="glass-card p-6 rounded-[2rem] relative overflow-hidden group">
+            <div class="absolute -right-4 -top-4 w-24 h-24 bg-gold-primary/5 rounded-full blur-2xl group-hover:bg-gold-primary/10 transition-colors"></div>
+            <p class="text-white/40 text-[10px] uppercase tracking-widest mb-1 font-bold">Penjualan Hari Ini</p>
+            <h3 class="text-2xl font-bold text-gold-gradient mb-4">Rp {{ number_format($omzetToday, 0, ',', '.') }}</h3>
+            <div class="flex items-center gap-2">
+                <span class="flex items-center justify-center w-6 h-6 rounded-full {{ $isUp ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500' }}">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="{{ $isUp ? 'M5 10l7-7m0 0l7 7m-7-7v18' : 'M19 14l-7 7m0 0l-7-7m7 7V3' }}" />
+                    </svg>
+                </span>
+                <span class="text-xs {{ $isUp ? 'text-green-400' : 'text-red-400' }} font-bold">{{ $pctText }}%</span>
+                <span class="text-white/20 text-[10px]">vs Kemarin</span>
             </div>
         </div>
 
-        <div class="rounded-[24px] border border-yellow-500/16 bg-[#121212]/90 p-5 backdrop-blur-xl">
-            <div class="text-xs uppercase tracking-[0.16em] text-white/50">Cash di Laci</div>
-            <div class="mt-2 text-2xl font-semibold text-white">Rp {{ number_format($cashNet, 0, ',', '.') }}</div>
-            <div class="mt-3 text-xs text-white/55">Cash masuk − kembalian</div>
+        <!-- Cash in Drawer -->
+        <div class="glass-card p-6 rounded-[2rem] relative overflow-hidden group">
+            <div class="absolute -right-4 -top-4 w-24 h-24 bg-gold-primary/5 rounded-full blur-2xl group-hover:bg-gold-primary/10 transition-colors"></div>
+            <p class="text-white/40 text-[10px] uppercase tracking-widest mb-1 font-bold">Cash di Laci</p>
+            <h3 class="text-2xl font-bold text-white mb-4">Rp {{ number_format($cashNet, 0, ',', '.') }}</h3>
+            <p class="text-white/20 text-[10px] italic">Fisik yang seharusnya ada</p>
         </div>
 
-        <div class="rounded-[24px] border border-yellow-500/16 bg-[#121212]/90 p-5 backdrop-blur-xl">
-            <div class="text-xs uppercase tracking-[0.16em] text-white/50">QRIS Hari Ini</div>
-            <div class="mt-2 text-2xl font-semibold text-white">Rp {{ number_format($omzetQris, 0, ',', '.') }}</div>
-            <div class="mt-3 text-xs text-white/55">Non tunai</div>
+        <!-- QRIS Today -->
+        <div class="glass-card p-6 rounded-[2rem] relative overflow-hidden group">
+            <div class="absolute -right-4 -top-4 w-24 h-24 bg-gold-primary/5 rounded-full blur-2xl group-hover:bg-gold-primary/10 transition-colors"></div>
+            <p class="text-white/40 text-[10px] uppercase tracking-widest mb-1 font-bold">QRIS Hari Ini</p>
+            <h3 class="text-2xl font-bold text-white mb-4">Rp {{ number_format($omzetQris, 0, ',', '.') }}</h3>
+            <p class="text-white/20 text-[10px]">Pembayaran non-tunai</p>
         </div>
 
-        <div class="rounded-[24px] border border-yellow-500/16 bg-[#121212]/90 p-5 backdrop-blur-xl">
-            <div class="text-xs uppercase tracking-[0.16em] text-white/50">Transaksi Hari Ini</div>
-            <div class="mt-2 text-2xl font-semibold text-white">{{ number_format($trxToday) }}</div>
-            <div class="mt-3 text-xs text-white/55">
-                Kemarin: {{ number_format($trxYesterday) }} • Produk: {{ number_format($totalProducts) }}
-            </div>
+        <!-- Total Transactions -->
+        <div class="glass-card p-6 rounded-[2rem] relative overflow-hidden group">
+            <div class="absolute -right-4 -top-4 w-24 h-24 bg-gold-primary/5 rounded-full blur-2xl group-hover:bg-gold-primary/10 transition-colors"></div>
+            <p class="text-white/40 text-[10px] uppercase tracking-widest mb-1 font-bold">Transaksi Hari Ini</p>
+            <h3 class="text-2xl font-bold text-white mb-4">{{ number_format($trxToday) }} Trx</h3>
+            <p class="text-white/20 text-[10px]">Kemarin: {{ number_format($trxYesterday) }}</p>
         </div>
     </section>
 
-    <section class="mt-5 grid grid-cols-1 gap-5 2xl:grid-cols-[1.65fr_1fr]">
-        <div class="rounded-[28px] border border-yellow-500/16 bg-[#121212]/90 p-6 backdrop-blur-xl sm:p-7">
-            <div class="flex items-center justify-between">
+    <!-- CHARTS AND POPULAR -->
+    <section class="grid grid-cols-1 gap-6 lg:grid-cols-3 mb-8">
+        <!-- Sales Chart -->
+        <div class="lg:col-span-2 glass-panel p-8 rounded-[2.5rem]">
+            <div class="flex items-center justify-between mb-8">
                 <div>
-                    <div class="text-sm font-semibold text-white">Grafik Omzet</div>
-                    <div class="text-xs text-white/50">14 hari terakhir • omzet & jumlah transaksi</div>
+                    <h4 class="text-lg font-bold">Performa Penjualan</h4>
+                    <p class="text-xs text-white/40">Visualisasi omzet & frekuensi transaksi 14 hari terakhir</p>
                 </div>
-                <div class="text-xs uppercase tracking-[0.14em] text-yellow-500">Paid Only</div>
+                <div class="flex items-center gap-4">
+                    <div class="flex items-center gap-2">
+                        <span class="w-3 h-3 rounded-full bg-gold-primary"></span>
+                        <span class="text-[10px] text-white/60 font-bold uppercase tracking-widest">Omzet</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="w-3 h-3 rounded-full bg-white/40"></span>
+                        <span class="text-[10px] text-white/60 font-bold uppercase tracking-widest">Trx</span>
+                    </div>
+                </div>
             </div>
-
-            <div class="mt-4 rounded-2xl border border-yellow-500/10 bg-white/[0.02] p-4">
-                <div class="h-[280px] sm:h-[320px]">
-                    <canvas id="adminSalesChart"></canvas>
-                </div>
+            <div class="h-[320px]">
+                <canvas id="adminSalesChart"></canvas>
             </div>
         </div>
 
-        <div class="space-y-5">
-            <div class="rounded-[28px] border border-yellow-500/16 bg-[#121212]/90 p-6 backdrop-blur-xl sm:p-7">
-                <div class="text-sm font-semibold text-white">Perputaran Uang</div>
-                <div class="mt-4 space-y-3 text-sm">
-                    <div class="flex items-center justify-between">
-                        <span class="text-white/60">Omzet Cash</span>
-                        <span class="font-semibold text-white">Rp {{ number_format($omzetCash, 0, ',', '.') }}</span>
-                    </div>
-                    <div class="flex items-center justify-between">
-                        <span class="text-white/60">Omzet QRIS</span>
-                        <span class="font-semibold text-white">Rp {{ number_format($omzetQris, 0, ',', '.') }}</span>
-                    </div>
-                    <div class="flex items-center justify-between">
-                        <span class="text-white/60">Pajak Terkumpul</span>
-                        <span class="font-semibold text-white">Rp {{ number_format($taxToday, 0, ',', '.') }}</span>
-                    </div>
-                    <div class="flex items-center justify-between gap-3">
-                        <span class="text-white/60">Belum dibayar di sistem</span>
-                        <span class="text-right font-semibold text-white">{{ number_format($unpaidCount) }} • Rp {{ number_format($unpaidTotal, 0, ',', '.') }}</span>
-                    </div>
-                    <div class="flex items-center justify-between">
-                        <span class="text-white/60">Total Cash</span>
-                        <span class="font-semibold text-white">Rp {{ number_format($totalCashAll, 0, ',', '.') }}</span>
-                    </div>
-                    <div class="flex items-center justify-between">
-                        <span class="text-white/60">Total QRIS</span>
-                        <span class="font-semibold text-white">Rp {{ number_format($totalQrisAll, 0, ',', '.') }}</span>
-                    </div>
-                </div>
-
-                <div class="mt-5 rounded-2xl border border-yellow-500/10 bg-white/[0.02] p-4 text-xs leading-6 text-white/50">
-                    Cash net adalah uang fisik yang seharusnya ada di laci setelah cash masuk dikurangi kembalian.
-                </div>
-            </div>
-
-            <div class="rounded-[28px] border border-yellow-500/16 bg-[#121212]/90 p-6 backdrop-blur-xl sm:p-7">
-                <div class="text-sm font-semibold text-white">Produk Populer Hari Ini</div>
-
+        <!-- Popular Products -->
+        <div class="glass-panel p-8 rounded-[2.5rem] flex flex-col">
+            <h4 class="text-lg font-bold mb-6">Produk Populer</h4>
+            
+            <div class="flex-1 space-y-4">
                 @if($popularProduct)
-                    <div class="mt-4 rounded-2xl border border-yellow-500/12 bg-white/[0.03] p-4">
-                        <div class="flex items-center justify-between gap-3">
-                            <div>
-                                <div class="text-sm font-semibold text-white">{{ $popularProduct->product->name ?? '—' }}</div>
-                                <div class="mt-1 text-xs text-white/55">Qty: {{ number_format($popularProduct->total_qty) }}</div>
-                            </div>
-                            <div class="rounded-xl border border-yellow-500/20 bg-yellow-500/10 px-3 py-2 text-xs font-semibold text-yellow-500">
-                                #1
-                            </div>
+                    <div class="glass-card p-5 rounded-2xl border-l-4 border-l-gold-primary">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-gold-primary font-bold text-xs uppercase tracking-tighter">Terlaris #1</span>
+                            <span class="px-2 py-1 bg-gold-primary/10 text-gold-primary text-[10px] font-bold rounded-lg">Top Choice</span>
                         </div>
+                        <h5 class="font-bold text-lg mb-1">{{ $popularProduct->product->name ?? '—' }}</h5>
+                        <p class="text-white/40 text-xs">Terjual {{ number_format($popularProduct->total_qty) }} unit hari ini</p>
                     </div>
-                @else
-                    <div class="mt-4 text-sm text-white/55">Belum ada transaksi paid hari ini.</div>
                 @endif
-            </div>
-        </div>
-    </section>
 
-    <section class="mt-5 grid grid-cols-1 gap-5 2xl:grid-cols-[1.35fr_1fr]">
-        <div class="rounded-[28px] border border-yellow-500/16 bg-[#121212]/90 p-6 backdrop-blur-xl sm:p-7">
-            <div class="flex items-center justify-between">
-                <div>
-                    <div class="text-sm font-semibold text-white">Rank Produk Paling Sering Dipesan</div>
-                    <div class="text-xs text-white/50">Berdasarkan total qty hari ini</div>
+                <div class="space-y-3">
+                    <p class="text-[10px] text-white/30 uppercase tracking-widest font-bold px-2">Top Performer Lainnya</p>
+                    @foreach($topProductsToday->slice(1, 3) as $row)
+                        <div class="flex items-center gap-4 px-4 py-3 glass-card rounded-2xl hover:translate-x-1 transition-transform">
+                            <div class="w-8 h-8 rounded-xl bg-white/5 flex items-center justify-center font-bold text-white/60 text-xs">
+                                {{ $loop->iteration + 1 }}
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-sm font-bold truncate">{{ $row->product->name ?? '-' }}</p>
+                                <p class="text-[10px] text-white/40">{{ number_format($row->total_qty) }} terjual</p>
+                            </div>
+                            <p class="text-xs font-bold text-gold-primary">Rp {{ number_format((int) $row->total_subtotal, 0, ',', '.') }}</p>
+                        </div>
+                    @endforeach
                 </div>
             </div>
 
-            <div class="mt-5 overflow-x-auto rounded-2xl border border-yellow-500/10">
-                <table class="min-w-full text-left text-sm">
-                    <thead class="bg-white/[0.04] text-xs uppercase tracking-[0.14em] text-white/45">
-                        <tr>
-                            <th class="px-4 py-3">Rank</th>
-                            <th class="px-4 py-3">Produk</th>
-                            <th class="px-4 py-3">Qty</th>
-                            <th class="px-4 py-3">Omzet</th>
+            <a href="{{ route('admin.products.index') }}" class="mt-6 w-full py-3 rounded-2xl border border-white/5 text-center text-xs font-bold text-white/40 hover:text-gold-primary hover:border-gold-primary/30 transition-all">Lihat Semua Produk</a>
+        </div>
+    </section>
+
+    <!-- TABLES AND RECENT SALES -->
+    <section class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <!-- Rank Table -->
+        <div class="glass-panel p-8 rounded-[2.5rem]">
+            <h4 class="text-lg font-bold mb-6">Rank Penjualan Produk</h4>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left">
+                    <thead>
+                        <tr class="text-[10px] text-white/30 uppercase tracking-widest border-b border-white/5">
+                            <th class="pb-4 font-bold">Rank</th>
+                            <th class="pb-4 font-bold">Nama Produk</th>
+                            <th class="pb-4 font-bold text-center">Qty</th>
+                            <th class="pb-4 font-bold text-right">Total Omzet</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-yellow-500/8">
+                    <tbody class="divide-y divide-white/5">
                         @forelse($topProductsToday as $i => $row)
-                            <tr class="hover:bg-white/[0.03]">
-                                <td class="px-4 py-3 font-semibold text-yellow-500">#{{ $i + 1 }}</td>
-                                <td class="px-4 py-3 text-white">{{ $row->product->name ?? '-' }}</td>
-                                <td class="px-4 py-3 text-white/80">{{ number_format($row->total_qty) }}</td>
-                                <td class="px-4 py-3 text-white">Rp {{ number_format((int) $row->total_subtotal, 0, ',', '.') }}</td>
+                            <tr class="group hover:bg-white/[0.02] transition-colors">
+                                <td class="py-4">
+                                    <span class="w-6 h-6 rounded-lg bg-gold-primary/10 text-gold-primary text-xs font-bold flex items-center justify-center">#{{ $i + 1 }}</span>
+                                </td>
+                                <td class="py-4 font-bold text-white/80 group-hover:text-white">{{ $row->product->name ?? '-' }}</td>
+                                <td class="py-4 text-center text-white/60 font-medium">{{ number_format($row->total_qty) }}</td>
+                                <td class="py-4 text-right text-gold-primary font-bold">Rp {{ number_format((int) $row->total_subtotal, 0, ',', '.') }}</td>
                             </tr>
                         @empty
-                            <tr>
-                                <td colspan="4" class="px-4 py-4 text-sm text-white/55">Belum ada data.</td>
-                            </tr>
+                            <tr><td colspan="4" class="py-10 text-center text-white/20 italic">Belum ada data penjualan hari ini</td></tr>
                         @endforelse
                     </tbody>
                 </table>
             </div>
         </div>
 
-        <div class="rounded-[28px] border border-yellow-500/16 bg-[#121212]/90 p-6 backdrop-blur-xl sm:p-7">
-            <div class="flex items-center justify-between">
-                <div>
-                    <div class="text-sm font-semibold text-white">Penjualan Terbaru</div>
-                    <div class="text-xs text-white/50">8 transaksi terakhir</div>
-                </div>
-                <a href="{{ route('admin.sales.index') }}"
-                    class="rounded-xl border border-yellow-500/16 bg-white/[0.03] px-3 py-2 text-xs text-white/80 hover:bg-white/[0.06]">
-                    View all
-                </a>
+        <!-- Recent Transactions -->
+        <div class="glass-panel p-8 rounded-[2.5rem]">
+            <div class="flex items-center justify-between mb-6">
+                <h4 class="text-lg font-bold">Transaksi Terbaru</h4>
+                <a href="{{ route('admin.sales.index') }}" class="text-[10px] font-bold text-gold-primary uppercase tracking-widest hover:underline">View Ledger</a>
             </div>
-
-            <div class="mt-5 space-y-3">
+            
+            <div class="space-y-4">
                 @foreach($latestSales as $s)
-                    <div class="flex items-center justify-between gap-4 rounded-2xl border border-yellow-500/10 bg-white/[0.03] px-4 py-3">
-                        <div class="min-w-0">
-                            <div class="truncate text-sm font-semibold text-white">{{ $s->invoice_no ?? ('#' . $s->id) }}</div>
-                            <div class="mt-1 text-xs text-white/50">
-                                {{ $s->cashier->name ?? '-' }} • {{ $s->created_at?->diffForHumans() }} • <span class="uppercase">{{ $s->payment_method }}</span>
-                            </div>
+                    <div class="flex items-center gap-4 p-4 glass-card rounded-2xl relative overflow-hidden group">
+                        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-white/10 to-transparent flex items-center justify-center text-white/60 group-hover:text-gold-primary transition-colors">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
                         </div>
-                        <div class="shrink-0 text-sm font-semibold text-yellow-500">
-                            Rp {{ number_format($s->total_amount ?? 0, 0, ',', '.') }}
+                        <div class="flex-1 min-w-0">
+                            <h5 class="text-sm font-bold truncate">{{ $s->invoice_no ?? ('#' . $s->id) }}</h5>
+                            <p class="text-[10px] text-white/30 font-medium uppercase tracking-tight">
+                                {{ $s->cashier->name ?? '-' }} • {{ $s->created_at?->diffForHumans() }}
+                            </p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-sm font-bold text-white mb-1">Rp {{ number_format($s->total_amount ?? 0, 0, ',', '.') }}</p>
+                            <span class="px-2 py-0.5 bg-white/5 text-[8px] font-bold text-white/40 uppercase rounded border border-white/5">{{ $s->payment_method }}</span>
                         </div>
                     </div>
                 @endforeach
@@ -213,21 +194,24 @@
                             type: 'bar',
                             label: 'Omzet',
                             data: totals,
-                            backgroundColor: 'rgba(234,179,8,0.45)',
-                            borderColor: 'rgba(234,179,8,0.95)',
-                            borderWidth: 1,
-                            borderRadius: 8,
+                            backgroundColor: 'rgba(212, 175, 55, 0.4)',
+                            borderColor: 'rgba(212, 175, 55, 1)',
+                            borderWidth: 0,
+                            borderRadius: 12,
+                            barThickness: 15,
                         },
                         {
                             type: 'line',
                             label: 'Transaksi',
                             data: counts,
                             yAxisID: 'y2',
-                            borderColor: 'rgba(255,255,255,0.85)',
-                            backgroundColor: 'rgba(255,255,255,0.20)',
-                            tension: 0.35,
-                            pointRadius: 3,
-                            pointHoverRadius: 4,
+                            borderColor: 'rgba(255, 255, 255, 0.3)',
+                            backgroundColor: 'transparent',
+                            tension: 0.4,
+                            pointRadius: 0,
+                            pointHoverRadius: 6,
+                            pointHoverBackgroundColor: '#D4AF37',
+                            borderWidth: 2,
                         },
                     ]
                 },
@@ -235,27 +219,30 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                        legend: {
-                            labels: {
-                                color: 'rgba(255,255,255,0.75)'
-                            }
-                        }
+                        legend: { display: false }
                     },
                     scales: {
                         x: {
-                            ticks: { color: 'rgba(255,255,255,0.55)' },
-                            grid: { color: 'rgba(255,255,255,0.06)' }
+                            ticks: { 
+                                color: 'rgba(255, 255, 255, 0.2)',
+                                font: { size: 10, weight: 'bold' }
+                            },
+                            grid: { display: false }
                         },
                         y: {
                             beginAtZero: true,
-                            ticks: { color: 'rgba(255,255,255,0.55)' },
-                            grid: { color: 'rgba(255,255,255,0.06)' }
+                            ticks: { 
+                                color: 'rgba(255, 255, 255, 0.2)',
+                                font: { size: 10 },
+                                callback: function(value) { return 'Rp ' + value.toLocaleString(); }
+                            },
+                            grid: { color: 'rgba(255, 255, 255, 0.03)' }
                         },
                         y2: {
                             beginAtZero: true,
                             position: 'right',
-                            ticks: { color: 'rgba(255,255,255,0.55)' },
-                            grid: { drawOnChartArea: false }
+                            ticks: { display: false },
+                            grid: { display: false }
                         }
                     }
                 }

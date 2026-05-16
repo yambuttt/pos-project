@@ -15,7 +15,12 @@
     
     --color-accent-gold: #eab308; /* yellow-500 */
     --color-accent-amber: #f59e0b;
-    --color-accent-blue: #3b82f6; /* Keep blue as secondary if needed */
+    --color-accent-blue: #3b82f6;
+
+    /* Custom Gold Palette */
+    --color-gold-primary: #D4AF37;
+    --color-gold-light: #F9E2AF;
+    --color-gold-dark: #996515;
 }
 
 @layer components {

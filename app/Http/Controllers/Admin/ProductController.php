@@ -63,7 +63,7 @@ class ProductController extends Controller
             'is_active' => ['nullable'],
         ]);
 
-        $data['is_active'] = $request->boolean('is_active', true);
+        $data['is_active'] = $request->has('is_active');
         $data['created_by'] = auth()->id();
 
         if ($request->hasFile('image')) {
@@ -94,7 +94,7 @@ class ProductController extends Controller
             'is_active' => ['nullable'],
         ]);
 
-        $data['is_active'] = $request->boolean('is_active', true);
+        $data['is_active'] = $request->has('is_active');
         $data['updated_by'] = auth()->id();
 
         if ($request->hasFile('image')) {

@@ -1,203 +1,101 @@
 @extends('layouts.admin')
-@section('title','Tambah Bahan Baku')
+@section('title', 'Tambah Bahan Baku')
 
 @section('body')
-  {{-- TOP BAR --}}
-  <div class="flex items-start justify-between gap-3">
-    <div class="flex items-center gap-3">
-      <button id="openMobileSidebar" type="button"
-        class="inline-flex items-center justify-center rounded-xl border border-white/20 bg-white/10 px-3 py-2 text-sm backdrop-blur-xl hover:bg-white/15 lg:hidden"
-        title="Menu">
-        ☰
-      </button>
-
-      <div>
-        <h1 class="text-xl font-semibold">Tambah Bahan Baku</h1>
-        <p class="text-sm text-white/70">Isi data bahan baku untuk inventory. Stok awal akan tercatat sebagai adjustment.</p>
-      </div>
+  <!-- HEADER -->
+  <div class="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between mb-8">
+    <div>
+      <h1 class="text-3xl font-bold text-gold-gradient">Tambah Bahan Baku</h1>
+      <p class="text-sm text-white/40 font-medium">Daftarkan bahan baku baru untuk manajemen stok dan resep produk.</p>
     </div>
 
     <a href="{{ route('admin.raw_materials.index') }}"
-      class="shrink-0 rounded-xl border border-white/20 bg-white/10 px-4 py-2 text-sm font-semibold backdrop-blur-xl hover:bg-white/15">
-      ← Kembali
+      class="flex items-center gap-2 rounded-2xl bg-white/5 px-6 py-3.5 text-xs font-black text-white border border-white/10 hover:bg-white/10 transition-all active:scale-95 uppercase tracking-widest">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+      </svg>
+      Kembali
     </a>
   </div>
 
-  {{-- ERRORS --}}
-  @if ($errors->any())
-    <div class="mt-4 whitespace-pre-line rounded-2xl border border-red-200/30 bg-red-500/10 px-4 py-3 text-sm backdrop-blur-2xl">
-      {{ $errors->first() }}
+  @if($errors->any())
+    <div class="mb-6 animate-fade-in rounded-2xl border border-red-500/20 bg-red-500/10 px-6 py-4 flex items-center gap-3 backdrop-blur-xl">
+      <div class="flex-shrink-0 w-8 h-8 rounded-full bg-red-500/20 flex items-center justify-center text-red-500">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+        </svg>
+      </div>
+      <p class="text-sm font-bold text-red-100">{{ $errors->first() }}</p>
     </div>
   @endif
 
-  <form method="POST" action="{{ route('admin.raw_materials.store') }}"
-    class="mt-5 grid grid-cols-1 gap-5 lg:grid-cols-[1.15fr_.85fr]">
+  <form method="POST" action="{{ route('admin.raw_materials.store') }}" class="max-w-4xl">
     @csrf
 
-    {{-- LEFT: MAIN FORM --}}
-    <div class="rounded-[26px] border border-white/20 bg-white/10 p-5 backdrop-blur-2xl sm:p-7">
-      <div class="flex items-center justify-between gap-3">
-        <div>
-          <div class="text-sm font-semibold">Informasi Bahan</div>
-          <div class="text-xs text-white/60">Wajib isi nama, unit, dan stok awal.</div>
+    <div class="glass-panel p-8 rounded-[2.5rem] space-y-8">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <!-- NAMA BAHAN -->
+        <div class="space-y-2">
+          <label class="text-[10px] uppercase tracking-widest text-white/40 font-bold ml-1">Nama Bahan Baku</label>
+          <input name="name" value="{{ old('name') }}" placeholder="Contoh: Biji Kopi Arabica" required
+            class="w-full rounded-2xl border border-white/5 bg-white/[0.02] px-6 py-4 text-sm text-white outline-none placeholder:text-white/20 focus:border-gold-primary/30 focus:bg-white/[0.04] transition-all">
         </div>
 
-        <span class="hidden sm:inline-flex rounded-xl border border-white/20 bg-white/10 px-3 py-2 text-xs text-white/70">
-          RM • Inventory
-        </span>
-      </div>
-
-      <div class="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
-        {{-- Nama --}}
-        <div class="sm:col-span-2">
-          <label class="text-sm text-white/80">Nama</label>
-          <input
-            name="name"
-            value="{{ old('name') }}"
-            placeholder="Contoh: Beras, Gula, Ayam Fillet"
-            class="mt-2 w-full rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm outline-none placeholder:text-white/40 focus:border-white/40"
-            required
-            autofocus
-          />
-          <p class="mt-1 text-xs text-white/55">Gunakan nama yang konsisten agar mudah dicari.</p>
+        <!-- SATUAN UNIT -->
+        <div class="space-y-2">
+          <label class="text-[10px] uppercase tracking-widest text-white/40 font-bold ml-1">Satuan Unit</label>
+          <input name="unit" value="{{ old('unit') }}" placeholder="Contoh: gram, ml, pcs, kg" required
+            class="w-full rounded-2xl border border-white/5 bg-white/[0.02] px-6 py-4 text-sm text-white outline-none placeholder:text-white/20 focus:border-gold-primary/30 focus:bg-white/[0.04] transition-all">
         </div>
 
-        {{-- Unit --}}
-        <div>
-          <label class="text-sm text-white/80">Unit</label>
-          <input
-            name="unit"
-            value="{{ old('unit') }}"
-            placeholder="kg / gram / ml / pcs"
-            list="unit_list"
-            class="mt-2 w-full rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm outline-none placeholder:text-white/40 focus:border-white/40"
-            required
-          />
-          <datalist id="unit_list">
-            <option value="kg"></option>
-            <option value="gram"></option>
-            <option value="liter"></option>
-            <option value="ml"></option>
-            <option value="pcs"></option>
-            <option value="pack"></option>
-            <option value="box"></option>
-            <option value="tabung"></option>
-            <option value="galon"></option>
-          </datalist>
-          <p class="mt-1 text-xs text-white/55">Contoh: kg, gram, ml, pcs.</p>
+        <!-- STOK AWAL -->
+        <div class="space-y-2">
+          <label class="text-[10px] uppercase tracking-widest text-white/40 font-bold ml-1">Stok Saat Ini</label>
+          <input name="stock_on_hand" type="number" step="0.001" value="{{ old('stock_on_hand', 0) }}"
+            class="w-full rounded-2xl border border-white/5 bg-white/[0.02] px-6 py-4 text-sm text-white outline-none focus:border-gold-primary/30 focus:bg-white/[0.04] transition-all">
         </div>
 
-        {{-- Default Cost --}}
-        <div>
-          <label class="text-sm text-white/80">Harga Default / Unit (opsional)</label>
-          <input
-            name="default_cost"
-            type="number"
-            min="0"
-            step="0.01"
-            value="{{ old('default_cost') }}"
-            placeholder="Contoh: 15000"
-            class="mt-2 w-full rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm outline-none placeholder:text-white/40 focus:border-white/40"
-          />
-          <p class="mt-1 text-xs text-white/55">Dipakai sebagai referensi biaya jika kamu butuh.</p>
+        <!-- MINIMUM STOK -->
+        <div class="space-y-2">
+          <label class="text-[10px] uppercase tracking-widest text-white/40 font-bold ml-1">Minimum Stok (Alert)</label>
+          <input name="min_stock" type="number" step="0.001" value="{{ old('min_stock', 0) }}"
+            class="w-full rounded-2xl border border-white/5 bg-white/[0.02] px-6 py-4 text-sm text-white outline-none focus:border-gold-primary/30 focus:bg-white/[0.04] transition-all">
         </div>
 
-        {{-- Stock --}}
-        <div>
-          <label class="text-sm text-white/80">Stok Awal</label>
-          <input
-            name="stock_on_hand"
-            type="number"
-            min="0"
-            step="0.01"
-            value="{{ old('stock_on_hand', 0) }}"
-            class="mt-2 w-full rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm outline-none focus:border-white/40"
-            required
-          />
-          <p class="mt-1 text-xs text-white/55">Jika &gt; 0, sistem akan membuat log “Initial stock”.</p>
+        <!-- HARGA DEFAULT -->
+        <div class="space-y-2">
+          <label class="text-[10px] uppercase tracking-widest text-white/40 font-bold ml-1">Harga Beli per Unit (Rp)</label>
+          <div class="relative">
+            <span class="absolute left-6 top-1/2 -translate-y-1/2 text-sm font-bold text-gold-primary">Rp</span>
+            <input name="default_cost" type="number" min="0" value="{{ old('default_cost', 0) }}"
+              class="w-full rounded-2xl border border-white/5 bg-white/[0.02] pl-14 pr-6 py-4 text-sm text-white outline-none focus:border-gold-primary/30 focus:bg-white/[0.04] transition-all">
+          </div>
         </div>
 
-        {{-- Min Stock --}}
-        <div>
-          <label class="text-sm text-white/80">Minimum Stock (opsional)</label>
-          <input
-            name="min_stock"
-            type="number"
-            min="0"
-            step="0.01"
-            value="{{ old('min_stock') }}"
-            placeholder="Contoh: 10"
-            class="mt-2 w-full rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm outline-none placeholder:text-white/40 focus:border-white/40"
-          />
-          <p class="mt-1 text-xs text-white/55">Untuk penanda “Low Stock” di list bahan.</p>
+        <!-- KATEGORI -->
+        <div class="space-y-2">
+          <label class="text-[10px] uppercase tracking-widest text-white/40 font-bold ml-1">Kategori Bahan</label>
+          <input name="category" value="{{ old('category') }}" placeholder="Contoh: Coffee, Dairy, Syrup"
+            class="w-full rounded-2xl border border-white/5 bg-white/[0.02] px-6 py-4 text-sm text-white outline-none placeholder:text-white/20 focus:border-gold-primary/30 focus:bg-white/[0.04] transition-all">
         </div>
       </div>
 
-      {{-- ACTIONS (desktop) --}}
-      <div class="mt-6 hidden sm:flex items-center justify-end gap-2">
-        <a href="{{ route('admin.raw_materials.index') }}"
-          class="rounded-xl border border-white/20 bg-white/10 px-4 py-2 text-sm font-semibold backdrop-blur-xl hover:bg-white/15">
-          Batal
-        </a>
+      <div class="pt-4">
         <button
-          class="rounded-xl bg-blue-600/85 px-5 py-2 text-sm font-semibold shadow-lg shadow-blue-900/25 hover:bg-blue-500/85">
-          Simpan
+          class="w-full rounded-[2rem] bg-gradient-to-r from-gold-primary via-gold-primary to-gold-dark px-6 py-5 text-xs font-black text-obsidian-950 uppercase tracking-widest shadow-xl shadow-gold-primary/20 hover:shadow-[0_0_20px_rgba(212,175,55,0.4)] hover:scale-[1.02] transition-all active:scale-95 border border-gold-light/20">
+          Daftarkan Bahan Baku
         </button>
       </div>
     </div>
-
-    {{-- RIGHT: SUMMARY / HELP --}}
-    <aside class="space-y-5">
-      <div class="rounded-[26px] border border-white/20 bg-white/10 p-5 backdrop-blur-2xl sm:p-6">
-        <div class="text-sm font-semibold">Ringkasan</div>
-        <div class="mt-2 space-y-2 text-sm text-white/70">
-          <div class="flex items-center justify-between gap-3">
-            <span>Nama</span>
-            <span class="text-white/50">wajib</span>
-          </div>
-          <div class="flex items-center justify-between gap-3">
-            <span>Unit</span>
-            <span class="text-white/50">wajib</span>
-          </div>
-          <div class="flex items-center justify-between gap-3">
-            <span>Stok Awal</span>
-            <span class="text-white/50">wajib</span>
-          </div>
-          <div class="flex items-center justify-between gap-3">
-            <span>Minimum Stock</span>
-            <span class="text-white/50">opsional</span>
-          </div>
-          <div class="flex items-center justify-between gap-3">
-            <span>Harga Default</span>
-            <span class="text-white/50">opsional</span>
-          </div>
-        </div>
-
-        <div class="mt-4 rounded-2xl border border-white/15 bg-white/5 p-4 text-xs text-white/70">
-          Tips:
-          <ul class="mt-2 list-disc space-y-1 pl-4">
-            <li>Gunakan unit konsisten (misal semua cairan: ml atau liter).</li>
-            <li>Set minimum stock untuk bahan yang sering habis agar mudah dipantau.</li>
-            <li>Stok awal &gt; 0 akan masuk ke ledger sebagai “Initial stock”.</li>
-          </ul>
-        </div>
-      </div>
-
-      {{-- ACTIONS (mobile sticky) --}}
-      <div class="sm:hidden sticky bottom-3">
-        <div class="rounded-2xl border border-white/20 bg-white/10 p-3 backdrop-blur-2xl">
-          <div class="flex gap-2">
-            <a href="{{ route('admin.raw_materials.index') }}"
-              class="w-full rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm font-semibold backdrop-blur-xl hover:bg-white/15 text-center">
-              Batal
-            </a>
-            <button
-              class="w-full rounded-xl bg-blue-600/85 px-4 py-3 text-sm font-semibold shadow-lg shadow-blue-900/25 hover:bg-blue-500/85">
-              Simpan
-            </button>
-          </div>
-        </div>
-      </div>
-    </aside>
   </form>
+
+  <div class="mt-12 p-6 rounded-2xl border border-gold-primary/10 bg-gold-primary/5 flex items-start gap-4 max-w-4xl">
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gold-primary shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+    <div>
+       <p class="text-xs font-black text-white/80 mb-1 uppercase tracking-widest">Pentingnya Manajemen Bahan</p>
+       <p class="text-xs text-white/40 leading-relaxed font-medium">Informasi stok dan harga ini akan digunakan untuk menghitung COGS (Harga Pokok Penjualan) secara akurat. Pastikan satuan unit konsisten dengan yang digunakan pada resep produk.</p>
+    </div>
+  </div>
 @endsection

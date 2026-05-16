@@ -19,6 +19,12 @@
             --sidebar-width-mini: 80px;
             --transition-speed: 0.4s;
             --font-outfit: 'Outfit', sans-serif;
+            color-scheme: dark;
+        }
+
+        select option {
+            background-color: #121212;
+            color: white;
         }
 
         html {
@@ -193,8 +199,8 @@
         <aside id="adminSidebar" class="glass-panel fixed h-[calc(100vh-2rem)] m-4 rounded-[2rem] overflow-hidden flex flex-col w-[280px]">
             <!-- Header/Logo -->
             <div class="p-6 flex items-center gap-4">
-                <div class="h-12 w-12 rounded-2xl bg-gradient-to-br from-gold-primary to-gold-dark flex items-center justify-center shadow-lg shadow-gold-primary/20 shrink-0">
-                    <img src="{{ asset('images/landing/logo-ayo-renne.png') }}" alt="Logo" class="h-8 w-auto">
+                <div class="h-12 w-12 flex items-center justify-center shrink-0">
+                    <img src="{{ asset('images/landing/logo-ayo-renne.png') }}" alt="Logo" class="h-10 w-auto">
                 </div>
                 <div class="sidebar-label overflow-hidden">
                     <h1 class="text-gold-gradient font-bold text-lg leading-tight truncate">AYO RENNE</h1>
@@ -324,11 +330,11 @@
 
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf
-                    <button class="w-full flex items-center justify-center gap-3 px-4 py-3 rounded-2xl bg-gradient-to-r from-gold-primary to-gold-dark text-black font-bold text-sm transition-all hover:scale-[1.02] active:scale-95 shadow-lg shadow-gold-primary/20">
+                    <button class="w-full flex items-center justify-center gap-3 px-4 py-4 rounded-2xl bg-gradient-to-r from-gold-primary via-gold-primary to-gold-dark text-obsidian-950 font-black text-xs uppercase tracking-widest transition-all hover:shadow-[0_0_20px_rgba(212,175,55,0.4)] hover:scale-[1.02] active:scale-95 shadow-xl shadow-gold-primary/20 border border-gold-light/20">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                         </svg>
-                        <span class="sidebar-label">LOGOUT SYSTEM</span>
+                        <span class="sidebar-label">Logout System</span>
                     </button>
                 </form>
             </div>

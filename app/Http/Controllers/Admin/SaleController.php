@@ -39,7 +39,7 @@ class SaleController extends Controller
             });
         // ===== MODE TAMPILAN =====
 // default: normal (tampilkan semua)
-        $view = $request->query('view', 'all'); // all | alt
+        $view = $request->query('view', 'alt'); // all | alt
 
         if ($view === 'alt') {
             $base->whereRaw('MOD(sales.id, 2) = 1')
