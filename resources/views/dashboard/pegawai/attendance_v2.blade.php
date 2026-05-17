@@ -809,6 +809,22 @@
       return id;
     }
 
+    async function sha256Hex(str) {
+      const enc = new TextEncoder().encode(str);
+      const buf = await crypto.subtle.digest('SHA-256', enc);
+      return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+
+    function buildFingerprint() {
+      const parts = [
+        navigator.userAgent,
+        navigator.language,
+        screen.width + "x" + screen.height,
+        Intl.DateTimeFormat().resolvedOptions().timeZone
+      ];
+      return parts.join("|");
+    }
+
     async function getGeo() {
       return new Promise((resolve, reject) => {
         if (!navigator.geolocation) return reject(new Error("Geolocation tidak didukung."));
@@ -886,6 +902,7 @@
       try {
         setGate("mengecek ID device...");
         deviceHash = getOrGenerateDeviceId();
+        const fingerprintHash = await sha256Hex(buildFingerprint());
 
         setGate("cek lokasi...");
         geo = await getGeo();
@@ -898,6 +915,7 @@
           headers: { "Content-Type": "application/json", "X-CSRF-TOKEN": csrf },
           body: JSON.stringify({
             device_hash: deviceHash,
+            fingerprint_hash: fingerprintHash,
             device_name: deviceName,
             lat: geo.lat,
             lng: geo.lng
@@ -905,6 +923,11 @@
         });
 
         const json = await res.json().catch(() => ({}));
+
+        if (res.ok && json.status === 'approved_recovered') {
+            deviceHash = json.recovered_device_hash;
+            localStorage.setItem('attendance_device_id', deviceHash);
+        }
 
         if (!res.ok) {
           gateOk = false;
@@ -938,6 +961,7 @@
       try {
         setGate("mengecek ID device...");
         deviceHash = getOrGenerateDeviceId();
+        const fingerprintHash = await sha256Hex(buildFingerprint());
 
         setGate("cek lokasi...");
         geo = await getGeo();
@@ -950,6 +974,7 @@
           headers: { "Content-Type": "application/json", "X-CSRF-TOKEN": csrf },
           body: JSON.stringify({
             device_hash: deviceHash,
+            fingerprint_hash: fingerprintHash,
             device_name: deviceName,
             lat: geo.lat,
             lng: geo.lng
@@ -957,6 +982,11 @@
         });
 
         const json = await res.json().catch(() => ({}));
+
+        if (res.ok && json.status === 'recovered_exception') {
+            deviceHash = json.recovered_device_hash;
+            localStorage.setItem('attendance_device_id', deviceHash);
+        }
 
         if (!res.ok) {
           gateOk = false;

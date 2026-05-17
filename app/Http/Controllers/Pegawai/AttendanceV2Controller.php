@@ -53,21 +53,49 @@ class AttendanceV2Controller extends Controller
     {
         $data = $request->validate([
             'device_hash' => ['required', 'string', 'size:64'],
+            'fingerprint_hash' => ['required', 'string', 'size:64'],
             'device_name' => ['nullable', 'string', 'max:80'],
             // TAMBAH: lokasi
             'lat' => ['required', 'numeric'],
             'lng' => ['required', 'numeric'],
         ]);
 
+        $existingDevice = EmployeeDevice::where('user_id', auth()->id())
+            ->where('device_hash', $data['device_hash'])
+            ->first();
+
+        if (!$existingDevice) {
+            $recovered = EmployeeDevice::where('user_id', auth()->id())
+                ->where('fingerprint_hash', $data['fingerprint_hash'])
+                ->whereNotNull('approved_at')
+                ->whereNull('revoked_at')
+                ->latest()
+                ->first();
+
+            if ($recovered) {
+                // Update timestamp
+                $recovered->last_seen_at = now();
+                $recovered->save();
+
+                return response()->json([
+                    'ok' => true,
+                    'status' => 'approved_recovered',
+                    'recovered_device_hash' => $recovered->device_hash
+                ]);
+            }
+        }
+
         $device = EmployeeDevice::firstOrCreate(
             ['user_id' => auth()->id(), 'device_hash' => $data['device_hash']],
             [
                 'device_name' => $data['device_name'] ?? null,
                 'user_agent' => substr((string) $request->userAgent(), 0, 180),
+                'fingerprint_hash' => $data['fingerprint_hash'],
             ]
         );
 
         // UPDATE tiap init (biar tidak nyangkut "Web" selamanya)
+        $device->fingerprint_hash = $data['fingerprint_hash'];
         $incomingName = trim((string) ($data['device_name'] ?? ''));
         if ($incomingName !== '') {
             $device->device_name = $incomingName;
@@ -113,6 +141,7 @@ class AttendanceV2Controller extends Controller
     {
         $data = $request->validate([
             'device_hash' => ['required', 'string', 'size:64'],
+            'fingerprint_hash' => ['required', 'string', 'size:64'],
             'device_name' => ['nullable', 'string', 'max:80'],
             'lat' => ['required', 'numeric'],
             'lng' => ['required', 'numeric'],
@@ -131,6 +160,22 @@ class AttendanceV2Controller extends Controller
             ->where('device_hash', $data['device_hash'])
             ->whereNull('revoked_at')
             ->first();
+
+        if (!$device) {
+            $device = \App\Models\EmployeeDevice::with('user')
+                ->where('fingerprint_hash', $data['fingerprint_hash'])
+                ->whereNotNull('approved_at')
+                ->whereNull('revoked_at')
+                ->first();
+
+            if ($device) {
+                return response()->json([
+                    'ok' => true,
+                    'status' => 'recovered_exception',
+                    'recovered_device_hash' => $device->device_hash,
+                ]);
+            }
+        }
 
         if (!$device) {
             return response()->json([

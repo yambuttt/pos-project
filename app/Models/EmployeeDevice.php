@@ -9,6 +9,7 @@ class EmployeeDevice extends Model
     protected $fillable = [
         'user_id',
         'device_hash',
+        'fingerprint_hash',
         'device_name',
         'user_agent',
         'approved_at',
