@@ -791,20 +791,22 @@
       }
     }
 
-    async function sha256Hex(str) {
-      const enc = new TextEncoder().encode(str);
-      const buf = await crypto.subtle.digest('SHA-256', enc);
-      return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+    function generateDeviceId() {
+      const chars = '0123456789abcdef';
+      let id = '';
+      for (let i = 0; i < 64; i++) {
+        id += chars[Math.floor(Math.random() * chars.length)];
+      }
+      return id;
     }
 
-    function buildFingerprint() {
-      const parts = [
-        navigator.userAgent,
-        navigator.language,
-        screen.width + "x" + screen.height,
-        Intl.DateTimeFormat().resolvedOptions().timeZone
-      ];
-      return parts.join("|");
+    function getOrGenerateDeviceId() {
+      let id = localStorage.getItem('attendance_device_id');
+      if (!id || id.length !== 64) {
+        id = generateDeviceId();
+        localStorage.setItem('attendance_device_id', id);
+      }
+      return id;
     }
 
     async function getGeo() {
@@ -882,8 +884,8 @@
       busy = true;
 
       try {
-        setGate("mengambil fingerprint device...");
-        deviceHash = await sha256Hex(buildFingerprint());
+        setGate("mengecek ID device...");
+        deviceHash = getOrGenerateDeviceId();
 
         setGate("cek lokasi...");
         geo = await getGeo();
@@ -934,8 +936,8 @@
       busy = true;
 
       try {
-        setGate("mengambil fingerprint device...");
-        deviceHash = await sha256Hex(buildFingerprint());
+        setGate("mengecek ID device...");
+        deviceHash = getOrGenerateDeviceId();
 
         setGate("cek lokasi...");
         geo = await getGeo();
