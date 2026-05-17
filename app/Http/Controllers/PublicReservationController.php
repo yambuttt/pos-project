@@ -20,6 +20,7 @@ class PublicReservationController extends Controller
             ->orderBy('type')->orderBy('name')->get();
 
         $buffetPackages = \App\Models\BuffetPackage::where('is_active', true)
+            ->with('items.product')
             ->orderBy('name')->get();
 
         return view('reservations/create', compact('resources', 'buffetPackages'));

@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class ReservationPayment extends Model
 {
     protected $fillable = [
-        'reservation_id','type','amount','method','status','reference','paid_at'
+        'reservation_id','type','amount','method','status','reference','paid_at','note','payment_proof'
     ];
 
     protected $casts = [

@@ -237,14 +237,24 @@ class ReservationController extends Controller
     public function markDpPaid(Reservation $reservation, Request $request, ReservationInventoryService $inv)
     {
         $data = $request->validate([
-            'method' => ['required', 'in:CASH,QRIS,MIDTRANS'],
+            'method' => ['required', 'in:CASH,TRANSFER'],
             'amount' => ['required', 'integer', 'min:1'],
             'reference' => ['nullable', 'string', 'max:120'],
+            'note' => ['nullable', 'string'],
+            'payment_proof' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
         ]);
 
-        return DB::transaction(function () use ($reservation, $data, $inv) {
+        return DB::transaction(function () use ($reservation, $data, $inv, $request) {
             if (!in_array($reservation->status, ['pending_dp', 'draft'], true)) {
                 throw new \RuntimeException('Status reservasi tidak valid untuk DP paid.');
+            }
+
+            $proofPath = null;
+            if ($request->hasFile('payment_proof')) {
+                $file = $request->file('payment_proof');
+                $filename = 'proof_' . time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+                $proofPath = $file->storeAs('proofs', $filename, 'public');
+                $proofPath = '/storage/' . $proofPath;
             }
 
             $reservation->update([
@@ -260,6 +270,8 @@ class ReservationController extends Controller
                 'method' => $data['method'],
                 'status' => 'paid',
                 'reference' => $data['reference'] ?? null,
+                'note' => $data['note'] ?? null,
+                'payment_proof' => $proofPath,
                 'paid_at' => now(),
             ]);
 

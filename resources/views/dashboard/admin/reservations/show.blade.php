@@ -280,6 +280,21 @@
                                <div class="text-[9px] text-white/30 font-medium italic">{{ $p->method }} • {{ $p->status }}</div>
                                <div class="text-[9px] text-white/20">{{ optional($p->paid_at)->format('d/m/y H:i') }}</div>
                             </div>
+
+                            @if($p->note)
+                                <div class="mt-3 pt-2 border-t border-white/5 text-[9px] text-white/50 leading-relaxed">
+                                    <span class="font-bold text-gold-primary">Catatan:</span> {{ $p->note }}
+                                </div>
+                            @endif
+
+                            @if($p->payment_proof)
+                                <div class="mt-3">
+                                    <a href="{{ $p->payment_proof }}" target="_blank" class="inline-flex items-center gap-1.5 rounded-lg bg-white/5 border border-white/10 px-3 py-1.5 text-[8px] font-black uppercase tracking-widest text-gold-primary hover:bg-white/10 transition-all">
+                                        <svg class="h-3 w-3" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                                        Lihat Bukti Transfer
+                                    </a>
+                                </div>
+                            @endif
                         </div>
                     @empty
                         <p class="text-xs text-white/20 italic text-center py-4">Belum ada catatan pembayaran.</p>
@@ -292,19 +307,18 @@
                 <h4 class="text-[10px] font-black text-white uppercase tracking-[0.2em] mb-4">Aksi Kelola Reservasi</h4>
 
                 @if(in_array($reservation->status, ['pending_dp', 'draft'], true))
-                    <div x-data="{ open: false }" class="space-y-3">
+                    <div x-data="{ open: false, method: 'CASH' }" class="space-y-3">
                        <button @click="open = !open" class="w-full rounded-2xl bg-emerald-500 py-4 text-xs font-black text-black uppercase tracking-widest shadow-xl shadow-emerald-500/20 hover:scale-[1.02] transition-all">
                           Konfirmasi DP Manual
                        </button>
-                       <form x-show="open" x-collapse method="POST" action="{{ route('admin.reservations.dp_paid', $reservation) }}"
+                       <form x-show="open" x-collapse method="POST" action="{{ route('admin.reservations.dp_paid', $reservation) }}" enctype="multipart/form-data"
                            class="p-6 rounded-2xl bg-black/40 border border-white/10 space-y-4 animate-fade-in">
                            @csrf
                            <div class="space-y-1.5">
                                <label class="text-[9px] uppercase tracking-widest text-white/40 font-black ml-1">Metode Bayar</label>
-                               <select name="method" class="w-full rounded-xl border border-white/5 bg-white/[0.02] px-4 py-3 text-sm text-white outline-none">
+                               <select name="method" x-model="method" class="w-full rounded-xl border border-white/5 bg-white/[0.02] px-4 py-3 text-sm text-white outline-none">
                                    <option value="CASH">CASH (Tunai)</option>
-                                   <option value="QRIS">QRIS</option>
-                                   <option value="MIDTRANS">Transfer Bank</option>
+                                   <option value="TRANSFER">Transfer Bank</option>
                                </select>
                            </div>
                            <div class="space-y-1.5">
@@ -312,6 +326,28 @@
                                <input type="number" name="amount" min="1" value="{{ $reservation->dp_amount }}"
                                    class="w-full rounded-xl border border-white/5 bg-white/[0.02] px-4 py-3 text-sm text-white outline-none focus:border-gold-primary/30">
                            </div>
+                           
+                           <!-- Note for Cash -->
+                           <div x-show="method === 'CASH'" class="space-y-1.5">
+                               <label class="text-[9px] uppercase tracking-widest text-white/40 font-black ml-1">Diterima Oleh (Catatan)</label>
+                               <input type="text" name="note" placeholder="Contoh: Diterima oleh Kasir Sarah (Shift Pagi)"
+                                   class="w-full rounded-xl border border-white/5 bg-white/[0.02] px-4 py-3 text-sm text-white outline-none focus:border-gold-primary/30">
+                           </div>
+
+                           <!-- Note and Attachment for Transfer -->
+                           <div x-show="method === 'TRANSFER'" class="space-y-4">
+                               <div class="space-y-1.5">
+                                   <label class="text-[9px] uppercase tracking-widest text-white/40 font-black ml-1">Catatan Admin</label>
+                                   <input type="text" name="note" placeholder="Contoh: Transfer masuk ke Rekening BCA"
+                                       class="w-full rounded-xl border border-white/5 bg-white/[0.02] px-4 py-3 text-sm text-white outline-none focus:border-gold-primary/30">
+                               </div>
+                               <div class="space-y-1.5">
+                                   <label class="text-[9px] uppercase tracking-widest text-white/40 font-black ml-1">Lampiran Bukti Transfer</label>
+                                   <input type="file" name="payment_proof" accept="image/*"
+                                       class="w-full rounded-xl border border-white/5 bg-white/[0.02] px-4 py-2.5 text-xs text-white outline-none focus:border-gold-primary/30 file:mr-4 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-[10px] file:font-black file:bg-white/10 file:text-white hover:file:bg-white/20">
+                               </div>
+                           </div>
+
                            <button class="w-full rounded-xl bg-white/10 py-3 text-[10px] font-black text-white uppercase tracking-widest hover:bg-white/20 transition-all">Simpan Konfirmasi</button>
                        </form>
                     </div>
