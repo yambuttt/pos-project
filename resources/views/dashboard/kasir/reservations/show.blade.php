@@ -140,14 +140,14 @@
                     @endif
 
                     @if($reservation->status === 'checked_in')
-                        <form method="POST" action="{{ route('kasir.reservations.checkout', $reservation) }}" class="space-y-4">
+                        <form method="POST" action="{{ route('kasir.reservations.checkout', $reservation) }}" class="space-y-4" enctype="multipart/form-data" x-data="{ method: 'CASH' }">
                             @csrf
                             
                             <div>
                                 <label class="block text-[10px] font-black uppercase tracking-[0.2em] text-white/40 mb-2">Metode Pembayaran</label>
-                                <select name="method" class="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-sm text-white focus:border-accent-gold/50 focus:ring-0 transition-all outline-none">
-                                    <option value="CASH">CASH</option>
-                                    <option value="QRIS">QRIS (Midtrans)</option>
+                                <select name="method" x-model="method" class="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-sm text-white focus:border-accent-gold/50 focus:ring-0 transition-all outline-none">
+                                    <option value="CASH" class="bg-gray-900 text-white">CASH</option>
+                                    <option value="TRANSFER" class="bg-gray-900 text-white">TRANSFER BANK</option>
                                 </select>
                             </div>
 
@@ -162,8 +162,20 @@
 
                             <div>
                                 <label class="block text-[10px] font-black uppercase tracking-[0.2em] text-white/40 mb-2">Referensi (Opsional)</label>
-                                <input name="reference" placeholder="Contoh: Tunai pas / Catatan Midtrans"
+                                <input name="reference" placeholder="Contoh: Tunai pas / Nomor Referensi"
                                     class="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-sm text-white placeholder:text-white/20 focus:border-accent-gold/50 focus:ring-0 transition-all outline-none">
+                            </div>
+
+                            <div x-show="method === 'TRANSFER'" x-transition style="display: none;">
+                                <label class="block text-[10px] font-black uppercase tracking-[0.2em] text-accent-gold mb-2">Bukti Transfer (Wajib)</label>
+                                <input type="file" name="payment_proof" accept="image/*" :required="method === 'TRANSFER'"
+                                    class="w-full bg-white/5 border border-white/10 rounded-xl py-2.5 px-4 text-sm text-white focus:border-accent-gold/50 focus:ring-0 transition-all outline-none file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-white/10 file:text-white hover:file:bg-white/20">
+                            </div>
+
+                            <div>
+                                <label class="block text-[10px] font-black uppercase tracking-[0.2em] text-white/40 mb-2">Catatan (Opsional)</label>
+                                <textarea name="note" placeholder="Tambahkan catatan pembayaran..." rows="2"
+                                    class="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-sm text-white placeholder:text-white/20 focus:border-accent-gold/50 focus:ring-0 transition-all outline-none"></textarea>
                             </div>
 
                             <button class="w-full rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-400 px-5 py-3.5 text-sm font-bold text-black hover:from-emerald-400 hover:to-emerald-300 transition-all shadow-[0_0_20px_rgba(16,185,129,0.3)] flex items-center justify-center gap-2">
@@ -172,12 +184,6 @@
                             </button>
                         </form>
 
-                        <div class="mt-4 p-4 rounded-xl border border-white/5 bg-white/[0.02] flex items-start gap-3">
-                            <svg class="w-4 h-4 text-white/40 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                            <p class="text-[10px] text-white/40 leading-relaxed font-bold">
-                                Jika memilih QRIS, sistem akan membuat QR Midtrans. Reservasi baru selesai otomatis setelah webhook settlement diterima.
-                            </p>
-                        </div>
                     @endif
 
                     @if($reservation->menu_type === 'REGULAR')
