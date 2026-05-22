@@ -74,6 +74,21 @@
             background: rgba(255, 255, 255, 0.05) !important;
             box-shadow: 0 0 0 4px rgba(251, 191, 36, 0.05);
         }
+
+        @keyframes pulse-gold {
+            0%, 100% {
+                box-shadow: 0 4px 20px rgba(251, 191, 36, 0.2);
+                transform: scale(1);
+            }
+            50% {
+                box-shadow: 0 4px 30px rgba(251, 191, 36, 0.6);
+                transform: scale(1.02);
+            }
+        }
+
+        .animate-pulse-gold {
+            animation: pulse-gold 2s infinite ease-in-out;
+        }
     </style>
 </head>
 
@@ -136,41 +151,73 @@
                     </div>
 
                     @if($isDelivery)
-                        <div class="glass-gold rounded-3xl p-6 border-dashed">
-                            <div class="mb-4 flex items-center justify-between">
-                                <h3 class="text-xs font-black uppercase tracking-[0.2em] text-yellow-400">Delivery Details</h3>
-                                <div class="h-1.5 w-1.5 animate-pulse rounded-full bg-yellow-400"></div>
+                        <div class="relative overflow-hidden rounded-[32px] border border-yellow-400/20 bg-gradient-to-b from-yellow-400/[0.05] to-transparent p-8 backdrop-blur-xl shadow-2xl transition-all duration-300">
+                            {{-- Decorative gold accent glow --}}
+                            <div class="absolute -right-16 -top-16 -z-10 h-32 w-32 rounded-full bg-yellow-400/10 blur-2xl"></div>
+                            
+                            <div class="mb-6 flex items-center justify-between">
+                                <div class="flex items-center gap-3">
+                                    <div class="flex h-10 w-10 items-center justify-center rounded-2xl bg-yellow-400/10 text-yellow-400 shadow-[0_0_15px_rgba(250,204,21,0.15)]">
+                                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                                    </div>
+                                    <div>
+                                        <h3 class="text-xs font-black uppercase tracking-[0.2em] text-white">Delivery Details</h3>
+                                        <p class="text-[9px] font-bold uppercase tracking-widest text-white/30">Premium Shipping Services</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-1.5 rounded-full bg-yellow-400/10 border border-yellow-400/20 px-3 py-1 text-[9px] font-black uppercase tracking-widest text-yellow-400">
+                                    <span class="h-1.5 w-1.5 animate-pulse rounded-full bg-yellow-400"></span>
+                                    Active Route
+                                </div>
                             </div>
 
-                            <div class="space-y-4">
-                                <input id="deliveryPhone" type="text" placeholder="Phone Number"
-                                    class="w-full rounded-xl border border-white/5 bg-white/[0.02] px-5 py-3.5 text-sm font-bold text-white outline-none" />
+                            <div class="space-y-5">
+                                {{-- Phone Input Group --}}
+                                <div class="group relative">
+                                    <label class="mb-1.5 block text-[9px] font-black uppercase tracking-widest text-white/40 group-focus-within:text-yellow-400 transition-colors ml-1">Phone Number</label>
+                                    <input id="deliveryPhone" type="text" placeholder="e.g. 08123456789"
+                                        class="w-full rounded-2xl border border-white/5 bg-white/[0.02] px-5 py-4 text-sm font-bold text-white transition-all outline-none focus:border-yellow-400/30 focus:bg-white/[0.04]" />
+                                </div>
 
-                                <textarea id="deliveryAddress" rows="3" placeholder="Full Delivery Address"
-                                    class="w-full rounded-xl border border-white/5 bg-white/[0.02] px-5 py-3.5 text-sm font-bold text-white outline-none"></textarea>
+                                {{-- Address Input Group with Auto-detect status --}}
+                                <div class="group relative">
+                                    <label class="mb-1.5 block text-[9px] font-black uppercase tracking-widest text-white/40 group-focus-within:text-yellow-400 transition-colors ml-1">Full Delivery Address</label>
+                                    <textarea id="deliveryAddress" rows="3" placeholder="Enter complete street name, house number, area..."
+                                        class="w-full rounded-2xl border border-white/5 bg-white/[0.02] px-5 py-4 text-sm font-bold text-white transition-all outline-none focus:border-yellow-400/30 focus:bg-white/[0.04] resize-none"></textarea>
+                                    
+                                    {{-- Elegant Floating Geocoder Status Box --}}
+                                    <div id="addressStatus" class="mt-2.5 hidden transition-all duration-300">
+                                        <div class="flex items-center gap-2.5 rounded-2xl border bg-white/[0.01] px-4 py-3 text-[10px] font-bold">
+                                            <div id="addressStatusIcon" class="h-4 w-4 shrink-0 rounded-full flex items-center justify-center"></div>
+                                            <span id="addressStatusText" class="text-white/70 leading-normal"></span>
+                                        </div>
+                                    </div>
+                                </div>
 
-                                <div class="grid grid-cols-2 gap-3">
+                                {{-- Action Buttons --}}
+                                <div class="grid grid-cols-2 gap-4">
                                     <button type="button" onclick="useMyLocation()"
-                                        class="flex items-center justify-center gap-2 rounded-xl bg-yellow-400 px-4 py-3.5 text-[10px] font-black uppercase tracking-widest text-black hover:bg-yellow-300 active:scale-95 transition-all">
-                                        <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                                        class="group/btn flex items-center justify-center gap-2.5 rounded-2xl bg-white/[0.02] hover:bg-white/[0.05] border border-white/5 hover:border-white/10 px-4 py-4 text-[10px] font-black uppercase tracking-widest text-white active:scale-95 transition-all">
+                                        <svg class="h-4 w-4 text-white/40 group-hover/btn:text-yellow-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                                         GPS Location
                                     </button>
 
-                                    <button type="button" onclick="openMapPicker()"
-                                        class="glass flex items-center justify-center gap-2 rounded-xl px-4 py-3.5 text-[10px] font-black uppercase tracking-widest text-white hover:bg-white/5 active:scale-95 transition-all">
-                                        <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7l5-2.5 5.553 2.776a1 1 0 01.447.894v10.764a1 1 0 01-1.447.894L15 17l-6 3z"></path></svg>
+                                    <button type="button" id="mapPickerBtn" onclick="openMapPicker()"
+                                        class="flex items-center justify-center gap-2.5 rounded-2xl bg-yellow-400 hover:bg-yellow-300 border border-yellow-400/10 px-4 py-4 text-[10px] font-black uppercase tracking-widest text-black active:scale-95 transition-all shadow-[0_4px_20px_rgba(250,204,21,0.15)]">
+                                        <svg class="h-4 w-4 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7l5-2.5 5.553 2.776a1 1 0 01.447.894v10.764a1 1 0 01-1.447.894L15 17l-6 3z"></path></svg>
                                         Pick on Map
                                     </button>
                                 </div>
 
+                                {{-- Distance & Fee Grid --}}
                                 <div class="grid grid-cols-2 gap-4 pt-2">
-                                    <div class="glass flex flex-col items-center justify-center rounded-2xl p-3">
-                                        <div class="text-[9px] font-black uppercase tracking-widest text-white/30">Distance</div>
-                                        <div id="deliveryDistance" class="text-xs font-black text-white">-</div>
+                                    <div class="relative overflow-hidden rounded-2xl border border-white/5 bg-white/[0.01] px-5 py-4 text-center">
+                                        <div class="text-[9px] font-black uppercase tracking-widest text-white/30 mb-1">Distance</div>
+                                        <div id="deliveryDistance" class="text-sm font-black text-white tracking-tight">-</div>
                                     </div>
-                                    <div class="glass-gold flex flex-col items-center justify-center rounded-2xl p-3">
-                                        <div class="text-[9px] font-black uppercase tracking-widest text-yellow-400/40">Fee</div>
-                                        <div id="deliveryFee" class="text-xs font-black text-yellow-400">Rp 0</div>
+                                    <div class="relative overflow-hidden rounded-2xl border border-yellow-400/10 bg-yellow-400/[0.02] px-5 py-4 text-center">
+                                        <div class="text-[9px] font-black uppercase tracking-widest text-yellow-400/40 mb-1">Fee</div>
+                                        <div id="deliveryFee" class="text-sm font-black text-yellow-400 tracking-tight">Rp 0</div>
                                     </div>
                                 </div>
                             </div>
@@ -322,17 +369,39 @@
             return 'Rp ' + n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
         }
 
-        function applyDeliveryLocation(lat, lng) {
+        async function applyDeliveryLocation(lat, lng) {
             deliveryLat = Number(lat);
             deliveryLng = Number(lng);
-
-            deliveryDistanceKm = haversineKm(STORE_LAT, STORE_LNG, deliveryLat, deliveryLng);
-            deliveryFee = Math.round(deliveryDistanceKm * RATE_PER_KM);
 
             const locStatus = document.getElementById('locStatus');
             if (locStatus) locStatus.textContent = `${deliveryLat.toFixed(6)}, ${deliveryLng.toFixed(6)}`;
 
-            document.getElementById('deliveryDistance').textContent = `${deliveryDistanceKm.toFixed(2)} KM`;
+            // Tampilkan indikator loading saat menghitung jarak riil
+            document.getElementById('deliveryDistance').textContent = "Calculating...";
+            document.getElementById('deliveryFee').textContent = "Calculating...";
+
+            let isRealRoute = false;
+            try {
+                // Fetch actual road distance using OSRM
+                const url = `https://router.project-osrm.org/route/v1/driving/${STORE_LNG},${STORE_LAT};${deliveryLng},${deliveryLat}?overview=false`;
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                if (data.code === 'Ok' && data.routes && data.routes.length > 0) {
+                    deliveryDistanceKm = data.routes[0].distance / 1000;
+                    isRealRoute = true;
+                } else {
+                    console.warn("OSRM returned non-OK code, falling back to straight-line distance.");
+                    deliveryDistanceKm = haversineKm(STORE_LAT, STORE_LNG, deliveryLat, deliveryLng);
+                }
+            } catch (error) {
+                console.error("Failed to fetch road distance from OSRM, falling back to straight-line:", error);
+                deliveryDistanceKm = haversineKm(STORE_LAT, STORE_LNG, deliveryLat, deliveryLng);
+            }
+
+            deliveryFee = Math.round(deliveryDistanceKm * RATE_PER_KM);
+
+            document.getElementById('deliveryDistance').textContent = `${deliveryDistanceKm.toFixed(2)} KM${isRealRoute ? '' : ' (Est.)'}`;
             document.getElementById('deliveryFee').textContent = rupiah(deliveryFee);
 
             // update total UI: total = subtotal + tax + deliveryFee
@@ -362,8 +431,47 @@
         // ===== Map Picker (Leaflet) =====
         let mapInstance = null;
         let mapMarker = null;
+        let storeMarker = null;
+        let routeLineInstance = null;
         let tempPickedLat = null;
         let tempPickedLng = null;
+
+        async function drawTempRoute(lat, lng) {
+            let latLngs = [[STORE_LAT, STORE_LNG], [lat, lng]];
+            let isRealRoute = false;
+
+            try {
+                const url = `https://router.project-osrm.org/route/v1/driving/${STORE_LNG},${STORE_LAT};${lng},${lat}?overview=full&geometries=geojson`;
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                if (data.code === 'Ok' && data.routes && data.routes.length > 0) {
+                    latLngs = data.routes[0].geometry.coordinates.map(coord => [coord[1], coord[0]]);
+                    isRealRoute = true;
+                }
+            } catch (error) {
+                console.error("Failed to fetch road routing path:", error);
+            }
+
+            if (routeLineInstance) {
+                mapInstance.removeLayer(routeLineInstance);
+            }
+
+            // Garis emas premium, jika fallback menggunakan dashed line
+            routeLineInstance = L.polyline(latLngs, {
+                color: '#fbbf24',
+                weight: 5,
+                opacity: 0.8,
+                lineJoin: 'round',
+                dashArray: isRealRoute ? null : '5, 10'
+            }).addTo(mapInstance);
+
+            const bounds = L.latLngBounds([
+                [STORE_LAT, STORE_LNG],
+                [lat, lng]
+            ]);
+            mapInstance.fitBounds(bounds, { padding: [50, 50] });
+        }
 
         function openMapPicker() {
             const backdrop = document.getElementById('mapBackdrop');
@@ -394,9 +502,18 @@
                         document.getElementById('tempCoords').textContent = `${tempPickedLat.toFixed(6)}, ${tempPickedLng.toFixed(6)}`;
                         if (mapMarker) mapMarker.setLatLng(e.latlng);
                         else mapMarker = L.marker(e.latlng).addTo(mapInstance);
+
+                        // Gambar rute jalan real-time saat pengguna klik peta
+                        drawTempRoute(tempPickedLat, tempPickedLng);
                     });
                 } else {
                     mapInstance.invalidateSize();
+                }
+
+                // Tambahkan marker restoran permanen
+                if (!storeMarker) {
+                    storeMarker = L.marker([STORE_LAT, STORE_LNG]).addTo(mapInstance)
+                        .bindPopup("<strong style='color:#070708;'>Ayo Renne Restaurant</strong><br/><span style='color:#555;'>Titik Awal Toko</span>");
                 }
 
                 if (deliveryLat != null && deliveryLng != null) {
@@ -406,7 +523,12 @@
                     document.getElementById('tempCoords').textContent = `${tempPickedLat.toFixed(6)}, ${tempPickedLng.toFixed(6)}`;
                     if (mapMarker) mapMarker.setLatLng(ll);
                     else mapMarker = L.marker(ll).addTo(mapInstance);
-                    mapInstance.setView(ll, 15);
+
+                    // Gambar rute yang tersimpan dan lakukan fit bounds
+                    drawTempRoute(deliveryLat, deliveryLng);
+                } else {
+                    // Tampilkan popup di toko sebagai panduan
+                    storeMarker.openPopup();
                 }
             }, 300);
         }
@@ -730,6 +852,138 @@
             alert('Order tersimpan! Invoice: ' + (json.invoice_no || '-'));
             window.location.href = '/';
         }
+        // ===== Debounce helper =====
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        // ===== Geocoding address =====
+        const geocodeAddress = debounce(async (address) => {
+            address = (address || '').trim();
+            if (address.length < 5) {
+                const statusWrap = document.getElementById('addressStatus');
+                if (statusWrap) statusWrap.classList.add('hidden');
+                return;
+            }
+
+            const statusWrap = document.getElementById('addressStatus');
+            const statusIcon = document.getElementById('addressStatusIcon');
+            const statusText = document.getElementById('addressStatusText');
+            const mapPickerBtn = document.getElementById('mapPickerBtn');
+
+            if (statusWrap) statusWrap.classList.remove('hidden');
+            
+            if (statusWrap && statusIcon && statusText) {
+                // Loading state
+                statusWrap.firstElementChild.className = "flex items-center gap-2.5 rounded-2xl border border-yellow-500/20 bg-yellow-500/5 px-4 py-3 text-[10px] font-bold transition-all duration-300";
+                statusIcon.className = "h-4 w-4 shrink-0 rounded-full flex items-center justify-center text-yellow-400";
+                statusIcon.innerHTML = `<svg class="h-3 w-3 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>`;
+                statusText.textContent = "🔍 Mencari koordinat alamat Anda secara otomatis...";
+                statusText.className = "text-yellow-400 leading-normal";
+            }
+
+            try {
+                // Bias search for Indonesia and locally in East Java if possible
+                const query = encodeURIComponent(address + ", Jawa Timur");
+                const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${query}&limit=1&countrycodes=id`, {
+                    headers: {
+                        'Accept-Language': 'id',
+                        'User-Agent': 'AyoRennePOSCheckout/1.0'
+                    }
+                });
+                const data = await response.json();
+
+                if (data && data.length > 0) {
+                    const lat = parseFloat(data[0].lat);
+                    const lng = parseFloat(data[0].lon);
+
+                    // Apply coordinates immediately (updates distance, fee, and total)
+                    await applyDeliveryLocation(lat, lng);
+
+                    // Update map markers in background so picker matches
+                    tempPickedLat = lat;
+                    tempPickedLng = lng;
+
+                    if (statusWrap && statusIcon && statusText) {
+                        // Success State
+                        statusWrap.firstElementChild.className = "flex items-center gap-2.5 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 px-4 py-3 text-[10px] font-bold transition-all duration-300";
+                        statusIcon.className = "h-4 w-4 shrink-0 rounded-full flex items-center justify-center text-emerald-400 bg-emerald-500/10";
+                        statusIcon.innerHTML = `<svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>`;
+                        statusText.textContent = "✨ Lokasi berhasil dipetakan! Silakan klik tombol 'Pick on Map' (kuning) untuk melihat rute emas dan konfirmasi ulang lokasi Anda.";
+                        statusText.className = "text-emerald-400 leading-normal";
+                    }
+
+                    if (mapPickerBtn) mapPickerBtn.classList.add('animate-pulse-gold');
+                } else {
+                    // Try without "Jawa Timur" as fallback
+                    const queryFallback = encodeURIComponent(address);
+                    const responseFallback = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${queryFallback}&limit=1&countrycodes=id`, {
+                        headers: {
+                            'Accept-Language': 'id',
+                            'User-Agent': 'AyoRennePOSCheckout/1.0'
+                        }
+                    });
+                    const dataFallback = await responseFallback.json();
+
+                    if (dataFallback && dataFallback.length > 0) {
+                        const lat = parseFloat(dataFallback[0].lat);
+                        const lng = parseFloat(dataFallback[0].lon);
+
+                        await applyDeliveryLocation(lat, lng);
+                        tempPickedLat = lat;
+                        tempPickedLng = lng;
+
+                        if (statusWrap && statusIcon && statusText) {
+                            statusWrap.firstElementChild.className = "flex items-center gap-2.5 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 px-4 py-3 text-[10px] font-bold transition-all duration-300";
+                            statusIcon.className = "h-4 w-4 shrink-0 rounded-full flex items-center justify-center text-emerald-400 bg-emerald-500/10";
+                            statusIcon.innerHTML = `<svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>`;
+                            statusText.textContent = "✨ Lokasi berhasil dipetakan! Silakan klik tombol 'Pick on Map' (kuning) untuk melihat rute emas dan konfirmasi ulang lokasi Anda.";
+                            statusText.className = "text-emerald-400 leading-normal";
+                        }
+                        if (mapPickerBtn) mapPickerBtn.classList.add('animate-pulse-gold');
+                    } else {
+                        if (statusWrap && statusIcon && statusText) {
+                            // Not found State
+                            statusWrap.firstElementChild.className = "flex items-center gap-2.5 rounded-2xl border border-red-500/20 bg-red-500/5 px-4 py-3 text-[10px] font-bold transition-all duration-300";
+                            statusIcon.className = "h-4 w-4 shrink-0 rounded-full flex items-center justify-center text-red-400 bg-red-500/10";
+                            statusIcon.innerHTML = `<svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>`;
+                            statusText.textContent = "⚠️ Alamat kurang spesifik / tidak terdeteksi. Silakan gunakan tombol 'Pick on Map' untuk memin lokasi manual Anda.";
+                            statusText.className = "text-red-400 leading-normal";
+                        }
+                        if (mapPickerBtn) mapPickerBtn.classList.remove('animate-pulse-gold');
+                    }
+                }
+            } catch (error) {
+                console.error("Geocoding failed:", error);
+                if (statusWrap && statusIcon && statusText) {
+                    statusWrap.firstElementChild.className = "flex items-center gap-2.5 rounded-2xl border border-red-500/20 bg-red-500/5 px-4 py-3 text-[10px] font-bold transition-all duration-300";
+                    statusIcon.className = "h-4 w-4 shrink-0 rounded-full flex items-center justify-center text-red-400 bg-red-500/10";
+                    statusIcon.innerHTML = `<svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>`;
+                    statusText.textContent = "⚠️ Gagal menghubungkan ke pencari lokasi otomatis. Silakan gunakan tombol 'Pick on Map' secara manual.";
+                    statusText.className = "text-red-400 leading-normal";
+                }
+                if (mapPickerBtn) mapPickerBtn.classList.remove('animate-pulse-gold');
+            }
+        }, 1000);
+
+        // Bind geocoding to textarea input
+        document.addEventListener('DOMContentLoaded', () => {
+            const addressInput = document.getElementById('deliveryAddress');
+            if (addressInput) {
+                addressInput.addEventListener('input', (e) => {
+                    geocodeAddress(e.target.value);
+                });
+            }
+        });
+
         // init: pastikan key qty ikut sinkron dari overview (kalau user reload di halaman ini)
         (function init() {
             const ov = loadOverview();
