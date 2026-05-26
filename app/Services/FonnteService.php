@@ -100,9 +100,15 @@ class FonnteService
         }
 
         try {
-            $response = Http::withHeaders([
+            $request = Http::withHeaders([
                 'Authorization' => $this->token,
-            ])->acceptJson()->post($this->baseUrl . '/get-whatsapp-group');
+            ]);
+
+            if (config('app.env') === 'local') {
+                $request = $request->withoutVerifying();
+            }
+
+            $response = $request->acceptJson()->post($this->baseUrl . '/get-whatsapp-group');
 
             return [
                 'ok' => $response->successful(),
@@ -147,9 +153,15 @@ class FonnteService
         $payload = $this->applyDefaults($payload);
 
         try {
-            $response = Http::withHeaders([
+            $request = Http::withHeaders([
                 'Authorization' => $this->token,
-            ])->asForm()->acceptJson()->post($this->baseUrl . '/send', $payload);
+            ]);
+
+            if (config('app.env') === 'local') {
+                $request = $request->withoutVerifying();
+            }
+
+            $response = $request->asForm()->acceptJson()->post($this->baseUrl . '/send', $payload);
 
             return [
                 'ok' => $response->successful(),

@@ -96,6 +96,96 @@
 
     {{-- RIGHT: SUMMARY & INFO --}}
     <div class="space-y-8">
+       <!-- SERVICE & LAYANAN DETAIL -->
+       <div class="premium-card p-8 border-white/5 bg-white/[0.02] relative overflow-hidden group">
+          <div class="absolute -top-10 -right-10 w-40 h-40 bg-gold-primary/5 blur-3xl rounded-full"></div>
+          
+          <div class="flex items-center gap-3 mb-6">
+             <div class="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-white/40 border border-white/10 group-hover:border-gold-primary/30 transition-all">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+             </div>
+             <div>
+                <h4 class="text-[9px] font-black text-white/20 uppercase tracking-widest">Jenis Layanan</h4>
+                <p class="text-sm font-bold text-white italic">Detail Pesanan</p>
+             </div>
+          </div>
+
+          <div class="flex flex-wrap gap-2 mb-6">
+             @if(($sale->order_type ?? '') === 'dine_in')
+                <span class="inline-flex items-center gap-2 rounded-xl border border-gold-primary/20 bg-gold-primary/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-gold-primary">
+                   🍽️ DINE IN
+                </span>
+             @elseif(($sale->order_type ?? '') === 'delivery')
+                <span class="inline-flex items-center gap-2 rounded-xl border border-amber-500/20 bg-amber-500/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-amber-500 animate-pulse">
+                   🚚 DELIVERY
+                </span>
+             @else
+                <span class="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-white/40">
+                   🥡 TAKE AWAY
+                </span>
+             @endif
+          </div>
+          
+          <div class="p-4 rounded-2xl bg-white/5 border border-white/5 space-y-3">
+             @if(($sale->order_type ?? '') === 'dine_in')
+                <div class="flex items-center justify-between">
+                   <span class="text-[9px] text-white/30 uppercase font-black">Meja</span>
+                   <span class="text-[10px] text-gold-primary font-black uppercase tracking-wider bg-gold-primary/10 px-2.5 py-0.5 rounded-lg border border-gold-primary/15">
+                      {{ $sale->diningTable?->name ?? ('Meja #' . ($sale->dining_table_id ?? '-')) }}
+                   </span>
+                </div>
+             @elseif(($sale->order_type ?? '') === 'delivery')
+                <div class="space-y-3">
+                   @php
+                      $customerNameRaw = trim($sale->user?->name ?? '');
+                      $customerName = $customerNameRaw ? str_replace('(Tamu)', '', $customerNameRaw) : '';
+                   @endphp
+                   @if($customerName)
+                      <div class="flex items-center justify-between pb-2 border-b border-white/5">
+                         <span class="text-[9px] text-white/30 uppercase font-black">Penerima</span>
+                         <span class="text-[10px] text-white/80 font-bold">{{ $customerName }}</span>
+                      </div>
+                   @endif
+                   @if($sale->delivery_phone)
+                      <div class="flex items-center justify-between pb-2 border-b border-white/5">
+                         <span class="text-[9px] text-white/30 uppercase font-black">Telepon</span>
+                         <span class="text-[10px] text-white/80 font-bold">{{ $sale->delivery_phone }}</span>
+                      </div>
+                   @endif
+                   @if($sale->delivery_distance_km)
+                      <div class="flex items-center justify-between pb-2 border-b border-white/5">
+                         <span class="text-[9px] text-white/30 uppercase font-black">Jarak</span>
+                         <span class="text-[10px] text-white/80 font-bold">{{ number_format($sale->delivery_distance_km, 2) }} KM</span>
+                      </div>
+                   @endif
+                   <div class="flex flex-col gap-1">
+                      <span class="text-[9px] text-white/30 uppercase font-black">Alamat Detail</span>
+                      <span class="text-[10px] text-white/70 leading-relaxed font-medium">{{ $sale->delivery_address ?? '-' }}</span>
+                   </div>
+                   @if($sale->delivery_lat && $sale->delivery_lng)
+                      <div class="pt-2 border-t border-white/5">
+                         <a href="https://www.google.com/maps?q={{ urlencode($sale->delivery_lat) }},{{ urlencode($sale->delivery_lng) }}" target="_blank"
+                            class="inline-flex items-center gap-1.5 text-[10px] font-bold text-gold-primary hover:underline">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                            Buka Peta Lokasi
+                         </a>
+                      </div>
+                   @endif
+                </div>
+             @else
+                <div class="text-center py-2">
+                   <p class="text-[10px] text-white/40 italic font-medium">Customer akan mengambil pesanan langsung di restaurant.</p>
+                </div>
+             @endif
+          </div>
+       </div>
+
        <!-- CASHIER INFO -->
        <div class="premium-card p-8 border-white/5 bg-white/[0.02] relative overflow-hidden group">
           <div class="absolute -top-10 -right-10 w-40 h-40 bg-gold-primary/5 blur-3xl rounded-full"></div>
@@ -103,7 +193,7 @@
           <div class="flex items-center gap-3 mb-6">
              <div class="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-white/40 border border-white/10 group-hover:border-gold-primary/30 transition-all">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
              </div>
              <div>
@@ -127,7 +217,8 @@
        <!-- PAYMENT SUMMARY -->
        @php
          $dpp = (float) ($sale->items?->sum('subtotal') ?? 0);
-         $tax = max(0, (float) ($sale->total_amount ?? 0) - $dpp);
+         $deliveryFee = (float) ($sale->delivery_fee ?? 0);
+         $tax = max(0, (float) ($sale->total_amount ?? 0) - $dpp - $deliveryFee);
        @endphp
        <div class="premium-card p-8 border-gold-primary/20 bg-gold-primary/[0.03] space-y-6">
           <h4 class="text-xs font-black text-gold-primary uppercase tracking-[0.2em]">Rincian Pembayaran</h4>
@@ -138,9 +229,15 @@
                 <span class="font-bold">Rp {{ number_format($dpp, 0, ',', '.') }}</span>
              </div>
              <div class="flex items-center justify-between text-[11px] text-white/60">
-                <span class="font-medium italic">Pajak Pertambahan Nilai (11%)</span>
+                <span class="font-medium italic">Pajak Pertambahan Nilai</span>
                 <span class="font-bold">Rp {{ number_format($tax, 0, ',', '.') }}</span>
              </div>
+             @if($deliveryFee > 0)
+             <div class="flex items-center justify-between text-[11px] text-white/60">
+                <span class="font-medium italic">Ongkos Kirim (Delivery)</span>
+                <span class="font-bold">Rp {{ number_format($deliveryFee, 0, ',', '.') }}</span>
+             </div>
+             @endif
              
              <div class="pt-6 border-t border-white/10">
                 <div class="flex flex-col gap-1">
@@ -168,7 +265,7 @@
           <div class="flex items-center gap-3">
              <div class="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-white/30 border border-white/10">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
                 </svg>
              </div>
              <h4 class="text-[9px] font-black text-white/30 uppercase tracking-widest">Catatan Transaksi</h4>

@@ -95,7 +95,9 @@ class SaleController extends Controller
             ->join('sale_items', 'sale_items.sale_id', '=', 'sales.id')
             ->sum('sale_items.subtotal');
 
-        $sumTax = max(0, $sumTotal - $sumSubtotal);
+        $sumDeliveryFee = (float) (clone $base)->sum('delivery_fee');
+
+        $sumTax = max(0, $sumTotal - $sumSubtotal - $sumDeliveryFee);
 
         $summary = [
             'total_trx' => (clone $base)->count(),
@@ -119,6 +121,7 @@ class SaleController extends Controller
         $sale->load([
             'cashier',
             'items.product',
+            'diningTable',
         ]);
 
         return view('dashboard.admin.sales.show', compact('sale'));

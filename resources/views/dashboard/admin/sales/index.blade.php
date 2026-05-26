@@ -159,11 +159,21 @@
            @forelse($sales as $s)
              @php
                $dpp = (float) ($s->items_subtotal ?? 0);
-               $tax = max(0, (float) ($s->total_amount ?? 0) - $dpp);
+               $deliveryFee = (float) ($s->delivery_fee ?? 0);
+               $tax = max(0, (float) ($s->total_amount ?? 0) - $dpp - $deliveryFee);
              @endphp
              <tr class="group hover:bg-white/[0.02] transition-colors">
                <td class="px-8 py-6">
-                 <div class="text-xs font-black text-white group-hover:text-gold-primary transition-colors">{{ $s->invoice_no ?? ('#'.$s->id) }}</div>
+                 <div class="flex flex-wrap items-center gap-2">
+                    <span class="text-xs font-black text-white group-hover:text-gold-primary transition-colors">{{ $s->invoice_no ?? ('#'.$s->id) }}</span>
+                    @if(($s->order_type ?? '') === 'dine_in')
+                       <span class="text-[8px] font-bold text-gold-primary bg-gold-primary/10 px-1.5 py-0.5 rounded border border-gold-primary/20 uppercase tracking-wider">Dine In</span>
+                    @elseif(($s->order_type ?? '') === 'delivery')
+                       <span class="text-[8px] font-bold text-amber-500 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20 uppercase tracking-wider">Delivery</span>
+                    @else
+                       <span class="text-[8px] font-bold text-white/40 bg-white/5 px-1.5 py-0.5 rounded border border-white/10 uppercase tracking-wider">Take Away</span>
+                    @endif
+                 </div>
                  <div class="text-[10px] text-white/30 font-medium italic mt-0.5">{{ $s->created_at?->format('d M Y • H:i') }}</div>
                </td>
                <td class="px-6 py-6">
@@ -212,7 +222,16 @@
          <div class="premium-card p-5 sm:p-6 border-white/5 bg-white/[0.02]">
             <div class="flex items-start justify-between gap-4 mb-4">
                <div>
-                  <h4 class="text-sm font-black text-white group-hover:text-gold-primary transition-colors">{{ $s->invoice_no ?? ('#'.$s->id) }}</h4>
+                  <div class="flex items-center gap-2">
+                     <h4 class="text-sm font-black text-white group-hover:text-gold-primary transition-colors">{{ $s->invoice_no ?? ('#'.$s->id) }}</h4>
+                     @if(($s->order_type ?? '') === 'dine_in')
+                        <span class="text-[8px] font-bold text-gold-primary bg-gold-primary/10 px-1.5 py-0.5 rounded border border-gold-primary/20 uppercase tracking-wider">Dine In</span>
+                     @elseif(($s->order_type ?? '') === 'delivery')
+                        <span class="text-[8px] font-bold text-amber-500 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20 uppercase tracking-wider">Delivery</span>
+                     @else
+                        <span class="text-[8px] font-bold text-white/40 bg-white/5 px-1.5 py-0.5 rounded border border-white/10 uppercase tracking-wider">Take Away</span>
+                     @endif
+                  </div>
                   <p class="text-[10px] text-white/30 font-medium mt-0.5">{{ $s->created_at?->format('d M Y • H:i') }}</p>
                </div>
                <div class="text-right">

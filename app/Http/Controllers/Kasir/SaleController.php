@@ -189,6 +189,10 @@ class SaleController extends Controller
 
                 $inventory->reserve($needs, $materials, $sale, $userId);
 
+                if ($isImmediatePaid) {
+                    $inventory->commitPaid($sale, $userId);
+                }
+
                 return $sale->fresh(['items.product']);
             });
 
