@@ -186,6 +186,88 @@
       </div>
 
     </div>
+
+    <!-- ROW 3: RIWAYAT PENGAJUAN -->
+    <div class="glass-panel rounded-[32px] p-7 animate-fade-in-up delay-200">
+      <div class="flex items-center justify-between mb-6">
+        <div>
+          <div class="text-lg font-bold text-white">Status & Riwayat Pengajuan</div>
+          <div class="text-xs text-white/50 mt-1">Daftar pengajuan absensi darurat, keterlambatan, lembur, dan koreksi checkout.</div>
+        </div>
+      </div>
+      
+      <div class="overflow-hidden rounded-2xl border border-white/10 bg-black/20">
+        <div class="overflow-x-auto">
+          <table class="w-full min-w-[800px] text-left text-sm text-white/80">
+            <thead class="bg-white/[0.03] text-xs text-white/60 uppercase font-mono tracking-wider">
+              <tr>
+                <th class="px-6 py-4">Tanggal Pengajuan</th>
+                <th class="px-6 py-4">Jenis Pengajuan</th>
+                <th class="px-6 py-4">Alasan / Detail</th>
+                <th class="px-6 py-4">Status</th>
+                <th class="px-6 py-4">Catatan Reviewer</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-white/5">
+              @forelse($requestsHistory as $r)
+                <tr class="hover:bg-white/[0.02] transition-colors">
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm font-semibold text-white">{{ $r->created_at->format('d M Y') }}</div>
+                    <div class="text-[10px] text-white/45 mt-0.5">{{ $r->created_at->format('H:i') }}</div>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="px-3 py-1.5 rounded-xl bg-white/[0.04] border border-white/10 text-xs font-semibold text-white/80">
+                      {{ $r->type_label }}
+                    </span>
+                  </td>
+                  <td class="px-6 py-4">
+                    <div class="text-xs max-w-xs break-words text-white/70">{{ $r->reason ?? '-' }}</div>
+                    @if(isset($r->requested_until_time))
+                      <div class="text-[10px] text-yellow-400/80 mt-1 font-mono">Batas: {{ $r->requested_until_time }}</div>
+                    @elseif(isset($r->requested_minutes))
+                      <div class="text-[10px] text-yellow-400/80 mt-1 font-mono">Durasi: {{ $r->requested_minutes }} menit</div>
+                    @endif
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    @if($r->status === 'pending')
+                      <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-yellow-500/10 text-yellow-500 border border-yellow-500/20">
+                        <span class="w-1.5 h-1.5 rounded-full bg-yellow-500 animate-pulse"></span>
+                        Pending
+                      </span>
+                    @elseif($r->status === 'approved')
+                      <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                        Disetujui
+                      </span>
+                    @elseif($r->status === 'rejected')
+                      <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-red-500/10 text-red-400 border border-red-500/20">
+                        <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>
+                        Ditolak (Alpha)
+                      </span>
+                    @else
+                      <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-white/10 text-white/60 border border-white/20">
+                        {{ ucfirst($r->status) }}
+                      </span>
+                    @endif
+                  </td>
+                  <td class="px-6 py-4">
+                    <div class="text-xs max-w-xs break-words text-white/60">{{ $r->review_note ?? '-' }}</div>
+                    @if($r->reviewed_at)
+                      <div class="text-[9px] text-white/30 mt-1 font-mono">Direview: {{ $r->reviewed_at->format('d/m H:i') }}</div>
+                    @endif
+                  </td>
+                </tr>
+              @empty
+                <tr>
+                  <td colspan="5" class="px-6 py-10 text-center text-sm text-white/40">Belum ada riwayat pengajuan absensi.</td>
+                </tr>
+              @endforelse
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
   </div>
 
   {{-- CAMERA MODAL (FULLSCREEN) --}}

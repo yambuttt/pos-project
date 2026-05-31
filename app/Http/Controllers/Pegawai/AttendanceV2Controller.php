@@ -45,7 +45,59 @@ class AttendanceV2Controller extends Controller
             ],
         ];
 
-        return view('dashboard.pegawai.attendance_v2', compact('attendance', 'ui'));
+        $exceptions = \App\Models\AttendanceExceptionRequest::where('user_id', auth()->id())
+            ->orderBy('created_at', 'desc')
+            ->take(10)
+            ->get()
+            ->map(function ($item) {
+                $item->type_label = 'Absensi Darurat (' . strtoupper($item->mode) . ')';
+                $item->request_date = $item->attendance_date;
+                $item->formatted_status = $item->status;
+                return $item;
+            });
+
+        $lates = \App\Models\LateAttendanceRequest::where('user_id', auth()->id())
+            ->orderBy('created_at', 'desc')
+            ->take(10)
+            ->get()
+            ->map(function ($item) {
+                $item->type_label = 'Pengajuan Telat';
+                $item->request_date = $item->date;
+                $item->formatted_status = $item->status;
+                return $item;
+            });
+
+        $corrections = \App\Models\CheckoutCorrectionRequest::where('user_id', auth()->id())
+            ->orderBy('created_at', 'desc')
+            ->take(10)
+            ->get()
+            ->map(function ($item) {
+                $item->type_label = 'Koreksi Checkout';
+                $item->request_date = $item->date;
+                $item->formatted_status = $item->status;
+                return $item;
+            });
+
+        $overtimes = \App\Models\OvertimeRequest::where('user_id', auth()->id())
+            ->orderBy('created_at', 'desc')
+            ->take(10)
+            ->get()
+            ->map(function ($item) {
+                $item->type_label = 'Pengajuan Lembur';
+                $item->request_date = $item->date;
+                $item->formatted_status = $item->status;
+                return $item;
+            });
+
+        $requestsHistory = collect()
+            ->concat($exceptions)
+            ->concat($lates)
+            ->concat($corrections)
+            ->concat($overtimes)
+            ->sortByDesc('created_at')
+            ->take(20);
+
+        return view('dashboard.pegawai.attendance_v2', compact('attendance', 'ui', 'requestsHistory'));
     }
 
     // dipanggil saat page load: cek device hash, kalau belum ada => buat pending
