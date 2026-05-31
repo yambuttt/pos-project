@@ -58,11 +58,17 @@
       <nav class="flex-1 space-y-2 relative z-10">
         @foreach($navItems as $item)
           <a href="{{ route($item['route']) }}" 
-             class="group flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all duration-300 {{ $item['active'] ? 'bg-accent-gold text-black shadow-lg shadow-accent-gold/20' : 'text-white/40 hover:bg-white/5 hover:text-white' }}">
-            <div class="shrink-0 transition-transform duration-300 group-hover:scale-110">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $item['icon'] }}"></path></svg>
+             id="nav-desktop-{{ Str::slug($item['label']) }}"
+             class="group flex items-center justify-between px-4 py-3.5 rounded-2xl transition-all duration-300 {{ $item['active'] ? 'bg-accent-gold text-black shadow-lg shadow-accent-gold/20' : 'text-white/40 hover:bg-white/5 hover:text-white' }}">
+            <div class="flex items-center gap-4 min-w-0">
+              <div class="shrink-0 transition-transform duration-300 group-hover:scale-110">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $item['icon'] }}"></path></svg>
+              </div>
+              <span class="font-bold text-sm tracking-tight truncate">{{ $item['label'] }}</span>
             </div>
-            <span class="font-bold text-sm tracking-tight">{{ $item['label'] }}</span>
+            @if($item['label'] === 'Pesanan Siap')
+              <span id="dot-desktop-pesanan-siap" class="hidden w-2 h-2 rounded-full bg-red-500 shadow-[0_0_8px_#ef4444] animate-pulse shrink-0"></span>
+            @endif
           </a>
         @endforeach
       </nav>
@@ -93,8 +99,9 @@
   <div class="lg:ml-72 relative z-10 flex flex-col min-h-screen">
     {{-- Mobile Header --}}
     <header class="lg:hidden flex items-center justify-between p-4 bg-black/50 backdrop-blur-xl border-b border-white/5 sticky top-0 z-[60]">
-      <button @click="mobileMenuOpen = true" class="w-10 h-10 rounded-xl glass-panel flex items-center justify-center">
+      <button @click="mobileMenuOpen = true" class="relative w-10 h-10 rounded-xl glass-panel flex items-center justify-center">
         <svg class="w-6 h-6 text-accent-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+        <span id="dot-hamburger" class="hidden absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-red-500 shadow-[0_0_8px_#ef4444] animate-pulse"></span>
       </button>
       <div class="flex items-center gap-2">
         <div class="w-8 h-8 rounded-lg bg-accent-gold flex items-center justify-center">
@@ -155,9 +162,15 @@
       <nav class="flex-1 space-y-2">
         @foreach($navItems as $item)
           <a href="{{ route($item['route']) }}" 
-             class="flex items-center gap-4 px-4 py-4 rounded-2xl transition-all duration-300 {{ $item['active'] ? 'bg-accent-gold text-black shadow-lg shadow-accent-gold/20' : 'text-white/50 hover:bg-white/5 hover:text-white' }}">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $item['icon'] }}"></path></svg>
-            <span class="font-bold text-sm tracking-tight">{{ $item['label'] }}</span>
+             id="nav-mobile-{{ Str::slug($item['label']) }}"
+             class="flex items-center justify-between px-4 py-4 rounded-2xl transition-all duration-300 {{ $item['active'] ? 'bg-accent-gold text-black shadow-lg shadow-accent-gold/20' : 'text-white/50 hover:bg-white/5 hover:text-white' }}">
+            <div class="flex items-center gap-4 min-w-0">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $item['icon'] }}"></path></svg>
+              <span class="font-bold text-sm tracking-tight truncate">{{ $item['label'] }}</span>
+            </div>
+            @if($item['label'] === 'Pesanan Siap')
+              <span id="dot-mobile-pesanan-siap" class="hidden w-2.5 h-2.5 rounded-full bg-red-500 shadow-[0_0_8px_#ef4444] animate-pulse shrink-0"></span>
+            @endif
           </a>
         @endforeach
       </nav>
@@ -179,6 +192,21 @@
       let lastReadyIds = new Set();
       let initialLoaded = false;
 
+      // LocalStorage keys
+      const SEEN_READY_ORDERS_KEY = 'seen_ready_order_ids_v2';
+
+      function getSeenReadyOrderIds() {
+        try {
+          return new Set(JSON.parse(localStorage.getItem(SEEN_READY_ORDERS_KEY) || '[]'));
+        } catch (e) {
+          return new Set();
+        }
+      }
+
+      function saveSeenReadyOrderIds(set) {
+        localStorage.setItem(SEEN_READY_ORDERS_KEY, JSON.stringify(Array.from(set)));
+      }
+
       async function pollReady() {
         try {
           const res = await fetch("{{ route('kasir.ready.orders') }}", { headers: { 'Accept': 'application/json' } });
@@ -198,7 +226,43 @@
 
           lastReadyIds = newIds;
           initialLoaded = true;
+
+          // Notification dot logic
+          const isReadyPage = {{ request()->routeIs('kasir.ready.*') ? 'true' : 'false' }};
+          
+          if (isReadyPage) {
+            saveSeenReadyOrderIds(newIds);
+            updateNotificationDots(new Set()); // Hide dots
+          } else {
+            const seenIds = getSeenReadyOrderIds();
+            const unseenIds = new Set();
+            
+            for (const id of newIds) {
+              if (!seenIds.has(id)) {
+                unseenIds.add(id);
+              }
+            }
+            
+            updateNotificationDots(unseenIds);
+          }
+
         } catch (e) { }
+      }
+
+      function updateNotificationDots(unseenIds) {
+        const dotDesktop = document.getElementById('dot-desktop-pesanan-siap');
+        const dotMobile = document.getElementById('dot-mobile-pesanan-siap');
+        const dotHamburger = document.getElementById('dot-hamburger');
+
+        if (unseenIds.size > 0) {
+          if (dotDesktop) dotDesktop.classList.remove('hidden');
+          if (dotMobile) dotMobile.classList.remove('hidden');
+          if (dotHamburger) dotHamburger.classList.remove('hidden');
+        } else {
+          if (dotDesktop) dotDesktop.classList.add('hidden');
+          if (dotMobile) dotMobile.classList.add('hidden');
+          if (dotHamburger) dotHamburger.classList.add('hidden');
+        }
       }
 
       function showToast(text) {
@@ -212,6 +276,13 @@
 
       pollReady();
       setInterval(pollReady, 5000);
+
+      // Listen for localStorage updates from other tabs
+      window.addEventListener('storage', (e) => {
+        if (e.key === SEEN_READY_ORDERS_KEY) {
+          pollReady();
+        }
+      });
     })();
   </script>
   @stack('scripts')
