@@ -455,7 +455,38 @@
       ccModal.classList.remove('flex');
     }
 
-    btnCheckoutCorrection?.addEventListener('click', openCcModal);
+    function canRequestCheckoutCorrection() {
+      // Hanya boleh jika sudah check-in dan belum check-out
+      return HAS_CHECKIN && !HAS_CHECKOUT;
+    }
+
+    function syncCheckoutCorrectionButton() {
+      if (!btnCheckoutCorrection) return;
+
+      const ok = canRequestCheckoutCorrection();
+      btnCheckoutCorrection.disabled = !ok;
+      btnCheckoutCorrection.classList.toggle('opacity-50', !ok);
+      btnCheckoutCorrection.classList.toggle('cursor-not-allowed', !ok);
+
+      if (!ccMsg) return;
+
+      if (!ok) {
+        if (!HAS_CHECKIN) {
+          ccMsg.textContent = 'Koreksi checkout hanya bisa diajukan jika sudah check-in.';
+        } else if (HAS_CHECKOUT) {
+          ccMsg.textContent = 'Kamu sudah check-out hari ini.';
+        } else {
+          ccMsg.textContent = '';
+        }
+      } else {
+        ccMsg.textContent = '';
+      }
+    }
+
+    btnCheckoutCorrection?.addEventListener('click', () => {
+      if (btnCheckoutCorrection.disabled) return;
+      openCcModal();
+    });
     ccClose?.addEventListener('click', closeCcModal);
     ccModal?.addEventListener('click', (e) => { if (e.target === ccModal) closeCcModal(); });
 
@@ -1534,6 +1565,7 @@
       syncLateButton();
       syncOvertimeButton();
       syncExceptionButton();
+      syncCheckoutCorrectionButton();
     }
 
     refreshShiftUi();
