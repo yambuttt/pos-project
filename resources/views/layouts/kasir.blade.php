@@ -192,21 +192,6 @@
       let lastReadyIds = new Set();
       let initialLoaded = false;
 
-      // LocalStorage keys
-      const SEEN_READY_ORDERS_KEY = 'seen_ready_order_ids_v2';
-
-      function getSeenReadyOrderIds() {
-        try {
-          return new Set(JSON.parse(localStorage.getItem(SEEN_READY_ORDERS_KEY) || '[]'));
-        } catch (e) {
-          return new Set();
-        }
-      }
-
-      function saveSeenReadyOrderIds(set) {
-        localStorage.setItem(SEEN_READY_ORDERS_KEY, JSON.stringify(Array.from(set)));
-      }
-
       async function pollReady() {
         try {
           const res = await fetch("{{ route('kasir.ready.orders') }}", { headers: { 'Accept': 'application/json' } });
@@ -231,30 +216,21 @@
           const isReadyPage = {{ request()->routeIs('kasir.ready.*') ? 'true' : 'false' }};
           
           if (isReadyPage) {
-            saveSeenReadyOrderIds(newIds);
-            updateNotificationDots(new Set()); // Hide dots
+            updateNotificationDots(false); // Hide dots when actively viewing the ready page
           } else {
-            const seenIds = getSeenReadyOrderIds();
-            const unseenIds = new Set();
-            
-            for (const id of newIds) {
-              if (!seenIds.has(id)) {
-                unseenIds.add(id);
-              }
-            }
-            
-            updateNotificationDots(unseenIds);
+            // Show dots if there are any active ready orders in the queue
+            updateNotificationDots(readySales.length > 0);
           }
 
         } catch (e) { }
       }
 
-      function updateNotificationDots(unseenIds) {
+      function updateNotificationDots(show) {
         const dotDesktop = document.getElementById('dot-desktop-pesanan-siap');
         const dotMobile = document.getElementById('dot-mobile-pesanan-siap');
         const dotHamburger = document.getElementById('dot-hamburger');
 
-        if (unseenIds.size > 0) {
+        if (show) {
           if (dotDesktop) dotDesktop.classList.remove('hidden');
           if (dotMobile) dotMobile.classList.remove('hidden');
           if (dotHamburger) dotHamburger.classList.remove('hidden');
@@ -276,13 +252,6 @@
 
       pollReady();
       setInterval(pollReady, 5000);
-
-      // Listen for localStorage updates from other tabs
-      window.addEventListener('storage', (e) => {
-        if (e.key === SEEN_READY_ORDERS_KEY) {
-          pollReady();
-        }
-      });
     })();
   </script>
   @stack('scripts')
