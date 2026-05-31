@@ -130,7 +130,7 @@
                         <span x-text="'Rp ' + formatNumber(totalPrice)"></span>
                     </div>
                     <div class="flex justify-between text-white/40 text-xs">
-                        <span>Pajak (11%)</span>
+                        <span>Pajak (10%)</span>
                         <span x-text="'Rp ' + formatNumber(taxAmount)"></span>
                     </div>
                     <div class="flex justify-between items-end pt-2 border-t border-white/5">
@@ -196,7 +196,7 @@
                     <span>Subtotal</span><span x-text="'Rp '+formatNumber(totalPrice)"></span>
                 </div>
                 <div class="flex justify-between text-xs text-white/40">
-                    <span>Pajak (11%)</span><span x-text="'Rp '+formatNumber(taxAmount)"></span>
+                    <span>Pajak (10%)</span><span x-text="'Rp '+formatNumber(taxAmount)"></span>
                 </div>
                 <div class="flex justify-between text-sm font-bold">
                     <span class="text-white">TOTAL</span><span class="text-yellow-500" x-text="'Rp '+formatNumber(grandTotal)"></span>
@@ -276,7 +276,7 @@
                     <div class="border-t border-dashed border-gray-400 my-2"></div>
                     <div class="space-y-0.5">
                         <div class="flex justify-between"><span>Subtotal</span><span x-text="'Rp '+formatNumber(lastSale?.subtotal)"></span></div>
-                        <div class="flex justify-between"><span>Pajak (11%)</span><span x-text="'Rp '+formatNumber(lastSale?.tax_amount)"></span></div>
+                        <div class="flex justify-between"><span>Pajak (10%)</span><span x-text="'Rp '+formatNumber(lastSale?.tax_amount)"></span></div>
                         <div class="flex justify-between font-bold"><span>TOTAL</span><span x-text="'Rp '+formatNumber(lastSale?.total_amount)"></span></div>
                         <div class="flex justify-between"><span>Tunai</span><span x-text="'Rp '+formatNumber(lastSale?.paid_amount)"></span></div>
                         <div class="flex justify-between font-bold"><span>Kembalian</span><span x-text="'Rp '+formatNumber(lastSale?.change_amount)"></span></div>
@@ -405,7 +405,7 @@ function posSystem() {
         },
 
         get taxAmount() {
-            return Math.round(this.totalPrice * 11 / 100);
+            return Math.round(this.totalPrice * 10 / 100);
         },
 
         get grandTotal() {

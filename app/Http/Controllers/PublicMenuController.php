@@ -176,7 +176,7 @@ class PublicMenuController extends Controller
     //                 }
     //             }
 
-    //             $tax = (int) round($total * 0.11);
+    //             $tax = (int) round($total * 0.10);
     //             $grandTotal = $total + $tax;
 
     //             // Untuk flow “tamu”: belum bayar di sistem -> set 0
@@ -472,7 +472,7 @@ class PublicMenuController extends Controller
                 [$products, $needs, $subtotal] = $inventory->prepareFromItems($data['items']);
                 $materials = $inventory->lockAndValidateMaterials($needs);
 
-                $tax = (int) round($subtotal * 0.11);
+                $tax = (int) round($subtotal * 0.10);
                 $deliveryFee = $data['order_type'] === 'delivery' ? (int) ($data['delivery_fee'] ?? 0) : 0;
                 $grandTotal = $subtotal + $tax + $deliveryFee;
 

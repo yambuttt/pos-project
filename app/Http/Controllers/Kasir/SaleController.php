@@ -106,7 +106,7 @@ class SaleController extends Controller
         try {
             $sale = DB::transaction(function () use ($data, $userId, $isCash, $isImmediatePaid, $randomLetters, $inventory) {
                 [$products, $needs, $subtotal] = $inventory->prepareFromItems($data['items']);
-                $tax = (int) round($subtotal * 0.11);
+                $tax = (int) round($subtotal * 0.10);
                 $grandTotal = $subtotal + $tax;
 
                 $paid = $isCash ? (int) $data['paid_amount'] : $grandTotal;

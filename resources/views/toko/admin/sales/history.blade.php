@@ -264,7 +264,7 @@
                         <span class="text-white/80" x-text="'Rp ' + new Intl.NumberFormat('id-ID').format(selectedSale?.subtotal || 0)"></span>
                     </div>
                     <div class="flex justify-between text-sm">
-                        <span class="text-white/40">Pajak (11%)</span>
+                        <span class="text-white/40">Pajak (10%)</span>
                         <span class="text-white/80" x-text="'Rp ' + new Intl.NumberFormat('id-ID').format(selectedSale?.tax_amount || 0)"></span>
                     </div>
                     <div class="flex justify-between items-center pt-3">

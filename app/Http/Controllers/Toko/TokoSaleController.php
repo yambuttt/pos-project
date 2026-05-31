@@ -39,7 +39,7 @@ class TokoSaleController extends Controller
                 throw new \Exception("Anda harus memulai shift terlebih dahulu sebelum melakukan transaksi.");
             }
 
-            $taxRate = 11; // 11%
+            $taxRate = 10; // 10%
             $subtotal = 0;
 
             // Hitung subtotal

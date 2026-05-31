@@ -154,7 +154,7 @@
                     <span x-text="fmtRp(totalPrice)"></span>
                 </div>
                 <div class="flex justify-between text-xs text-white/30 font-bold">
-                    <span>Pajak (11%)</span>
+                    <span>Pajak (10%)</span>
                     <span x-text="fmtRp(taxAmount)"></span>
                 </div>
                 <div class="flex justify-between items-end pt-3 border-t border-white/5">
@@ -436,7 +436,7 @@ function posSystem() {
         },
 
         get taxAmount() {
-            return Math.round(this.totalPrice * 0.11);
+            return Math.round(this.totalPrice * 0.10);
         },
 
         get grandTotal() {

@@ -41,7 +41,7 @@
      </div>
      <!-- PAJAK -->
      <div class="premium-card p-4 sm:p-6 border-gold-primary/10 bg-gold-primary/5">
-        <p class="text-[8px] sm:text-[10px] uppercase tracking-widest text-gold-primary/40 font-black mb-1">Pajak (11%)</p>
+        <p class="text-[8px] sm:text-[10px] uppercase tracking-widest text-gold-primary/40 font-black mb-1">Pajak (10%)</p>
         <h3 class="text-sm sm:text-xl font-bold text-gold-primary italic truncate">Rp {{ number_format($summary['sum_tax'], 0, ',', '.') }}</h3>
      </div>
      <!-- MODE SELECTOR -->
@@ -149,7 +149,7 @@
              <th class="px-8 py-6">Waktu & Invoice</th>
              <th class="px-6 py-6">Petugas Kasir</th>
              <th class="px-6 py-6 text-right">Dasar Pajak</th>
-             <th class="px-6 py-6 text-right">Pajak (11%)</th>
+             <th class="px-6 py-6 text-right">Pajak (10%)</th>
              <th class="px-6 py-6 text-right">Total Akhir</th>
              <th class="px-6 py-6 text-center">Status</th>
              <th class="px-8 py-6 text-right">Opsi</th>

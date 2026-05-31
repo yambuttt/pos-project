@@ -129,7 +129,7 @@
                     <span class="text-white" id="subtotal">Rp 0</span>
                 </div>
                 <div class="flex items-center justify-between text-[11px] font-bold uppercase tracking-widest text-white/30">
-                    <span>Service Tax (11%)</span>
+                    <span>Service Tax (10%)</span>
                     <span class="text-white" id="tax">Rp 0</span>
                 </div>
                 <div class="flex items-center justify-between pt-2">
@@ -623,7 +623,7 @@
             for (const it of Object.values(overview)) {
                 subtotal += (Number(it.price) || 0) * (Number(it.qty) || 0);
             }
-            const tax = Math.round(subtotal * 0.11);
+            const tax = Math.round(subtotal * 0.10);
             return { subtotal, tax, total: subtotal + tax };
         }
 

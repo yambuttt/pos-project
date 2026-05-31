@@ -325,7 +325,7 @@
                             <span id="subtotal" class="text-white">Rp 0</span>
                         </div>
                         <div class="flex justify-between text-xs font-bold uppercase tracking-widest text-white/30">
-                            <span>Tax (11%)</span>
+                            <span>Tax (10%)</span>
                             <span id="tax" class="text-white">Rp 0</span>
                         </div>
                         <div class="h-px bg-white/5 my-4"></div>
@@ -560,7 +560,7 @@
                 if (!p) continue;
                 subtotal += p.price * (Number(qty) || 0);
             }
-            const tax = Math.round(subtotal * 0.11);
+            const tax = Math.round(subtotal * 0.10);
             const total = subtotal + tax;
             return { subtotal, tax, total };
         }
