@@ -142,7 +142,7 @@
           </div>
           
           <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 px-1">
-             <div></div>
+             <div id="exceptionMsg" class="text-[10px] text-yellow-400/80 leading-tight"></div>
              <div id="lateReqMsg" class="text-[10px] text-yellow-400/80 leading-tight"></div>
              <div id="ccMsg" class="text-[10px] text-yellow-400/80 leading-tight"></div>
              <div id="otMsg" class="text-[10px] text-yellow-400/80 leading-tight"></div>
@@ -641,6 +641,7 @@
     const scanStatus = document.getElementById('scanStatus');
     const btnInitNormal = document.getElementById('btnInitNormal');
     const btnInitException = document.getElementById('btnInitException');
+    const exceptionMsg = document.getElementById('exceptionMsg');
     const exceptionReasonWrap = document.getElementById('exceptionReasonWrap');
     const exceptionReason = document.getElementById('exceptionReason');
     const btnCheckIn = document.getElementById('btnCheckIn');
@@ -1440,9 +1441,66 @@
         return false;
       }
     }
+    function canUseException() {
+      const now = serverNowMs();
+
+      // 1. Sudah check-in & check-out => tidak bisa
+      if (HAS_CHECKIN && HAS_CHECKOUT) {
+        return false;
+      }
+
+      // 2. Belum check-in => hanya bisa selama jadwal check-in (belum lewat UI.in.to_ms)
+      if (!HAS_CHECKIN) {
+        if (now > UI.in.to_ms) {
+          return false; // Sudah melewati jadwal check-in
+        }
+        return true;
+      }
+
+      // 3. Sudah check-in, belum check-out => hanya bisa jika belum lewat jadwal check-out
+      if (HAS_CHECKIN && !HAS_CHECKOUT) {
+        if (now > UI.out.to_ms) {
+          return false; // Sudah melewati jadwal check-out
+        }
+        return true;
+      }
+
+      return true;
+    }
+
+    function syncExceptionButton() {
+      if (!btnInitException) return;
+
+      const ok = canUseException();
+      btnInitException.disabled = !ok;
+      btnInitException.classList.toggle('opacity-50', !ok);
+      btnInitException.classList.toggle('cursor-not-allowed', !ok);
+
+      if (!exceptionMsg) return;
+
+      if (!ok) {
+        const now = serverNowMs();
+        if (HAS_CHECKIN && HAS_CHECKOUT) {
+          exceptionMsg.textContent = 'Sudah check-in & check-out hari ini.';
+        } else if (!HAS_CHECKIN && now > UI.in.to_ms) {
+          exceptionMsg.textContent = 'Absensi darurat ditutup karena sudah melewati jam check-in.';
+        } else if (HAS_CHECKIN && !HAS_CHECKOUT && now > UI.out.to_ms) {
+          exceptionMsg.textContent = 'Absensi darurat ditutup karena sudah melewati jam check-out.';
+        } else {
+          exceptionMsg.textContent = '';
+        }
+      } else {
+        exceptionMsg.textContent = '';
+      }
+    }
+
     // EVENTS
     btnInitNormal.addEventListener("click", () => { flow = null; initGate(); });
-    btnInitException.addEventListener("click", () => { flow = null; initExceptionGate(); });
+    btnInitException.addEventListener("click", () => {
+      if (btnInitException.disabled) return;
+      flow = null;
+      initExceptionGate();
+    });
     btnCheckIn.addEventListener("click", () => { if (!btnCheckIn.disabled) startQrScanner("in"); });
     btnCheckOut.addEventListener("click", () => { if (!btnCheckOut.disabled) startQrScanner("out"); });
 
@@ -1475,6 +1533,7 @@
       setButtonsAfterGate();
       syncLateButton();
       syncOvertimeButton();
+      syncExceptionButton();
     }
 
     refreshShiftUi();
