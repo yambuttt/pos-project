@@ -196,7 +196,8 @@
         </div>
       </div>
       
-      <div class="overflow-hidden rounded-2xl border border-white/10 bg-black/20">
+      <!-- Desktop View (Table) -->
+      <div class="hidden md:block overflow-hidden rounded-2xl border border-white/10 bg-black/20">
         <div class="overflow-x-auto">
           <table class="w-full min-w-[800px] text-left text-sm text-white/80">
             <thead class="bg-white/[0.03] text-xs text-white/60 uppercase font-mono tracking-wider">
@@ -265,6 +266,74 @@
             </tbody>
           </table>
         </div>
+      </div>
+
+      <!-- Mobile View (List Card) -->
+      <div class="space-y-4 md:hidden">
+        @forelse($requestsHistory as $r)
+          <div class="rounded-2xl border border-white/10 bg-black/30 p-5 space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="px-2.5 py-1 rounded-xl bg-white/[0.04] border border-white/10 text-[11px] font-semibold text-white/80">
+                {{ $r->type_label }}
+              </span>
+              <div>
+                @if($r->status === 'pending')
+                  <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-yellow-500/10 text-yellow-500 border border-yellow-500/20">
+                    <span class="w-1 h-1 rounded-full bg-yellow-500 animate-pulse"></span>
+                    Pending
+                  </span>
+                @elseif($r->status === 'approved')
+                  <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                    <span class="w-1 h-1 rounded-full bg-emerald-500"></span>
+                    Disetujui
+                  </span>
+                @elseif($r->status === 'rejected')
+                  <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-red-500/10 text-red-400 border border-red-500/20">
+                    <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>
+                    Ditolak (Alpha)
+                  </span>
+                @else
+                  <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-white/10 text-white/60 border border-white/20">
+                    {{ ucfirst($r->status) }}
+                  </span>
+                @endif
+              </div>
+            </div>
+            
+            <div class="flex items-center justify-between text-xs text-white/50">
+              <div>Tanggal Pengajuan</div>
+              <div class="text-right text-white/80 font-medium">
+                {{ $r->created_at->format('d M Y') }} <span class="text-[10px] text-white/40 ml-1">{{ $r->created_at->format('H:i') }}</span>
+              </div>
+            </div>
+
+            <div class="space-y-1">
+              <div class="text-[11px] text-white/40 uppercase tracking-wider">Alasan / Detail</div>
+              <div class="text-xs text-white/80 leading-relaxed bg-black/20 p-2.5 rounded-xl border border-white/5 break-words">
+                {{ $r->reason ?? '-' }}
+                @if(isset($r->requested_until_time))
+                  <div class="text-[10px] text-yellow-400/80 mt-1 font-mono">Batas: {{ $r->requested_until_time }}</div>
+                @elseif(isset($r->requested_minutes))
+                  <div class="text-[10px] text-yellow-400/80 mt-1 font-mono">Durasi: {{ $r->requested_minutes }} menit</div>
+                @endif
+              </div>
+            </div>
+
+            @if($r->review_note || $r->reviewed_at)
+              <div class="space-y-1 pt-1 border-t border-white/5">
+                <div class="text-[11px] text-white/40 uppercase tracking-wider">Catatan Reviewer</div>
+                <div class="text-xs text-white/60 leading-relaxed break-words">
+                  {{ $r->review_note ?? '-' }}
+                </div>
+                @if($r->reviewed_at)
+                  <div class="text-[9px] text-white/30 font-mono">Direview pada: {{ $r->reviewed_at->format('d/m/Y H:i') }}</div>
+                @endif
+              </div>
+            @endif
+          </div>
+        @empty
+          <div class="text-center py-8 text-sm text-white/40">Belum ada riwayat pengajuan absensi.</div>
+        @endforelse
       </div>
     </div>
 
