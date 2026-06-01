@@ -367,11 +367,14 @@
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         @foreach($buffetPackages as $bp)
-                            <label class="relative cursor-pointer group">
-                                <input type="checkbox" name="buffet_package_ids[]" value="{{ $bp->id }}" data-price="{{ (int) $bp->price }}"
+                            <div class="relative group">
+                                <input type="checkbox" name="buffet_package_ids[]" id="bp_chk_{{ $bp->id }}" value="{{ $bp->id }}" data-price="{{ (int) $bp->price }}"
                                     data-pricing-type="{{ $bp->pricing_type }}" data-min-pax="{{ (int) ($bp->min_pax ?? 0) }}"
                                     class="peer hidden buffet-checkbox">
-                                <div class="h-full rounded-3xl border border-white/5 bg-white/[0.01] p-6 transition-all peer-checked:border-yellow-400 peer-checked:bg-yellow-400/5 group-hover:bg-white/[0.03] flex flex-col justify-between">
+                                
+                                <label for="bp_chk_{{ $bp->id }}" class="absolute inset-0 z-10 cursor-pointer"></label>
+
+                                <div class="h-full rounded-3xl border border-white/5 bg-white/[0.01] p-6 transition-all peer-checked:border-yellow-400 peer-checked:bg-yellow-400/5 group-hover:bg-white/[0.03] flex flex-col justify-between relative">
                                     <div>
                                         <div class="flex items-start justify-between gap-4 mb-3">
                                             <div>
@@ -390,17 +393,32 @@
                                             {{ $bp->notes ?: 'No description available for this package.' }}
                                         </p>
                                     </div>
-                                    <div class="mt-4 pt-4 border-t border-white/5 flex items-center justify-between">
-                                        <button type="button" onclick="showBuffetDetails(event, {{ $bp->id }})" class="rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 px-4 py-2 text-[9px] font-black uppercase tracking-widest text-yellow-400 transition-all">
-                                            Detail Paket
-                                        </button>
-                                        @if($bp->min_pax > 0)
-                                            <span class="text-[9px] font-black text-white/20 uppercase tracking-widest">Min: {{ $bp->min_pax }} Pax</span>
-                                        @endif
+                                    
+                                    <div class="mt-4 pt-4 border-t border-white/5 flex flex-col gap-4 relative z-20">
+                                        <!-- Pax / Qty input container, shown only when checked -->
+                                        <div class="hidden items-center justify-between gap-2 buffet-qty-container bg-white/[0.02] border border-white/5 rounded-2xl px-4 py-3">
+                                            <span class="text-[10px] font-black uppercase tracking-widest text-white/40">
+                                                {{ $bp->pricing_type === 'per_pax' ? 'Jumlah Pax' : 'Jumlah Paket' }}
+                                            </span>
+                                            <input type="number" name="buffet_packages[{{ $bp->id }}][pax]" 
+                                                min="{{ max(1, (int) $bp->min_pax) }}" 
+                                                value="{{ max(1, (int) $bp->min_pax) }}" 
+                                                class="w-20 rounded-xl border border-white/10 bg-black/40 px-3 py-2 text-center text-xs font-bold text-white outline-none focus:border-yellow-400 transition-all buffet-qty-input"
+                                                oninput="updateTotals();"
+                                            >
+                                        </div>
+
+                                        <div class="flex items-center justify-between">
+                                            <button type="button" onclick="showBuffetDetails(event, {{ $bp->id }})" class="rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 px-4 py-2 text-[9px] font-black uppercase tracking-widest text-yellow-400 transition-all">
+                                                Detail Paket
+                                            </button>
+                                            @if($bp->min_pax > 0)
+                                                <span class="text-[9px] font-black text-white/20 uppercase tracking-widest">Min: {{ $bp->min_pax }} Pax</span>
+                                            @endif
+                                        </div>
                                     </div>
                                 </div>
-                            </label>
-                        @endforeach
+                            </div>
                     </div>
 
                     <div class="mt-8 max-w-xs">
@@ -734,9 +752,16 @@
             let total = 0;
             const checked = document.querySelectorAll('.buffet-checkbox:checked');
             const paxInput = document.querySelector('input[name="pax"]');
-            const pax = parseInt(paxInput?.value || '0', 10);
+            const globalPax = parseInt(paxInput?.value || '0', 10);
 
             checked.forEach(el => {
+                const label = el.closest('.group');
+                const qtyInput = label.querySelector('.buffet-qty-input');
+                let pax = parseInt(qtyInput?.value || '0', 10);
+                if (pax <= 0) {
+                    pax = globalPax;
+                }
+
                 const price = parseInt(el.dataset.price || '0', 10);
                 const pricingType = el.dataset.pricingType || '';
                 if (pricingType === 'per_pax') {
@@ -767,12 +792,18 @@
 
             // Render Buffet Packages if Selected
             buffetChecked.forEach(el => {
-                const label = el.closest('label');
+                const label = el.closest('.group');
                 const name = label.querySelector('h3').textContent.trim();
                 const price = parseInt(el.dataset.price || '0', 10);
                 const pricingType = el.dataset.pricingType || '';
-                const paxInput = document.querySelector('input[name="pax"]');
-                const pax = parseInt(paxInput?.value || '0', 10);
+                const qtyInput = label.querySelector('.buffet-qty-input');
+                const globalPaxInput = document.querySelector('input[name="pax"]');
+                const globalPax = parseInt(globalPaxInput?.value || '0', 10);
+
+                let pax = parseInt(qtyInput?.value || '0', 10);
+                if (pax <= 0) {
+                    pax = globalPax;
+                }
                 const total = pricingType === 'per_pax' ? price * Math.max(0, pax) : price;
 
                 const row = document.createElement('div');
@@ -903,19 +934,24 @@
 
             // Buffet billing
             const buffetChecked = document.querySelectorAll('.buffet-checkbox:checked');
-            const paxInput = document.querySelector('input[name="pax"]');
-            const pax = parseInt(paxInput?.value || '0', 10);
+            const globalPaxInput = document.querySelector('input[name="pax"]');
+            const globalPax = parseInt(globalPaxInput?.value || '0', 10);
 
             buffetChecked.forEach(el => {
-                const label = el.closest('label');
+                const label = el.closest('.group');
                 const name = label.querySelector('h3').textContent.trim();
                 const price = parseInt(el.dataset.price || '0', 10);
                 const pricingType = el.dataset.pricingType || '';
+                const qtyInput = label.querySelector('.buffet-qty-input');
+                let pax = parseInt(qtyInput?.value || '0', 10);
+                if (pax <= 0) {
+                    pax = globalPax;
+                }
                 const total = pricingType === 'per_pax' ? price * Math.max(0, pax) : price;
 
                 const row = document.createElement('div');
                 row.className = 'flex justify-between items-center';
-                row.innerHTML = `<span>• ${name}</span><span>${fmtRp(total)}</span>`;
+                row.innerHTML = `<span>• ${name} (${pax} pax)</span><span>${fmtRp(total)}</span>`;
                 detailBox.appendChild(row);
                 hasDetails = true;
             });
@@ -1293,14 +1329,17 @@
             el.addEventListener('change', () => {
                 const box = el.nextElementSibling;
                 const indicator = box.querySelector('.select-indicator div');
+                const qtyContainer = box.querySelector('.buffet-qty-container');
                 if (el.checked) {
                     box.classList.add('border-yellow-400', 'bg-yellow-400/5');
                     box.classList.remove('border-white/5', 'bg-white/[0.01]');
                     if (indicator) indicator.classList.add('scale-100');
+                    if (qtyContainer) qtyContainer.classList.remove('hidden');
                 } else {
                     box.classList.remove('border-yellow-400', 'bg-yellow-400/5');
                     box.classList.add('border-white/5', 'bg-white/[0.01]');
                     if (indicator) indicator.classList.remove('scale-100');
+                    if (qtyContainer) qtyContainer.classList.add('hidden');
                 }
                 updateTotals();
             });

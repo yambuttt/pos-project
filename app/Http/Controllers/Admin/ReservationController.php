@@ -65,8 +65,9 @@ class ReservationController extends Controller
             'items.*.qty' => ['required_with:items', 'integer', 'min:1'],
 
             // BUFFET
-            'buffet_package_ids' => ['nullable', 'array'],
-            'buffet_package_ids.*' => ['integer', 'exists:buffet_packages,id'],
+            'buffet_packages' => ['nullable', 'array'],
+            'buffet_packages.*.id' => ['required_with:buffet_packages', 'integer', 'exists:buffet_packages,id'],
+            'buffet_packages.*.pax' => ['required_with:buffet_packages', 'integer', 'min:1'],
 
             'rental_total' => ['nullable', 'integer', 'min:0'],
             'notes' => ['nullable', 'string'],
@@ -160,16 +161,17 @@ class ReservationController extends Controller
                 }
             } else {
                 // BUFFET => wajib pilih paket
-                $buffetPackageIds = $data['buffet_package_ids'] ?? [];
-                $buffetPackageIds = array_values(array_filter($buffetPackageIds));
+                $buffetPackages = $data['buffet_packages'] ?? [];
+                $buffetPackages = array_values(array_filter($buffetPackages, fn($bp) => !empty($bp['id']) && !empty($bp['pax'])));
 
-                if (count($buffetPackageIds) === 0) {
+                if (count($buffetPackages) === 0) {
                     throw new \RuntimeException('Pilih minimal 1 paket buffet.');
                 }
 
-                foreach ($buffetPackageIds as $pkgId) {
-                    $pkg = BuffetPackage::with('items.product')->lockForUpdate()->findOrFail((int) $pkgId);
-                    $pax = (int) ($reservation->pax ?? 0);
+                foreach ($buffetPackages as $bpData) {
+                    $pkgId = (int) $bpData['id'];
+                    $pkg = BuffetPackage::with('items.product')->lockForUpdate()->findOrFail($pkgId);
+                    $pax = (int) $bpData['pax'];
 
                     if ($pkg->min_pax && $pax < (int) $pkg->min_pax) {
                         throw new \RuntimeException("Paket '{$pkg->name}' minimal pax {$pkg->min_pax}.");

@@ -223,6 +223,8 @@ class PublicReservationController extends Controller
             // BUFFET (optional)
             'buffet_package_ids' => ['nullable', 'array'],
             'buffet_package_ids.*' => ['integer', 'exists:buffet_packages,id'],
+            'buffet_packages' => ['nullable', 'array'],
+            'buffet_packages.*.pax' => ['nullable', 'integer', 'min:1'],
 
             'notes' => ['nullable', 'string'],
         ]);
@@ -320,12 +322,16 @@ class PublicReservationController extends Controller
         if ($hasBuffet) {
             foreach ($buffetPackageIds as $pkgId) {
                 $pkg = BuffetPackage::findOrFail((int) $pkgId);
-                $pax = (int) ($data['pax'] ?? 0);
+                
+                $pkgPax = (int) ($data['buffet_packages'][$pkgId]['pax'] ?? 0);
+                if ($pkgPax <= 0) {
+                    $pkgPax = (int) ($data['pax'] ?? 0);
+                }
 
-                if ($pkg->min_pax && $pax < (int) $pkg->min_pax) {
+                if ($pkg->min_pax && $pkgPax < (int) $pkg->min_pax) {
                     return back()->withErrors(['pax' => "Paket '{$pkg->name}' minimal pax {$pkg->min_pax}."])->withInput();
                 }
-                if ($pkg->pricing_type === 'per_pax' && $pax <= 0) {
+                if ($pkg->pricing_type === 'per_pax' && $pkgPax <= 0) {
                     return back()->withErrors(['pax' => "Paket '{$pkg->name}' butuh pax."])->withInput();
                 }
             }
@@ -412,11 +418,16 @@ class PublicReservationController extends Controller
             if ($hasBuffet) {
                 foreach ($buffetPackageIds as $pkgId) {
                     $pkg = BuffetPackage::with('items.product')->lockForUpdate()->findOrFail((int) $pkgId);
-                    $pax = (int) ($reservation->pax ?? 0);
+                    
+                    // Fetch package-specific custom pax
+                    $pkgPax = (int) ($data['buffet_packages'][$pkgId]['pax'] ?? 0);
+                    if ($pkgPax <= 0) {
+                        $pkgPax = (int) ($reservation->pax ?? 0);
+                    }
 
                     if ($pkg->pricing_type === 'per_pax') {
-                        $buffetTotal = (int) $pkg->price * max(1, $pax);
-                        $pkgQty = max(1, $pax);
+                        $buffetTotal = (int) $pkg->price * max(1, $pkgPax);
+                        $pkgQty = max(1, $pkgPax);
                     } else {
                         $buffetTotal = (int) $pkg->price;
                         $pkgQty = 1;
@@ -435,7 +446,7 @@ class PublicReservationController extends Controller
                         'meta' => [
                             'pricing_type' => $pkg->pricing_type,
                             'min_pax' => $pkg->min_pax,
-                            'pax' => $pax ?: null,
+                            'pax' => $pkgPax ?: null,
                             'notes' => $pkg->notes ?? null,
                         ],
                     ]);

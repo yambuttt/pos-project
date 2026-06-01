@@ -163,8 +163,8 @@
 
                 <div id="buffetItemsWrap" class="space-y-3">
                     <div class="grid grid-cols-1 gap-3 md:grid-cols-12">
-                        <div class="md:col-span-11">
-                           <select name="buffet_package_ids[]"
+                        <div class="md:col-span-8">
+                           <select name="buffet_packages[0][id]"
                                class="w-full rounded-xl border border-white/5 bg-black/40 px-4 py-3.5 text-sm text-white outline-none focus:border-gold-primary/30 transition-all appearance-none">
                                <option value="">-- Pilih Paket Buffet --</option>
                                @foreach($buffetPackages as $bp)
@@ -175,6 +175,10 @@
                                    </option>
                                @endforeach
                            </select>
+                        </div>
+                        <div class="md:col-span-3">
+                           <input type="number" name="buffet_packages[0][pax]" min="1" value="1" placeholder="Pax/Qty"
+                               class="w-full rounded-xl border border-white/5 bg-black/40 px-4 py-3.5 text-sm text-white outline-none focus:border-gold-primary/30 transition-all">
                         </div>
                         <div class="md:col-span-1">
                            <!-- Spacer -->
@@ -276,8 +280,8 @@
             const row = document.createElement('div');
             row.className = 'grid grid-cols-1 gap-3 md:grid-cols-12 animate-fade-in';
             row.innerHTML = `
-                <div class="md:col-span-11">
-                   <select name="buffet_package_ids[]"
+                <div class="md:col-span-8">
+                   <select name="buffet_packages[${buffetIdx}][id]"
                        class="w-full rounded-xl border border-white/5 bg-black/40 px-4 py-3.5 text-sm text-white outline-none focus:border-gold-primary/30 appearance-none">
                        <option value="">-- Pilih Paket Buffet --</option>
                        @foreach($buffetPackages as $bp)
@@ -289,9 +293,13 @@
                        @endforeach
                    </select>
                 </div>
+                <div class="md:col-span-3">
+                   <input type="number" name="buffet_packages[${buffetIdx}][pax]" min="1" value="1" placeholder="Pax/Qty"
+                       class="w-full rounded-xl border border-white/5 bg-black/40 px-4 py-3.5 text-sm text-white outline-none focus:border-gold-primary/30">
+                </div>
                 <div class="md:col-span-1">
                    <button type="button" onclick="this.parentElement.parentElement.remove()"
-                       class="w-full h-full rounded-xl bg-red-500/10 border border-red-500/20 text-red-500 flex items-center justify-center hover:bg-red-500 hover:text-white transition-all">
+                       class="w-full h-full rounded-xl bg-red-500/10 border border-red-500/20 text-red-500 flex items-center justify-center hover:bg-red-500 hover:text-white transition-all py-3">
                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                        </svg>
