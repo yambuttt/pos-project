@@ -419,6 +419,7 @@
                                     </div>
                                 </div>
                             </div>
+                        @endforeach
                     </div>
 
                     <div class="mt-8 max-w-xs">
