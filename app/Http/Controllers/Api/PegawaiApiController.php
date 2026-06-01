@@ -184,10 +184,75 @@ class PegawaiApiController extends Controller
             ],
         ];
 
+        // Today's specific request statuses (to disable buttons on Flutter client)
+        $todayLate = \App\Models\LateAttendanceRequest::where('user_id', auth()->id())->where('date', $today)->first();
+        $todayCorrection = \App\Models\CheckoutCorrectionRequest::where('user_id', auth()->id())->where('date', $today)->first();
+        $todayOvertime = \App\Models\OvertimeRequest::where('user_id', auth()->id())->where('date', $today)->first();
+        $todayExceptions = \App\Models\AttendanceExceptionRequest::where('user_id', auth()->id())->where('attendance_date', $today)->get();
+
+        // Historical requests log
+        $exceptions = \App\Models\AttendanceExceptionRequest::where('user_id', auth()->id())
+            ->orderBy('created_at', 'desc')
+            ->take(10)
+            ->get()
+            ->map(function ($item) {
+                $item->type_label = 'Absensi Darurat (' . strtoupper($item->mode) . ')';
+                $item->request_date = $item->attendance_date;
+                $item->formatted_status = $item->status;
+                return $item;
+            });
+
+        $lates = \App\Models\LateAttendanceRequest::where('user_id', auth()->id())
+            ->orderBy('created_at', 'desc')
+            ->take(10)
+            ->get()
+            ->map(function ($item) {
+                $item->type_label = 'Pengajuan Telat';
+                $item->request_date = $item->date;
+                $item->formatted_status = $item->status;
+                return $item;
+            });
+
+        $corrections = \App\Models\CheckoutCorrectionRequest::where('user_id', auth()->id())
+            ->orderBy('created_at', 'desc')
+            ->take(10)
+            ->get()
+            ->map(function ($item) {
+                $item->type_label = 'Koreksi Checkout';
+                $item->request_date = $item->date;
+                $item->formatted_status = $item->status;
+                return $item;
+            });
+
+        $overtimes = \App\Models\OvertimeRequest::where('user_id', auth()->id())
+            ->orderBy('created_at', 'desc')
+            ->take(10)
+            ->get()
+            ->map(function ($item) {
+                $item->type_label = 'Pengajuan Lembur';
+                $item->request_date = $item->date;
+                $item->formatted_status = $item->status;
+                return $item;
+            });
+
+        $requestsHistory = collect()
+            ->concat($exceptions)
+            ->concat($lates)
+            ->concat($corrections)
+            ->concat($overtimes)
+            ->sortByDesc('created_at')
+            ->take(20)
+            ->values();
+
         return response()->json([
             'ok' => true,
             'attendance' => $attendance,
-            'ui' => $ui
+            'ui' => $ui,
+            'today_late' => $todayLate,
+            'today_correction' => $todayCorrection,
+            'today_overtime' => $todayOvertime,
+            'today_exceptions' => $todayExceptions,
+            'requests_history' => $requestsHistory
         ]);
     }
 
