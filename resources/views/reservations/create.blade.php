@@ -368,9 +368,9 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         @foreach($buffetPackages as $bp)
                             <label class="relative cursor-pointer group">
-                                <input type="radio" name="buffet_package_id" value="{{ $bp->id }}" data-price="{{ (int) $bp->price }}"
+                                <input type="checkbox" name="buffet_package_ids[]" value="{{ $bp->id }}" data-price="{{ (int) $bp->price }}"
                                     data-pricing-type="{{ $bp->pricing_type }}" data-min-pax="{{ (int) ($bp->min_pax ?? 0) }}"
-                                    class="peer hidden buffet-radio">
+                                    class="peer hidden buffet-checkbox">
                                 <div class="h-full rounded-3xl border border-white/5 bg-white/[0.01] p-6 transition-all peer-checked:border-yellow-400 peer-checked:bg-yellow-400/5 group-hover:bg-white/[0.03] flex flex-col justify-between">
                                     <div>
                                         <div class="flex items-start justify-between gap-4 mb-3">
@@ -731,27 +731,30 @@
         }
 
         function calcBuffetTotal() {
-            const selected = document.querySelector('input[name="buffet_package_id"]:checked');
-            if (!selected) return 0;
-
-            const price = parseInt(selected.dataset.price || '0', 10);
-            const pricingType = selected.dataset.pricingType || '';
+            let total = 0;
+            const checked = document.querySelectorAll('.buffet-checkbox:checked');
             const paxInput = document.querySelector('input[name="pax"]');
             const pax = parseInt(paxInput?.value || '0', 10);
 
-            if (pricingType === 'per_pax') {
-                return price * Math.max(0, pax);
-            }
+            checked.forEach(el => {
+                const price = parseInt(el.dataset.price || '0', 10);
+                const pricingType = el.dataset.pricingType || '';
+                if (pricingType === 'per_pax') {
+                    total += price * Math.max(0, pax);
+                } else {
+                    total += price;
+                }
+            });
 
-            return price;
+            return total;
         }
 
         function renderSelectedList() {
             const box = document.getElementById('selectedList');
             const items = [...cart.values()].filter(x => x.qty > 0);
-            const buffetSelected = document.querySelector('input[name="buffet_package_id"]:checked');
+            const buffetChecked = document.querySelectorAll('.buffet-checkbox:checked');
 
-            if (items.length === 0 && !buffetSelected) {
+            if (items.length === 0 && buffetChecked.length === 0) {
                 box.innerHTML = `
                     <div class="glass-card flex flex-col items-center justify-center rounded-3xl border-dashed py-8 text-center">
                         <p class="text-[9px] font-black uppercase tracking-[0.2em] text-white/20 italic">No items or packages ordered yet</p>
@@ -762,14 +765,15 @@
 
             box.innerHTML = '';
 
-            // Render Buffet Package if Selected
-            if (buffetSelected) {
-                const label = buffetSelected.closest('label');
+            // Render Buffet Packages if Selected
+            buffetChecked.forEach(el => {
+                const label = el.closest('label');
                 const name = label.querySelector('h3').textContent.trim();
-                const total = calcBuffetTotal();
-                const pricingType = buffetSelected.dataset.pricingType || '';
+                const price = parseInt(el.dataset.price || '0', 10);
+                const pricingType = el.dataset.pricingType || '';
                 const paxInput = document.querySelector('input[name="pax"]');
                 const pax = parseInt(paxInput?.value || '0', 10);
+                const total = pricingType === 'per_pax' ? price * Math.max(0, pax) : price;
 
                 const row = document.createElement('div');
                 row.className = 'glass-card flex items-center justify-between gap-4 rounded-2xl p-4';
@@ -783,7 +787,7 @@
                     <span class="text-xs font-black text-white">${fmtRp(total)}</span>
                 `;
                 box.appendChild(row);
-            }
+            });
 
             // Render A la Carte Items
             items.forEach(it => {
@@ -898,16 +902,23 @@
             let hasDetails = false;
 
             // Buffet billing
-            const buffet = document.querySelector('input[name="buffet_package_id"]:checked');
-            if (buffet) {
-                const label = buffet.closest('label');
+            const buffetChecked = document.querySelectorAll('.buffet-checkbox:checked');
+            const paxInput = document.querySelector('input[name="pax"]');
+            const pax = parseInt(paxInput?.value || '0', 10);
+
+            buffetChecked.forEach(el => {
+                const label = el.closest('label');
                 const name = label.querySelector('h3').textContent.trim();
+                const price = parseInt(el.dataset.price || '0', 10);
+                const pricingType = el.dataset.pricingType || '';
+                const total = pricingType === 'per_pax' ? price * Math.max(0, pax) : price;
+
                 const row = document.createElement('div');
                 row.className = 'flex justify-between items-center';
-                row.innerHTML = `<span>• ${name}</span><span>${fmtRp(calcBuffetTotal())}</span>`;
+                row.innerHTML = `<span>• ${name}</span><span>${fmtRp(total)}</span>`;
                 detailBox.appendChild(row);
                 hasDetails = true;
-            }
+            });
 
             // Regular items billing
             for (const it of cart.values()) {
@@ -1278,36 +1289,21 @@
         };
 
         // Buffet Selection Binding
-        document.querySelectorAll('input[name="buffet_package_id"]').forEach(el => {
+        document.querySelectorAll('.buffet-checkbox').forEach(el => {
             el.addEventListener('change', () => {
-                // Toggle active style visual on labels
-                document.querySelectorAll('.buffet-radio').forEach(radio => {
-                    const box = radio.nextElementSibling;
-                    const indicator = box.querySelector('.select-indicator div');
-                    if (radio.checked) {
-                        box.classList.add('border-yellow-400', 'bg-yellow-400/5');
-                        box.classList.remove('border-white/5', 'bg-white/[0.01]');
-                        if (indicator) indicator.classList.add('scale-100');
-                    } else {
-                        box.classList.remove('border-yellow-400', 'bg-yellow-400/5');
-                        box.classList.add('border-white/5', 'bg-white/[0.01]');
-                        if (indicator) indicator.classList.remove('scale-100');
-                    }
-                });
+                const box = el.nextElementSibling;
+                const indicator = box.querySelector('.select-indicator div');
+                if (el.checked) {
+                    box.classList.add('border-yellow-400', 'bg-yellow-400/5');
+                    box.classList.remove('border-white/5', 'bg-white/[0.01]');
+                    if (indicator) indicator.classList.add('scale-100');
+                } else {
+                    box.classList.remove('border-yellow-400', 'bg-yellow-400/5');
+                    box.classList.add('border-white/5', 'bg-white/[0.01]');
+                    if (indicator) indicator.classList.remove('scale-100');
+                }
                 updateTotals();
             });
-            
-            // Allow unchecking package radio by clicking active selection
-            el.onclick = () => {
-                if (el.dataset.wasChecked === 'true') {
-                    el.checked = false;
-                    el.dataset.wasChecked = 'false';
-                    el.dispatchEvent(new Event('change'));
-                } else {
-                    document.querySelectorAll('input[name="buffet_package_id"]').forEach(r => r.dataset.wasChecked = 'false');
-                    el.dataset.wasChecked = 'true';
-                }
-            };
         });
 
         const paxInput = document.querySelector('input[name="pax"]');

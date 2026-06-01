@@ -221,7 +221,8 @@ class PublicReservationController extends Controller
             'items.*.qty' => ['nullable', 'integer', 'min:1'],
 
             // BUFFET (optional)
-            'buffet_package_id' => ['nullable', 'integer', 'exists:buffet_packages,id'],
+            'buffet_package_ids' => ['nullable', 'array'],
+            'buffet_package_ids.*' => ['integer', 'exists:buffet_packages,id'],
 
             'notes' => ['nullable', 'string'],
         ]);
@@ -230,7 +231,9 @@ class PublicReservationController extends Controller
         $items = array_values(array_filter($items, fn($it) => !empty($it['product_id']) && !empty($it['qty'])));
 
         $hasRegular = count($items) > 0;
-        $hasBuffet = !empty($data['buffet_package_id']);
+        $buffetPackageIds = $data['buffet_package_ids'] ?? [];
+        $buffetPackageIds = array_values(array_filter($buffetPackageIds));
+        $hasBuffet = count($buffetPackageIds) > 0;
 
         if (!$hasRegular && !$hasBuffet) {
             return back()->withErrors(['menu' => 'Pilih minimal salah satu: Paket Buffet atau Menu Regular.'])->withInput();
@@ -315,21 +318,23 @@ class PublicReservationController extends Controller
 
         // Validasi buffet: paket ada, cek min pax kalau per_pax
         if ($hasBuffet) {
-            $pkg = BuffetPackage::findOrFail((int) $data['buffet_package_id']);
-            $pax = (int) ($data['pax'] ?? 0);
+            foreach ($buffetPackageIds as $pkgId) {
+                $pkg = BuffetPackage::findOrFail((int) $pkgId);
+                $pax = (int) ($data['pax'] ?? 0);
 
-            if ($pkg->min_pax && $pax < (int) $pkg->min_pax) {
-                return back()->withErrors(['pax' => "Paket '{$pkg->name}' minimal pax {$pkg->min_pax}."])->withInput();
-            }
-            if ($pkg->pricing_type === 'per_pax' && $pax <= 0) {
-                return back()->withErrors(['pax' => "Paket '{$pkg->name}' butuh pax."])->withInput();
+                if ($pkg->min_pax && $pax < (int) $pkg->min_pax) {
+                    return back()->withErrors(['pax' => "Paket '{$pkg->name}' minimal pax {$pkg->min_pax}."])->withInput();
+                }
+                if ($pkg->pricing_type === 'per_pax' && $pax <= 0) {
+                    return back()->withErrors(['pax' => "Paket '{$pkg->name}' butuh pax."])->withInput();
+                }
             }
         }
 
         $code = 'RSV-' . now()->format('Ymd') . '-' . strtoupper(substr(bin2hex(random_bytes(3)), 0, 6));
         $dpRatio = (float) config('reservations.dp_ratio', 0.5);
 
-        return DB::transaction(function () use ($data, $items, $hasRegular, $hasBuffet, $menuType, $start, $end, $code, $dpRatio, $resource) {
+        return DB::transaction(function () use ($data, $items, $buffetPackageIds, $hasRegular, $hasBuffet, $menuType, $start, $end, $code, $dpRatio, $resource) {
 
             // cek bentrok + buffer
             $resource = ReservationResource::lockForUpdate()->findOrFail($resource->id);
@@ -405,46 +410,48 @@ class PublicReservationController extends Controller
 
             // BUFFET part (no stock check)
             if ($hasBuffet) {
-                $pkg = BuffetPackage::with('items.product')->lockForUpdate()->findOrFail((int) $data['buffet_package_id']);
-                $pax = (int) ($reservation->pax ?? 0);
+                foreach ($buffetPackageIds as $pkgId) {
+                    $pkg = BuffetPackage::with('items.product')->lockForUpdate()->findOrFail((int) $pkgId);
+                    $pax = (int) ($reservation->pax ?? 0);
 
-                if ($pkg->pricing_type === 'per_pax') {
-                    $buffetTotal = (int) $pkg->price * max(1, $pax);
-                    $pkgQty = max(1, $pax);
-                } else {
-                    $buffetTotal = (int) $pkg->price;
-                    $pkgQty = 1;
-                }
+                    if ($pkg->pricing_type === 'per_pax') {
+                        $buffetTotal = (int) $pkg->price * max(1, $pax);
+                        $pkgQty = max(1, $pax);
+                    } else {
+                        $buffetTotal = (int) $pkg->price;
+                        $pkgQty = 1;
+                    }
 
-                $menuTotal += $buffetTotal;
+                    $menuTotal += $buffetTotal;
 
-                ReservationItem::create([
-                    'reservation_id' => $reservation->id,
-                    'item_type' => 'BUFFET_PACKAGE',
-                    'item_id' => $pkg->id,
-                    'snapshot_name' => $pkg->name,
-                    'unit_price' => (int) $pkg->price,
-                    'qty' => $pkgQty,
-                    'subtotal' => $buffetTotal,
-                    'meta' => [
-                        'pricing_type' => $pkg->pricing_type,
-                        'min_pax' => $pkg->min_pax,
-                        'pax' => $pax ?: null,
-                        'notes' => $pkg->notes ?? null,
-                    ],
-                ]);
-
-                foreach ($pkg->items as $it) {
                     ReservationItem::create([
                         'reservation_id' => $reservation->id,
-                        'item_type' => 'BUFFET_ITEM',
-                        'item_id' => $it->product_id,
-                        'snapshot_name' => $it->product?->name ?? 'Item Paket',
-                        'unit_price' => 0,
-                        'qty' => (int) $it->qty,
-                        'subtotal' => 0,
-                        'meta' => ['included' => true, 'note' => $it->note],
+                        'item_type' => 'BUFFET_PACKAGE',
+                        'item_id' => $pkg->id,
+                        'snapshot_name' => $pkg->name,
+                        'unit_price' => (int) $pkg->price,
+                        'qty' => $pkgQty,
+                        'subtotal' => $buffetTotal,
+                        'meta' => [
+                            'pricing_type' => $pkg->pricing_type,
+                            'min_pax' => $pkg->min_pax,
+                            'pax' => $pax ?: null,
+                            'notes' => $pkg->notes ?? null,
+                        ],
                     ]);
+
+                    foreach ($pkg->items as $it) {
+                        ReservationItem::create([
+                            'reservation_id' => $reservation->id,
+                            'item_type' => 'BUFFET_ITEM',
+                            'item_id' => $it->product_id,
+                            'snapshot_name' => $it->product?->name ?? 'Item Paket',
+                            'unit_price' => 0,
+                            'qty' => (int) $it->qty,
+                            'subtotal' => 0,
+                            'meta' => ['included' => true, 'note' => $it->note],
+                        ]);
+                    }
                 }
             }
 

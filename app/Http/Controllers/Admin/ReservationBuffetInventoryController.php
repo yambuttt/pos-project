@@ -37,29 +37,36 @@ class ReservationBuffetInventoryController extends Controller
          */
         $needRows = [];
 
-        $pkgItem = $reservation->items->firstWhere('item_type', 'BUFFET_PACKAGE');
-        if ($pkgItem && $pkgItem->item_id) {
-            $pkg = \App\Models\BuffetPackage::with(['items.product.recipes.rawMaterial'])
-                ->find($pkgItem->item_id);
+        $pkgItems = $reservation->items->where('item_type', 'BUFFET_PACKAGE');
+        if ($pkgItems->isNotEmpty()) {
+            // map stok buffet saat ini: raw_material_id => qty_on_hand
+            $buffetStockMap = $reservation->buffetStocks->keyBy('raw_material_id');
+            // map consumed: raw_material_id => total_qty_consumed
+            $consumedMap = $reservation->buffetMovements
+                ->where('type', 'consume')
+                ->groupBy('raw_material_id')
+                ->map(function ($rows) {
+                    return (float) $rows->sum('qty_out');
+                });
 
-            if ($pkg) {
+            // Akumulasi kebutuhan bahan
+            $needs = []; // raw_material_id => qty_need
+            $meta = [];  // raw_material_id => ['name','unit']
+
+            foreach ($pkgItems as $pkgItem) {
+                if (!$pkgItem->item_id) {
+                    continue;
+                }
+                $pkg = \App\Models\BuffetPackage::with(['items.product.recipes.rawMaterial'])
+                    ->find($pkgItem->item_id);
+
+                if (!$pkg) {
+                    continue;
+                }
+
                 // multiplier: kalau per_pax -> dikali pax, kalau per_event -> 1
                 $pax = (int) ($reservation->pax ?? 0);
                 $mult = $pkg->pricing_type === 'per_pax' ? max(1, $pax) : 1;
-
-                // map stok buffet saat ini: raw_material_id => qty_on_hand
-                $buffetStockMap = $reservation->buffetStocks->keyBy('raw_material_id');
-                // map consumed: raw_material_id => total_qty_consumed
-                $consumedMap = $reservation->buffetMovements
-                    ->where('type', 'consume')
-                    ->groupBy('raw_material_id')
-                    ->map(function ($rows) {
-                        return (float) $rows->sum('qty_out');
-                    });
-
-                // Akumulasi kebutuhan bahan
-                $needs = []; // raw_material_id => qty_need
-                $meta = [];  // raw_material_id => ['name','unit']
 
                 foreach ($pkg->items as $pi) {
                     $product = $pi->product;
@@ -83,46 +90,46 @@ class ReservationBuffetInventoryController extends Controller
                         }
                     }
                 }
-
-                // format rows untuk view
-                foreach ($needs as $rid => $qtyNeed) {
-                    $inBuffet = (float) ($buffetStockMap[$rid]->qty_on_hand ?? 0);
-                    $consumed = (float) ($consumedMap[$rid] ?? 0);
-
-                    // Remaining yang benar: Need - (Consumed + InBuffet)
-                    $remaining = max(0, $qtyNeed - ($consumed + $inBuffet));
-
-                    $needRows[] = [
-                        'raw_material_id' => $rid,
-                        'name' => $meta[$rid]['name'] ?? "Material #{$rid}",
-                        'unit' => $meta[$rid]['unit'] ?? '',
-                        'need' => $qtyNeed,
-                        'consumed' => $consumed,
-                        'in_buffet' => $inBuffet,
-                        'remaining' => $remaining,
-                        'main_stock' => $meta[$rid]['main_stock'] ?? 0,
-                    ];
-                }
-
-                // ambil raw_material_id yang dibutuhkan oleh recipe paket
-                $neededIds = collect($needRows)->pluck('raw_material_id')->unique();
-
-                // ambil raw_material_id yang sudah ada di stok buffet (buat return/consume/waste)
-                $stockIds = $reservation->buffetStocks->pluck('raw_material_id')->unique();
-
-                // gabungkan keduanya
-                $actionIds = $neededIds->merge($stockIds)->unique()->values();
-
-                // ambil raw material yang relevan saja untuk dropdown
-                $actionMaterials = \App\Models\RawMaterial::whereIn('id', $actionIds)
-                    ->orderBy('name')
-                    ->get(['id', 'name', 'unit', 'stock_on_hand']);
-
-                // sort: yang masih kurang taruh atas
-                usort($needRows, function ($a, $b) {
-                    return ($b['remaining'] <=> $a['remaining']);
-                });
             }
+
+            // format rows untuk view
+            foreach ($needs as $rid => $qtyNeed) {
+                $inBuffet = (float) ($buffetStockMap[$rid]->qty_on_hand ?? 0);
+                $consumed = (float) ($consumedMap[$rid] ?? 0);
+
+                // Remaining yang benar: Need - (Consumed + InBuffet)
+                $remaining = max(0, $qtyNeed - ($consumed + $inBuffet));
+
+                $needRows[] = [
+                    'raw_material_id' => $rid,
+                    'name' => $meta[$rid]['name'] ?? "Material #{$rid}",
+                    'unit' => $meta[$rid]['unit'] ?? '',
+                    'need' => $qtyNeed,
+                    'consumed' => $consumed,
+                    'in_buffet' => $inBuffet,
+                    'remaining' => $remaining,
+                    'main_stock' => $meta[$rid]['main_stock'] ?? 0,
+                ];
+            }
+
+            // ambil raw_material_id yang dibutuhkan oleh recipe paket
+            $neededIds = collect($needRows)->pluck('raw_material_id')->unique();
+
+            // ambil raw_material_id yang sudah ada di stok buffet (buat return/consume/waste)
+            $stockIds = $reservation->buffetStocks->pluck('raw_material_id')->unique();
+
+            // gabungkan keduanya
+            $actionIds = $neededIds->merge($stockIds)->unique()->values();
+
+            // ambil raw material yang relevan saja untuk dropdown
+            $actionMaterials = \App\Models\RawMaterial::whereIn('id', $actionIds)
+                ->orderBy('name')
+                ->get(['id', 'name', 'unit', 'stock_on_hand']);
+
+            // sort: yang masih kurang taruh atas
+            usort($needRows, function ($a, $b) {
+                return ($b['remaining'] <=> $a['remaining']);
+            });
         }
 
         return view('dashboard.admin.reservations.buffet_inventory', compact('reservation', 'needRows', 'actionMaterials'));

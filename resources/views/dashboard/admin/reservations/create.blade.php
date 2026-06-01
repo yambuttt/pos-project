@@ -143,31 +143,43 @@
 
             <!-- SECTION 4: ITEMS / PAKET (DYNAMIC) -->
             <div id="buffetPackageWrap" class="hidden animate-fade-in premium-card p-8 border-gold-primary/10 bg-gold-primary/[0.02]">
-                <div class="flex items-center gap-3 mb-6">
-                   <div class="w-10 h-10 rounded-xl bg-gold-primary/10 flex items-center justify-center text-gold-primary border border-gold-primary/20">
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                      </svg>
+                <div class="flex items-center justify-between gap-4 mb-8">
+                   <div class="flex items-center gap-3">
+                      <div class="w-10 h-10 rounded-xl bg-gold-primary/10 flex items-center justify-center text-gold-primary border border-gold-primary/20">
+                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                         </svg>
+                      </div>
+                      <div>
+                         <h4 class="text-xs font-black text-white uppercase tracking-[0.2em]">Pilihan Paket Buffet</h4>
+                         <p class="text-[10px] text-white/30 italic">Tambah paket menu untuk reservasi buffet.</p>
+                      </div>
                    </div>
-                   <div>
-                      <h4 class="text-xs font-black text-white uppercase tracking-[0.2em]">Pilihan Paket Buffet</h4>
-                      <p class="text-[10px] text-white/30 italic">Pilih paket menu untuk reservasi buffet.</p>
-                   </div>
+                   <button type="button" onclick="addBuffetRow()"
+                       class="rounded-xl border border-gold-primary/20 bg-gold-primary/10 px-4 py-2 text-[10px] font-black text-gold-primary uppercase tracking-widest hover:bg-gold-primary hover:text-black transition-all active:scale-95">
+                       + Paket
+                   </button>
                 </div>
 
-                <div class="space-y-2">
-                    <label class="text-[9px] uppercase tracking-widest text-white/40 font-black ml-1">Nama Paket</label>
-                    <select name="buffet_package_id"
-                        class="w-full rounded-xl border border-white/5 bg-white/[0.03] px-4 py-4 text-sm text-white outline-none focus:border-gold-primary/30 transition-all appearance-none">
-                        <option value="">-- Pilih Paket Buffet --</option>
-                        @foreach($buffetPackages as $bp)
-                            <option value="{{ $bp->id }}">
-                                {{ $bp->name }} —
-                                {{ $bp->pricing_type === 'per_pax' ? 'per pax' : 'per event' }}
-                                (Rp {{ number_format($bp->price, 0, ',', '.') }})
-                            </option>
-                        @endforeach
-                    </select>
+                <div id="buffetItemsWrap" class="space-y-3">
+                    <div class="grid grid-cols-1 gap-3 md:grid-cols-12">
+                        <div class="md:col-span-11">
+                           <select name="buffet_package_ids[]"
+                               class="w-full rounded-xl border border-white/5 bg-black/40 px-4 py-3.5 text-sm text-white outline-none focus:border-gold-primary/30 transition-all appearance-none">
+                               <option value="">-- Pilih Paket Buffet --</option>
+                               @foreach($buffetPackages as $bp)
+                                   <option value="{{ $bp->id }}">
+                                       {{ $bp->name }} —
+                                       {{ $bp->pricing_type === 'per_pax' ? 'per pax' : 'per event' }}
+                                       (Rp {{ number_format($bp->price, 0, ',', '.') }})
+                                   </option>
+                               @endforeach
+                           </select>
+                        </div>
+                        <div class="md:col-span-1">
+                           <!-- Spacer -->
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -256,6 +268,38 @@
             `;
             wrap.appendChild(row);
             idx++;
+        }
+
+        let buffetIdx = 1;
+        function addBuffetRow() {
+            const wrap = document.getElementById('buffetItemsWrap');
+            const row = document.createElement('div');
+            row.className = 'grid grid-cols-1 gap-3 md:grid-cols-12 animate-fade-in';
+            row.innerHTML = `
+                <div class="md:col-span-11">
+                   <select name="buffet_package_ids[]"
+                       class="w-full rounded-xl border border-white/5 bg-black/40 px-4 py-3.5 text-sm text-white outline-none focus:border-gold-primary/30 appearance-none">
+                       <option value="">-- Pilih Paket Buffet --</option>
+                       @foreach($buffetPackages as $bp)
+                           <option value="{{ $bp->id }}">
+                               {{ $bp->name }} —
+                               {{ $bp->pricing_type === 'per_pax' ? 'per pax' : 'per event' }}
+                               (Rp {{ number_format($bp->price, 0, ',', '.') }})
+                           </option>
+                       @endforeach
+                   </select>
+                </div>
+                <div class="md:col-span-1">
+                   <button type="button" onclick="this.parentElement.parentElement.remove()"
+                       class="w-full h-full rounded-xl bg-red-500/10 border border-red-500/20 text-red-500 flex items-center justify-center hover:bg-red-500 hover:text-white transition-all">
+                       <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                       </svg>
+                   </button>
+                </div>
+            `;
+            wrap.appendChild(row);
+            buffetIdx++;
         }
 
         function syncBuffetUI() {
