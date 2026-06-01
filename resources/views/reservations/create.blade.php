@@ -367,14 +367,12 @@
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         @foreach($buffetPackages as $bp)
-                            <div class="relative group">
+                            <div class="relative group buffet-card" data-id="{{ $bp->id }}">
                                 <input type="checkbox" name="buffet_package_ids[]" id="bp_chk_{{ $bp->id }}" value="{{ $bp->id }}" data-price="{{ (int) $bp->price }}"
                                     data-pricing-type="{{ $bp->pricing_type }}" data-min-pax="{{ (int) ($bp->min_pax ?? 0) }}"
                                     class="peer hidden buffet-checkbox">
                                 
-                                <label for="bp_chk_{{ $bp->id }}" class="absolute inset-0 z-10 cursor-pointer"></label>
-
-                                <div class="h-full rounded-3xl border border-white/5 bg-white/[0.01] p-6 transition-all peer-checked:border-yellow-400 peer-checked:bg-yellow-400/5 group-hover:bg-white/[0.03] flex flex-col justify-between relative">
+                                <div class="h-full rounded-3xl border border-white/5 bg-white/[0.01] p-6 transition-all peer-checked:border-yellow-400 peer-checked:bg-yellow-400/5 group-hover:bg-white/[0.03] flex flex-col justify-between relative cursor-pointer card-content">
                                     <div>
                                         <div class="flex items-start justify-between gap-4 mb-3">
                                             <div>
@@ -1325,22 +1323,43 @@
             updateTotals();
         };
 
+        // Buffet Selection Card Clicks
+        document.querySelectorAll('.buffet-card').forEach(card => {
+            const checkbox = card.querySelector('.buffet-checkbox');
+            const content = card.querySelector('.card-content');
+            
+            content.addEventListener('click', (e) => {
+                if (e.target.closest('.buffet-qty-container') || e.target.closest('button') || e.target.closest('input')) {
+                    return;
+                }
+                checkbox.checked = !checkbox.checked;
+                checkbox.dispatchEvent(new Event('change'));
+            });
+        });
+
         // Buffet Selection Binding
         document.querySelectorAll('.buffet-checkbox').forEach(el => {
             el.addEventListener('change', () => {
-                const box = el.nextElementSibling;
+                const group = el.closest('.group');
+                const box = group.querySelector('.h-full');
                 const indicator = box.querySelector('.select-indicator div');
                 const qtyContainer = box.querySelector('.buffet-qty-container');
                 if (el.checked) {
                     box.classList.add('border-yellow-400', 'bg-yellow-400/5');
                     box.classList.remove('border-white/5', 'bg-white/[0.01]');
                     if (indicator) indicator.classList.add('scale-100');
-                    if (qtyContainer) qtyContainer.classList.remove('hidden');
+                    if (qtyContainer) {
+                        qtyContainer.classList.remove('hidden');
+                        qtyContainer.classList.add('flex');
+                    }
                 } else {
                     box.classList.remove('border-yellow-400', 'bg-yellow-400/5');
                     box.classList.add('border-white/5', 'bg-white/[0.01]');
                     if (indicator) indicator.classList.remove('scale-100');
-                    if (qtyContainer) qtyContainer.classList.add('hidden');
+                    if (qtyContainer) {
+                        qtyContainer.classList.add('hidden');
+                        qtyContainer.classList.remove('flex');
+                    }
                 }
                 updateTotals();
             });
