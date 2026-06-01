@@ -245,6 +245,12 @@ class PublicReservationController extends Controller
             return back()->withErrors(['end' => 'End harus setelah Start.'])->withInput();
         }
 
+        // Waktu reservasi harus di masa depan dengan lead time minimal 30 menit
+        $now = now(config('app.timezone', 'Asia/Jakarta'));
+        if ($start->lt($now->copy()->addMinutes(30))) {
+            return back()->withErrors(['start' => 'Waktu reservasi minimal harus 30 menit ke depan dari sekarang.'])->withInput();
+        }
+
         $resource = ReservationResource::findOrFail($data['reservation_resource_id']);
 
         // min durasi

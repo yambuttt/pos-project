@@ -1023,11 +1023,29 @@
             const step = Math.max(5, parseInt(availability.slot_minutes || 30, 10));
             const booked = availability.booked || [];
 
+            // Calculate cutoff for today (current local time + 30 minutes buffer)
+            let cutoffMin = -999999;
+            const todayStr = toISODate(new Date());
+            if (selectedDate === todayStr) {
+                const now = new Date();
+                cutoffMin = now.getHours() * 60 + now.getMinutes() + 30;
+            }
+
+            // Auto-reset selectedStart if it is now in the past / within preparation buffer
+            if (selectedStart && selectedDate === todayStr) {
+                const startMins = parseHHMM(selectedStart);
+                if (startMins < cutoffMin) {
+                    selectedStart = null;
+                    selectedDuration = null;
+                }
+            }
+
             let hasAvailable = false;
 
             for (let t = open; t + minDur <= close; t += step) {
                 const hhmm = fromMin(t);
-                const disabled = isOverlap(t, t + minDur, booked);
+                // Slot is disabled if it overlaps with bookings OR is in the past / within prep buffer
+                const disabled = isOverlap(t, t + minDur, booked) || (t < cutoffMin);
 
                 const btn = document.createElement('button');
                 btn.type = 'button';
