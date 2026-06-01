@@ -116,36 +116,33 @@
 
           <!-- Tombol Sekunder Grid -->
           <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-1">
-            <div class="flex flex-col">
-              <button id="btnInitException" class="h-full rounded-xl border border-white/10 bg-white/[0.02] hover:bg-white/[0.06] hover:border-white/20 transition-all p-3 text-xs font-semibold text-white/70">
+            <div class="flex flex-col gap-1.5">
+              <button id="btnInitException" class="w-full rounded-xl border border-white/10 bg-white/[0.02] hover:bg-white/[0.06] hover:border-white/20 transition-all p-3 text-xs font-semibold text-white/70">
                 Device Lain (Darurat)
               </button>
+              <div id="exceptionMsg" class="text-[10px] text-yellow-400/80 leading-tight px-1"></div>
             </div>
             
-            <div class="flex flex-col relative group">
-              <button id="btnLateRequest" class="h-full rounded-xl border border-white/10 bg-white/[0.02] hover:bg-white/[0.06] hover:border-white/20 transition-all p-3 text-xs font-semibold text-white/70">
+            <div class="flex flex-col gap-1.5 relative group">
+              <button id="btnLateRequest" class="w-full rounded-xl border border-white/10 bg-white/[0.02] hover:bg-white/[0.06] hover:border-white/20 transition-all p-3 text-xs font-semibold text-white/70">
                 Ajukan Telat
               </button>
+              <div id="lateReqMsg" class="text-[10px] text-yellow-400/80 leading-tight px-1"></div>
             </div>
 
-            <div class="flex flex-col relative group">
-              <button id="btnCheckoutCorrection" class="h-full rounded-xl border border-white/10 bg-white/[0.02] hover:bg-white/[0.06] hover:border-white/20 transition-all p-3 text-xs font-semibold text-white/70">
+            <div class="flex flex-col gap-1.5 relative group">
+              <button id="btnCheckoutCorrection" class="w-full rounded-xl border border-white/10 bg-white/[0.02] hover:bg-white/[0.06] hover:border-white/20 transition-all p-3 text-xs font-semibold text-white/70">
                 Koreksi Checkout
               </button>
+              <div id="ccMsg" class="text-[10px] text-yellow-400/80 leading-tight px-1"></div>
             </div>
 
-            <div class="flex flex-col relative group">
-              <button id="btnOvertime" class="h-full rounded-xl border border-white/10 bg-white/[0.02] hover:bg-white/[0.06] hover:border-white/20 transition-all p-3 text-xs font-semibold text-white/70">
+            <div class="flex flex-col gap-1.5 relative group">
+              <button id="btnOvertime" class="w-full rounded-xl border border-white/10 bg-white/[0.02] hover:bg-white/[0.06] hover:border-white/20 transition-all p-3 text-xs font-semibold text-white/70">
                 Ajukan Lembur
               </button>
+              <div id="otMsg" class="text-[10px] text-yellow-400/80 leading-tight px-1"></div>
             </div>
-          </div>
-          
-          <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 px-1">
-             <div id="exceptionMsg" class="text-[10px] text-yellow-400/80 leading-tight"></div>
-             <div id="lateReqMsg" class="text-[10px] text-yellow-400/80 leading-tight"></div>
-             <div id="ccMsg" class="text-[10px] text-yellow-400/80 leading-tight"></div>
-             <div id="otMsg" class="text-[10px] text-yellow-400/80 leading-tight"></div>
           </div>
           
         </div>
@@ -530,8 +527,11 @@
     function closeOt() { otModal.classList.add('hidden'); otModal.classList.remove('flex'); }
 
     function canOvertime() {
-      // harus sudah check-in dan belum checkout
-      return HAS_CHECKIN && !HAS_CHECKOUT;
+      // 1. Harus sudah check-in
+      // 2. Belum check-out
+      // 3. Belum melewati jam checkout ditutup (serverNowMs() <= UI.out.to_ms)
+      const now = serverNowMs();
+      return HAS_CHECKIN && !HAS_CHECKOUT && now <= UI.out.to_ms;
     }
 
     function syncOvertimeButton() {
@@ -540,7 +540,22 @@
       btnOvertime.disabled = !ok;
       btnOvertime.classList.toggle('opacity-50', !ok);
       btnOvertime.classList.toggle('cursor-not-allowed', !ok);
-      if (otMsg) otMsg.textContent = ok ? '' : 'Ajukan lembur hanya bisa setelah check-in dan sebelum checkout.';
+      
+      if (!otMsg) return;
+      if (!ok) {
+        const now = serverNowMs();
+        if (!HAS_CHECKIN) {
+          otMsg.textContent = 'Ajukan lembur hanya bisa setelah check-in.';
+        } else if (HAS_CHECKOUT) {
+          otMsg.textContent = 'Kamu sudah check-out hari ini.';
+        } else if (now > UI.out.to_ms) {
+          otMsg.textContent = 'Pengajuan lembur ditutup karena sudah melewati jam check-out.';
+        } else {
+          otMsg.textContent = '';
+        }
+      } else {
+        otMsg.textContent = '';
+      }
     }
 
     btnOvertime?.addEventListener('click', () => {

@@ -34,6 +34,13 @@ class OvertimeRequestController extends Controller
             return response()->json(['ok'=>false,'message'=>'Kamu sudah checkout. Tidak bisa ajukan lembur.'], 422);
         }
 
+        // tidak bisa setelah checkout ditutup
+        $svc = app(ShiftResolverService::class);
+        $wOut = $svc->getWindow(auth()->user(), 'out', $now);
+        if ($now->gt($wOut['to'])) {
+            return response()->json(['ok' => false, 'message' => 'Pengajuan lembur ditutup karena sudah melewati jam check-out.'], 422);
+        }
+
         // cegah dobel request pending/approved
         $exists = OvertimeRequest::query()
             ->where('user_id', auth()->id())
