@@ -64,9 +64,8 @@ class ReservationBuffetInventoryController extends Controller
                     continue;
                 }
 
-                // multiplier: kalau per_pax -> dikali pax, kalau per_event -> 1
-                $pax = (int) ($reservation->pax ?? 0);
-                $mult = $pkg->pricing_type === 'per_pax' ? max(1, $pax) : 1;
+                // multiplier: use the actual package quantity booked
+                $mult = (int) $pkgItem->qty;
 
                 foreach ($pkg->items as $pi) {
                     $product = $pi->product;

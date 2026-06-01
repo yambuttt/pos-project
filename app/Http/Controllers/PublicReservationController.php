@@ -458,7 +458,7 @@ class PublicReservationController extends Controller
                             'item_id' => $it->product_id,
                             'snapshot_name' => $it->product?->name ?? 'Item Paket',
                             'unit_price' => 0,
-                            'qty' => (int) $it->qty,
+                            'qty' => (int) $it->qty * $pkgQty,
                             'subtotal' => 0,
                             'meta' => ['included' => true, 'note' => $it->note],
                         ]);
